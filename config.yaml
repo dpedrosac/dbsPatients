@@ -1,0 +1,12 @@
+# Config file saving all important settings that have been set; A recovery to default mode is possible
+
+import getpass
+import os, sys
+
+%YAML 1.1
+
+
+---
+folders:
+  dpedr: 'D:\\DBS_patients'
+  Anwender: 'C:\\Users\\Anwender\\PycharmProjects\\DBS_Patients' # new folder added
