@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBox
     QWidget, QLabel, QComboBox, QCalendarWidget
 
 from utils.helper_functions import General
-
+from dependencies import FILEDIR, ROOTDIR
 
 class CheckForGeneralData(QDialog):
     """GUI which provides a mean to enter all the general data of a patient (Name, Surname, etc.).
@@ -136,7 +136,7 @@ class CheckForGeneralData(QDialog):
         lay10.addWidget(self.lineEditDominance)
         lay10.addStretch()
 
-        self.subj_side = QLabel('IPG:\t\t\t')
+        self.subj_side = QLabel('IPG serial number:\t\t\t')
         self.lineEditIPG = QLineEdit()
 
         self.lineEditIPG.setFixedWidth(textfield_width)
@@ -196,20 +196,22 @@ class CheckForGeneralData(QDialog):
     def onClickedSaveGeneralData(self):
         """when button is pressed, data is added to ./data/general_data.csv """
 
-        filename_to_use = os.path.join(os.getcwd(), 'data', 'general_data.csv')
-        df = General.import_dataframe(filename_to_use)
+        filename2load = os.path.join(FILEDIR, 'general_data.csv')
+        df = General.import_dataframe(filename2load, separator_csv=',')
+        if df.shape[1] == 1: # avoids problems with comma-separated vs. semicolon-separated csv-files
+            df = General.import_dataframe(filename2load, separator_csv=';')
         entered_data = [self.lineEditSurname.text(),
                         self.lineEditName.text(),
                         self.lineEditBirthdate.text(),
                         self.lineEditPID.text(),
                         self.lineEditID.text(),
-                        df.iloc[len(df)-1].Curr_no + 1,
+                        len(df.index),
                         str(self.lineEditGender.currentText()),
                         str(self.lineEditDiagnosis.currentText()),
                         str(self.lineEditDominance.currentText()),
                         self.lineEditIPG.text()]
-        df.loc[df.index.max()+1] = entered_data
-        df.to_csv(filename_to_use, index=False, sep=';')
+        df.loc[len(df)] = entered_data
+        df.to_csv(filename2load, index=False, sep=';')
         self.close()
         return
 
