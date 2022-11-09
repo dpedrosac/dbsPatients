@@ -69,8 +69,11 @@ class CheckPID(QDialog):
             return
 
         if self.lineEditPID.text():
-            filename = 'general_data.csv'  # 'General.csv'
-            df = General.import_dataframe(filename)
+            filename2load = 'general_data.csv'
+            df = General.import_dataframe(filename2load, separator_csv=',')
+            if df.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
+                df = General.import_dataframe(filename2load, separator_csv=';')
+
             PID2lookfor = self.lineEditPID.text().lstrip('0')  # string that is searched for in metadata file
             idx_PID = df.index[df['PID_ORBIS'] == int(PID2lookfor)].to_list()
 
