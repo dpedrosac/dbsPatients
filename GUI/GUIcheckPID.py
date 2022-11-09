@@ -61,8 +61,7 @@ class CheckPID(QDialog):
     # In the next lines, actions are defined when Buttons are pressed
     @QtCore.pyqtSlot()
     def onClickedCheckPID(self):
-        """when button is pressed, a series of checks are performed in order to retrieve data/to set the following
-        GUI """
+        """when button pressed, a series of checks are performed to retrieve data/to set the following GUI """
 
         if not self.lineEditPID.text():
             Output.msg_box(text='Missing input for the PID, please enter a number', title='Missing input')
@@ -82,14 +81,11 @@ class CheckPID(QDialog):
             self.EnterNewPID.show()
             self.hide()
         elif len(idx_PID) > 1:
-            Output.msg_box(text='Too many entries, please double check file: {}'.format(filename),
+            Output.msg_box(text='Too many entries for PID, please double check file manually: {}'.format(filename2load),
                            title='Too many PID entries')
             return
         else:
-            # writes data to temporary file, so that it may be used later
-            """when button is pressed, data is added to temporary file """
-
-            General.write_csv_temp(df, idx_PID)
+            General.write_csv_temp(df, idx_PID) # creates a new temporary file called current_subj.csv in ./temp
             self.hide()
             self.GuiMain.show()
 

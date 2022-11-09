@@ -1,7 +1,5 @@
-import os
 import sys
 
-import pandas as pds
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, \
     QWidget, QButtonGroup, QHBoxLayout, QGroupBox
@@ -14,8 +12,7 @@ from dependencies import ROOTDIR
 
 
 class ChooseGUI(QDialog):
-    """This GUI is responsible to open further GUI'S:
-    1. Preoperative 2. Intraoperative 3. Postoperative"""
+    """GUI responsible to offer further GUI's: 1. Preoperative 2. Intraoperative 3. Postoperative"""
 
     def __init__(self, parent=None):
         """Initialize GUImain, a window in which all other "sub-GUIs" may be called from."""
@@ -62,6 +59,7 @@ class ChooseGUI(QDialog):
     # ====================    In the next lines, actions are defined when Buttons are pressed      ====================
     @QtCore.pyqtSlot()
     def on_click(self):
+        """select the further steps/GUI to open"""
         if self.button_openGUI_Preoperative.isChecked():  # selects three different options available
             dialog = PreoperativeDialog(parent=self)
         elif self.button_openGUI_Intraoperative.isChecked():
