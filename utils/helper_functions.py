@@ -113,6 +113,20 @@ class Content:
     @staticmethod
     def list_of_data(condition):
         """ defines a list of columns for the csv files in the data folder"""
+
+        list_preop = [
+
+        ]
+
+        list_intraop = [
+
+        ]
+
+        list_postop = [
+
+        ]
+
+
         complete_list = {
             "preoperative": {},
             
