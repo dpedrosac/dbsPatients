@@ -63,7 +63,7 @@ class General:
 
         file2read = os.path.join('{}.csv'.format(flag))
         try:
-            data_all = General.import_dataframe(file2read, separator_csv=',')
+            data_all = General.import_dataframe(file2read, separator_csv=',') # change
             if data_all.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
                 data_all = General.import_dataframe(file2read, separator_csv=';')
             pid2lookfor = str(pid2lookfor).lstrip('0')  # string that is searched for in metadata file
@@ -114,7 +114,18 @@ class Content:
     def list_of_data(condition):
         """ defines a list of columns for the csv files in the data folder"""
 
-        list_preop = [
+        list_preop = ["ID","PID","Gender","Diagnosis_preop","First_Diagnosed_preop","Admission_preop","Dismissal_preop",
+                      "Report_preop","Report_Preop_preop","UPDRS_On_preop","UPDRS_Off_preop","Video_preop",
+                      "Video_File_preop","MRI_preop","fpcit_spect_preop","NMSQ_preop","MoCa_preop","DemTect_preop",
+                      "MMST_preop","PDQ8_preop","BDI2_preop","PDQ39_preop","Outpat_Contact_preop","nch_preop",
+                      "Briefing_preop","Briefing_Doctor_preop","DBS_Conference_preop","Decision_DBS_preop","LEDD_preop",
+                      "Levodopa/Carbidopa_preop","Levodopa/Carbidopa_CR_preop","Entacapone_preop","Tolcapone_preop",
+                      "Pramipexole_preop","Ropinirole_preop","Rotigotine_preop","Selegiline_preop","_oral_preop",
+                      "Selegiline.1_preop","_sublingual_preop","Rasagiline_preop","Amantadine_preop","Apomorphine_preop",
+                      "Piribedil_preop","Safinamid_preop","Opicapone_preop","Other_preop","UPDRSII_preop","H&Y_preop",
+                      "HRUQ_preop","EQ5D_preop","S&E_preop","icVRCS_preop","inexVRCS_preop","Notes_preop",
+                      "Unnamed:_55_preop","Unnamed:_56_preop","Unnamed:_57_preop","Unnamed:_58_preop"
+
 
         ]
 
@@ -122,7 +133,17 @@ class Content:
 
         ]
 
-        list_postop = [
+        list_postop = ["ID","PID","Gender","Diagnosis_postop","First_Diagnosed_postop","Admission_postop","Dismissal_postop",
+                      "Report_postop","Report_postop_postop","UPDRS_On_postop","UPDRS_Off_postop","Video_postop",
+                      "Video_File_postop","MRI_postop","fpcit_spect_postop","NMSQ_postop","MoCa_postop","DemTect_postop",
+                      "MMST_postop","PDQ8_postop","BDI2_postop","PDQ39_postop","Outpat_Contact_postop","nch_postop",
+                      "Briefing_postop","Briefing_Doctor_postop","DBS_Conference_postop","Decision_DBS_postop","LEDD_postop",
+                      "Levodopa/Carbidopa_postop","Levodopa/Carbidopa_CR_postop","Entacapone_postop","Tolcapone_postop",
+                      "Pramipexole_postop","Ropinirole_postop","Rotigotine_postop","Selegiline_postop","_oral_postop",
+                      "Selegiline.1_postop","_sublingual_postop","Rasagiline_postop","Amantadine_postop","Apomorphine_postop",
+                      "Piribedil_postop","Safinamid_postop","Opicapone_postop","Other_postop","UPDRSII_postop","H&Y_postop",
+                      "HRUQ_postop","EQ5D_postop","S&E_postop","icVRCS_postop","inexVRCS_postop","Notes_postop",
+                      "Unnamed:_55_postop","Unnamed:_56_postop","Unnamed:_57_postop","Unnamed:_58_postop"
 
         ]
 
