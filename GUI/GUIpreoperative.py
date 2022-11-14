@@ -2,10 +2,10 @@
 import sys
 
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox,  QSpacerItem, QSizePolicy, \
-    QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QListWidget, QCheckBox
+from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
+    QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QCheckBox
 from GUI.GUImedication import MedicationDialog
-from utils.helper_functions import General
+from utils.helper_functions import General, Content
 
 
 class PreoperativeDialog(QDialog):
@@ -87,26 +87,26 @@ class PreoperativeDialog(QDialog):
         layout_general.addWidget(self.optionbox2, 1, 0)
 
         # TODO: Check Boxes should be aligned in the middle to match the text!
-        self.ReportNeurCheck = QCheckBox()
-        self.ReportNeurLabel = QLabel('Report')
-        self.ReportNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.AwakePatientCheck = QCheckBox()
-        self.AwakePatientLabel = QLabel('Decision for lead placement')
-        self.AwakePatientLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.ReportNChCheck = QCheckBox()
-        self.ReportNChLabel = QLabel('Consent VERCISE DBS')
-        self.ReportNChLabel.setAlignment(QtCore.Qt.AlignLeft)
+        self.VideoFile = QCheckBox()
+        self.VideoFileLabel = QLabel('Report')
+        self.VideoFileLabel.setAlignment(QtCore.Qt.AlignLeft)
+        self.MRIpreop = QCheckBox()
+        self.MRIpreopLabel = QLabel('Decision for lead placement')
+        self.MRIpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
+        self.FPCITpreop = QCheckBox()
+        self.FPCITpreopLabel = QLabel('Consent VERCISE DBS')
+        self.FPCITpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
         self.ProtocolNeurCheck = QCheckBox()
         self.ProtocolNeurLabel = QLabel('In-/Exclusion criteria\n VERCISE-DBS')
         self.ProtocolNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
 
         box2line1 = QHBoxLayout()
-        box2line1.addWidget(self.ReportNeurCheck)
-        box2line1.addWidget(self.ReportNeurLabel)
-        box2line1.addWidget(self.AwakePatientCheck)
-        box2line1.addWidget(self.AwakePatientLabel)
-        box2line1.addWidget(self.ReportNChCheck)
-        box2line1.addWidget(self.ReportNChLabel)
+        box2line1.addWidget(self.VideoFile)
+        box2line1.addWidget(self.VideoFileLabel)
+        box2line1.addWidget(self.MRIpreop)
+        box2line1.addWidget(self.MRIpreopLabel)
+        box2line1.addWidget(self.FPCITpreop)
+        box2line1.addWidget(self.FPCITpreopLabel)
         box2line1.addWidget(self.ProtocolNeurCheck)
         box2line1.addWidget(self.ProtocolNeurLabel)
         box2line1.addStretch()
@@ -142,7 +142,7 @@ class PreoperativeDialog(QDialog):
                     'MMST': self.mmst,
                     'BDI-II': self.bdi2,
                     'NMSQ': self.nmsq},
-                    {'UPDRS III OFF': self.updrsOFF,
+                   {'UPDRS III OFF': self.updrsOFF,
                     'H&Y': self.hy,
                     'EQ5D': self.eq5d,
                     'DemTect': self.demtect,
@@ -167,24 +167,23 @@ class PreoperativeDialog(QDialog):
         self.optionbox4Content = QVBoxLayout(self.optionbox4)
         layout_general.addWidget(self.optionbox4, 3, 0)
 
-        self.ReportNeurCheck = QCheckBox()
-        self.ReportNeurLabel = QLabel('Video')
-        self.ReportNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.AwakePatientCheck = QCheckBox()
-        self.AwakePatientLabel = QLabel('MRI')
-        self.AwakePatientLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.ReportNChCheck = QCheckBox()
-        self.ReportNChLabel = QLabel('FP-CIT SPECT')
-        self.ReportNChLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.ProtocolNeurCheck = QCheckBox()
+        self.VideoFile = QCheckBox()
+        self.VideoFileLabel = QLabel('Video')
+        self.VideoFileLabel.setAlignment(QtCore.Qt.AlignLeft)
+        self.MRIpreop = QCheckBox()
+        self.MRIpreopLabel = QLabel('MRI')
+        self.MRIpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
+        self.FPCITpreop = QCheckBox()
+        self.FPCITpreopLabel = QLabel('FP-CIT SPECT')
+        self.FPCITpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
 
         box4line1 = QHBoxLayout()
-        box4line1.addWidget(self.ReportNeurCheck)
-        box4line1.addWidget(self.ReportNeurLabel)
-        box4line1.addWidget(self.AwakePatientCheck)
-        box4line1.addWidget(self.AwakePatientLabel)
-        box4line1.addWidget(self.ReportNChCheck)
-        box4line1.addWidget(self.ReportNChLabel)
+        box4line1.addWidget(self.VideoFile)
+        box4line1.addWidget(self.VideoFileLabel)
+        box4line1.addWidget(self.MRIpreop)
+        box4line1.addWidget(self.MRIpreopLabel)
+        box4line1.addWidget(self.FPCITpreop)
+        box4line1.addWidget(self.FPCITpreopLabel)
         box4line1.addStretch(1)
 
         self.optionbox4Content.addLayout(box4line1)
@@ -201,9 +200,30 @@ class PreoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
+        self.updatetext()
+
         # ====================   Actions when buttons are pressed      ====================
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
+
+    def updatetext(self):
+        """adds information extracted from database already provided"""
+
+        # Todo: Marco, here further input is required so that every chunk of data is retrieved and may be saved later.
+        #  Be careful by saving data, as everything may be deleted if you start pressing save before data is completely
+        #  loaded.
+        df_subj = Content.extract_saved_data(self.date)
+
+        # Edit LineEdits with content
+        self.hy.setText(str(df_subj["H&Y"][0]))
+        self.updrsON.setText(str(df_subj["UPDRS On"][0]))
+        self.updrsOFF.setText(str(df_subj["UPDRS Off"][0]))
+
+        # Edit CheckBoxes with content
+        if df_subj["Video"][0] != 0:
+            self.VideoFile.setChecked(True)
+
+        return
 
     # ====================   Defines actions when buttons are pressed      ====================
     @QtCore.pyqtSlot()

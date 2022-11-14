@@ -63,7 +63,7 @@ class General:
 
         file2read = os.path.join('{}.csv'.format(flag))
         try:
-            data_all = General.import_dataframe(file2read, separator_csv=',') # change
+            data_all = General.import_dataframe(file2read, separator_csv=',')
             if data_all.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
                 data_all = General.import_dataframe(file2read, separator_csv=';')
             pid2lookfor = str(pid2lookfor).lstrip('0')  # string that is searched for in metadata file
@@ -111,12 +111,26 @@ class Content:
         pass
 
     @staticmethod
-    def list_of_data(condition):
-        """ defines a list of columns for the csv files in the data folder"""
+    def extract_saved_data(condition):
+        """ defines a list of columns for the csv files in the data folder; if id not found,
+        dictionary remains empty"""
 
-        list_preop = ["ID","PID","Gender","Diagnosis_preop","First_Diagnosed_preop","Admission_preop","Dismissal_preop",
-                      "Report_preop","Report_Preop_preop","UPDRS_On_preop","UPDRS_Off_preop","Video_preop",
-                      "Video_File_preop","MRI_preop","fpcit_spect_preop","NMSQ_preop","MoCa_preop","DemTect_preop",
+        subj_id = General.read_current_subj().id[0] # reads data from curent_subj (saved in ./tmp)
+        df = General.import_dataframe('{}.csv'.format(condition), separator_csv=',')
+        if df.shape[1] == 1:
+            df = General.import_dataframe('{}.csv'.format(condition), separator_csv=';')
+        df_subj = df.iloc[df.index[df['ID'] == subj_id].tolist()].to_dict('list')
+
+        # TODO Marco, please tidy up by using max. 5 items per line, whitespace after comma and avoiding slashs
+        #  and backslashs (see first two lines); also the columns should be identical to what is provided in the folder
+        #  ./install. An important concept here is that we need an overall mechanism to ensure,
+        #  an empty file is created/copied (from ./install) when the code is run for the first time. Therefore, data
+        #  MUST be changed in the ./install folder as well, whenever something is manipulated (see also line 66)
+
+        list_preop = ["ID", "PID", "Gender", "Diagnosis_preop", "First_Diagnosed_preop",
+                      "Admission_preop", "Dismissal_preop", "Report_preop", "Report_Preop_preop", "UPDRS_On_preop",
+                      "UPDRS_Off_preop","Video_preop", "Video_File_preop","MRI_preop","fpcit_spect_preop","NMSQ_preop",
+                      "MoCa_preop","DemTect_preop",
                       "MMST_preop","PDQ8_preop","BDI2_preop","PDQ39_preop","Outpat_Contact_preop","nch_preop",
                       "Briefing_preop","Briefing_Doctor_preop","DBS_Conference_preop","Decision_DBS_preop","LEDD_preop",
                       "Levodopa/Carbidopa_preop","Levodopa/Carbidopa_CR_preop","Entacapone_preop","Tolcapone_preop",
@@ -125,9 +139,7 @@ class Content:
                       "Piribedil_preop","Safinamid_preop","Opicapone_preop","Other_preop","UPDRSII_preop","H&Y_preop",
                       "HRUQ_preop","EQ5D_preop","S&E_preop","icVRCS_preop","inexVRCS_preop","Notes_preop",
                       "Unnamed:_55_preop","Unnamed:_56_preop","Unnamed:_57_preop","Unnamed:_58_preop"
-
-
-        ]
+                     ]
 
         list_intraop = ["ID","Gender","pat_contact_intraop","Diagnosis","sugery_no_intraop","Admission_intraop",
                         "Dismissal_intraop","admission_Nch_intraop","dismissal_NCh_intraop","report_file_NCh_intraop",
@@ -146,9 +158,7 @@ class Content:
                         "Perc13_intraop","Perc14_intraop","Perc15_intraop","AmplL_intraop","AmplR_intraop","PWL_intraop",
                         "PWR_intraop","FreqL_intraop","FreqR_intraop","CTscan_intraop","activation_visit_intraop",
                         "implantation_visit_intraop","incl_qualiPA_intraop","DBS_intraop","Comments_intraop"
-
-
-        ]
+                        ]
 
         list_postop = ["ID","PID","Gender","Diagnosis_postop","First_Diagnosed_postop","Admission_postop","Dismissal_postop",
                       "Report_postop","Report_postop_postop","UPDRS_On_postop","UPDRS_Off_postop","Video_postop",
@@ -162,18 +172,10 @@ class Content:
                       "HRUQ_postop","EQ5D_postop","S&E_postop","icVRCS_postop","inexVRCS_postop","Notes_postop",
                       "Unnamed:_55_postop","Unnamed:_56_postop","Unnamed:_57_postop","Unnamed:_58_postop"
 
-        ]
+                    ]
 
+        return df_subj
 
-        complete_list = {
-            "preoperative": {},
-            
-            "intraoperative": {},
-            
-            "postopertaive": {},
-        }
-
-        return complete_list[condition]
 
 class Output:
     def __init__(self, _debug=False):

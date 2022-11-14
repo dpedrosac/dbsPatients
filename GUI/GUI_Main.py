@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, \
 
 from utils.helper_functions import General
 from GUI.GUI_Intraoperative import IntraoperativeDialog
-from GUI.GUI_Postoperative import PostoperativeDialog
+from GUI.GUIpostoperative import PostoperativeDialog
 from GUI.GUIpreoperative import PreoperativeDialog
 from dependencies import ROOTDIR
 
