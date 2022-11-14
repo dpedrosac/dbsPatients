@@ -129,7 +129,24 @@ class Content:
 
         ]
 
-        list_intraop = [
+        list_intraop = ["ID","Gender","pat_contact_intraop","Diagnosis","sugery_no_intraop","Admission_intraop",
+                        "Dismissal_intraop","admission_Nch_intraop","dismissal_NCh_intraop","report_file_NCh_intraop",
+                        "report_file_NR_intraop","awake_intraop","surgery_date_intraop","target_intraop",
+                        "electrode_intraop","IPG_intraop","no_traj_intraop","neur_test_intraop","targetL1_intraop",
+                        "targetL2_intraop","targetL3_intraop","targetL4_intraop","targetL5_intraop","targetL6_intraop",
+                        "targetL7_intraop","targetL8_intraop","targetR1_intraop","targetR2_intraop","targetR3_intraop",
+                        "targetR4_intraop","targetR5_intraop","targetR6_intraop","targetR7_intraop","targetR8_intraop",
+                        "protocol_intraop","protocol_file_intraop","op_duration_intraop","LEDD_intraop",
+                        "Levodopa/Carbidopa_intraop","Levodopa/Carbidopa_CR_intraop","Entacapone_intraop",
+                        "Tolcapone_intraop","Pramipexole_intraop","Ropinirole_intraop","Rotigotine_intraop","Selegiline,_oral_intraop",
+                        "Selegiline,_sublingual_intraop","Rasagiline_intraop","Amantadine_intraop","Apomorphine_intraop",
+                        "Piribedil_intraop","Safinamid_intraop","Opicapone_intraop","Other_intraop","Perc0_intraop",
+                        "Perc1_intraop","Perc2_intraop","Perc3_intraop","Perc4_intraop","Perc5_intraop","Perc6_intraop",
+                        "Perc7_intraop","Perc8_intraop","Perc9_intraop","Perc10_intraop","Perc11_intraop","Perc12_intraop",
+                        "Perc13_intraop","Perc14_intraop","Perc15_intraop","AmplL_intraop","AmplR_intraop","PWL_intraop",
+                        "PWR_intraop","FreqL_intraop","FreqR_intraop","CTscan_intraop","activation_visit_intraop",
+                        "implantation_visit_intraop","incl_qualiPA_intraop","DBS_intraop","Comments_intraop"
+
 
         ]
 
