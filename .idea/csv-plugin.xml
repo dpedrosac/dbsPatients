@@ -10,13 +10,6 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="/data/general_data.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value=";" />
-            </Attribute>
-          </value>
-        </entry>
         <entry key="/data/preoperative.csv">
           <value>
             <Attribute>
@@ -46,6 +39,13 @@
           </value>
         </entry>
         <entry key="\.install\preoperative_template.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\Postoperative.csv">
           <value>
             <Attribute>
               <option name="separator" value=";" />
