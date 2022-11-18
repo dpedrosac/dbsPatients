@@ -45,6 +45,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\GUI\medication.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\Postoperative.csv">
           <value>
             <Attribute>

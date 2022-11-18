@@ -105,8 +105,22 @@ class MedicationDialog(QDialog):
     # In the next lines, actions are defined when Buttons are pressed
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):
+
         """returns to calling GUI saving data whenever the (only available) button is pressed """
+
+
+        #with open("medication.csv","w", newline="") as f:
+            #writer = csv.writer(f, delimiter=",")
+            #writer.writerow(['Levodopa/Carbidopa{}', 'Levodopa/Carbidopa CR{}', 'Entacapone {}', 'Tolcapone {}',
+                            #'Pramipexole {}', 'Ropinirole{}', 'Rotigotine{}', 'Selegiline oral{}', 'Other',
+                            #'Selegiline sublingual{}', 'Rasagiline{}', 'Amantadine{}', 'Apomorphine{}', 'Piribedil{}',
+                            #'Safinamid{}', 'Opicapone{}'])
+
+
         # TODO: add a way to save data to csv files according to the flag (self.date) used
+        self.date("medication")
+        self.saveFileDialog()
+        print('Done!')
         self.close()
 
 
