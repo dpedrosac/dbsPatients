@@ -138,7 +138,6 @@ class Content:
                       "Rasagiline_preop", "Amantadine_preop", "Apomorphine_preop", "Piribedil_preop", "Safinamid_preop",
                       "Opicapone_preop", "Other_preop", "UPDRSII_preop", "H&Y_preop", "HRUQ_preop",
                       "EQ5D_preop", "S&E_preop", "icVRCS_preop", "inexVRCS_preop", "Notes_preop",
-                      "Unnamed:_55_preop", "Unnamed:_56_preop", "Unnamed:_57_preop", "Unnamed:_58_preop"
                      ]
 
         list_intraop = ["ID", "Gender", "pat_contact_intraop", "Diagnosis", "sugery_no_intraop",
@@ -171,7 +170,6 @@ class Content:
                        "Rasagiline_postop", "Amantadine_postop", "Apomorphine_postop", "Piribedil_postop", "Safinamid_postop",
                        "Opicapone_postop", "Other_postop", "UPDRSII_postop", "H&Y_postop", "HRUQ_postop",
                        "EQ5D_postop", "S&E_postop", "icVRCS_postop", "inexVRCS_postop", "Notes_postop",
-                       "Unnamed:_55_postop", "Unnamed:_56_postop", "Unnamed:_57_postop", "Unnamed:_58_postop"
                     ]
 
         return df_subj
