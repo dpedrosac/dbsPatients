@@ -121,12 +121,6 @@ class Content:
             df = General.import_dataframe('{}.csv'.format(condition), separator_csv=';')
         df_subj = df.iloc[df.index[df['ID'] == subj_id].tolist()].to_dict('list')
 
-        # TODO Marco, please tidy up by using max. 5 items per line, whitespace after comma and avoiding slashs
-        #  and backslashs (see first two lines); also the columns should be identical to what is provided in the folder
-        #  ./install. An important concept here is that we need an overall mechanism to ensure,
-        #  an empty file is created/copied (from ./install) when the code is run for the first time. Therefore, data
-        #  MUST be changed in the ./install folder as well, whenever something is manipulated (see also line 66)
-
         list_preop = ["ID", "PID", "Gender", "Diagnosis_preop", "First_Diagnosed_preop",
                       "Admission_preop", "Dismissal_preop", "Report_preop", "Report_Preop_preop", "UPDRS_On_preop",
                       "UPDRS_Off_preop", "Video_preop", "Video_File_preop", "MRI_preop", "fpcit_spect_preop",

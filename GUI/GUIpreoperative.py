@@ -216,15 +216,24 @@ class PreoperativeDialog(QDialog):
         df_subj = Content.extract_saved_data(self.date)
 
         # Edit LineEdits with content
-        # Is it required here as well to update the Object-label to fit the csv file? e.g. UPDRS_On_preop?
         self.hy.setText(str(df_subj["H&Y"][0]))
         self.updrsON.setText(str(df_subj["UPDRS On"][0]))
         self.updrsOFF.setText(str(df_subj["UPDRS Off"][0]))
-        self.updrsII.setText(str(df_subj["UPDRS II"][0]))
+
+        # TODO: Hi Marco. I think at this point it makes sense to get familiar with the debugging mode in Pycharm. I'm
+        #  sure you know, you can either run the code with "run" or with debug. In the latter case, it offers you to
+        #  stop the code deliberately - especially when an error is thrown.  At the next line, there is an error, so
+        #  you can see what happens: There is no key "UPDRS II" but one called UPDRSII which makes a difference. It is
+        #  still a problem, at least in my data, as no reasonable value but something called ' Venlafaxin 150mg' exists
+        #  which is not overly sensible. If you haven't done already, please make sure that the columns in
+        #  /.install/preoperative.csv are identical with /data/preoperative.csv. I have spotted errors in the UPDRSII
+        #  and BDI2, although they are called differntly in the .install folder, so it should be consistent.
+
+        self.updrsII.setText(str(df_subj["UPDRSII"][0]))
         self.hruq.setText(str(df_subj["HRUQ"][0]))
         self.moca.setText(str(df_subj["MoCa"][0]))
         self.mmst.setText(str(df_subj["MMST"][0]))
-        self.bdi2.setText(str(df_subj["BDI-II"][0]))
+        self.bdi2.setText(str(df_subj["BDI2"][0]))
         self.nmsq.setText(str(df_subj["NMSQ"][0]))
         self.eq5d.setText(str(df_subj["EQ5D"][0]))
         self.demtect.setText(str(df_subj["DemTect"][0]))
@@ -232,20 +241,19 @@ class PreoperativeDialog(QDialog):
         self.pdq39.setText(str(df_subj["PDQ39"][0]))
         self.se.setText(str(df_subj["S&E"][0]))
 
+        # TODO Why don't you give it a try with rest of TExtBoxes after getting all data consistent
 
         # Edit CheckBoxes with content
         # I hope this makes sense
-        if df_subj["Video_preop"][0] != 0:
+        if df_subj["Video"][0] != 0: # TODO: called Video in my file, so could be wrong! should exchange data !!
             self.VideoFile.setChecked(True)
-        elif df_subj["MRI_preop"][0] != 0:
+        elif df_subj["MRI"][0] != 0:
             self.MRIpreop.setChecked(True)
-        elif df_subj["FPCIT_preop"][0] != 0:
+        elif df_subj["FPCIT"][0] != 0:
             self.FPCITpreop.setChecked(True)
-        #could only find a protocol column in intraop?
+        #could only find a protocol column in intraop? # TODO: just remove it
         #elif df_subj["protocol_preop"][0] != 0:
             #self.ProtocolNeurCheck.setChecked(True)
-
-
 
         return
 
