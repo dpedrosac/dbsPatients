@@ -212,16 +212,40 @@ class PreoperativeDialog(QDialog):
         # Todo: Marco, here further input is required so that every chunk of data is retrieved and may be saved later.
         #  Be careful by saving data, as everything may be deleted if you start pressing save before data is completely
         #  loaded.
+
         df_subj = Content.extract_saved_data(self.date)
 
         # Edit LineEdits with content
+        # Is it required here as well to update the Object-label to fit the csv file? e.g. UPDRS_On_preop?
         self.hy.setText(str(df_subj["H&Y"][0]))
         self.updrsON.setText(str(df_subj["UPDRS On"][0]))
         self.updrsOFF.setText(str(df_subj["UPDRS Off"][0]))
+        self.updrsII.setText(str(df_subj["UPDRS II"][0]))
+        self.hruq.setText(str(df_subj["HRUQ"][0]))
+        self.moca.setText(str(df_subj["MoCa"][0]))
+        self.mmst.setText(str(df_subj["MMST"][0]))
+        self.bdi2.setText(str(df_subj["BDI-II"][0]))
+        self.nmsq.setText(str(df_subj["NMSQ"][0]))
+        self.eq5d.setText(str(df_subj["EQ5D"][0]))
+        self.demtect.setText(str(df_subj["DemTect"][0]))
+        self.pdq8.setText(str(df_subj["PDQ8"][0]))
+        self.pdq39.setText(str(df_subj["PDQ39"][0]))
+        self.se.setText(str(df_subj["S&E"][0]))
+
 
         # Edit CheckBoxes with content
-        if df_subj["Video"][0] != 0:
+        # I hope this makes sense
+        if df_subj["Video_preop"][0] != 0:
             self.VideoFile.setChecked(True)
+        elif df_subj["MRI_preop"][0] != 0:
+            self.MRIpreop.setChecked(True)
+        elif df_subj["FPCIT_preop"][0] != 0:
+            self.FPCITpreop.setChecked(True)
+        #could only find a protocol column in intraop?
+        #elif df_subj["protocol_preop"][0] != 0:
+            #self.ProtocolNeurCheck.setChecked(True)
+
+
 
         return
 
