@@ -216,9 +216,9 @@ class PreoperativeDialog(QDialog):
         df_subj = Content.extract_saved_data(self.date)
 
         # Edit LineEdits with content
-        self.hy.setText(str(df_subj["H&Y"][0]))
-        self.updrsON.setText(str(df_subj["UPDRS On"][0]))
-        self.updrsOFF.setText(str(df_subj["UPDRS Off"][0]))
+        self.hy.setText(str(df_subj["H&Y_preop"][0]))
+        self.updrsON.setText(str(df_subj["UPDRS_On_preop"][0]))
+        self.updrsOFF.setText(str(df_subj["UPDRS_Off_preop"][0]))
 
         # TODO: Hi Marco. I think at this point it makes sense to get familiar with the debugging mode in Pycharm. I'm
         #  sure you know, you can either run the code with "run" or with debug. In the latter case, it offers you to
@@ -229,31 +229,28 @@ class PreoperativeDialog(QDialog):
         #  /.install/preoperative.csv are identical with /data/preoperative.csv. I have spotted errors in the UPDRSII
         #  and BDI2, although they are called differntly in the .install folder, so it should be consistent.
 
-        self.updrsII.setText(str(df_subj["UPDRSII"][0]))
-        self.hruq.setText(str(df_subj["HRUQ"][0]))
-        self.moca.setText(str(df_subj["MoCa"][0]))
-        self.mmst.setText(str(df_subj["MMST"][0]))
-        self.bdi2.setText(str(df_subj["BDI2"][0]))
-        self.nmsq.setText(str(df_subj["NMSQ"][0]))
-        self.eq5d.setText(str(df_subj["EQ5D"][0]))
-        self.demtect.setText(str(df_subj["DemTect"][0]))
-        self.pdq8.setText(str(df_subj["PDQ8"][0]))
-        self.pdq39.setText(str(df_subj["PDQ39"][0]))
-        self.se.setText(str(df_subj["S&E"][0]))
+        self.updrsII.setText(str(df_subj["UPDRSII_preop"][0]))
+        self.hruq.setText(str(df_subj["HRUQ_preop"][0]))
+        self.moca.setText(str(df_subj["MoCa_preop"][0]))
+        self.mmst.setText(str(df_subj["MMST_preop"][0]))
+        self.bdi2.setText(str(df_subj["BDI2_preop"][0]))
+        self.nmsq.setText(str(df_subj["NMSQ_preop"][0]))
+        self.eq5d.setText(str(df_subj["EQ5D_preop"][0]))
+        self.demtect.setText(str(df_subj["DemTect_preop"][0]))
+        self.pdq8.setText(str(df_subj["PDQ8_preop"][0]))
+        self.pdq39.setText(str(df_subj["PDQ39_preop"][0]))
+        self.se.setText(str(df_subj["S&E_preop"][0]))
 
         # TODO Why don't you give it a try with rest of TExtBoxes after getting all data consistent
 
         # Edit CheckBoxes with content
         # I hope this makes sense
-        if df_subj["Video"][0] != 0: # TODO: called Video in my file, so could be wrong! should exchange data !!
+        if df_subj["Video_preop"][0] != 0: # TODO: called Video in my file, so could be wrong! should exchange data !!
             self.VideoFile.setChecked(True)
-        elif df_subj["MRI"][0] != 0:
+        elif df_subj["MRI_preop"][0] != 0:
             self.MRIpreop.setChecked(True)
-        elif df_subj["FPCIT"][0] != 0:
+        elif df_subj["FPCIT_preop"][0] != 0:
             self.FPCITpreop.setChecked(True)
-        #could only find a protocol column in intraop? # TODO: just remove it
-        #elif df_subj["protocol_preop"][0] != 0:
-            #self.ProtocolNeurCheck.setChecked(True)
 
         return
 
