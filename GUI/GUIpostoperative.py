@@ -350,6 +350,8 @@ class PostoperativeDialog(QDialog):
 
         self.optionbox6.setLayout(self.optionbox6Content)
 
+        #todo: wie bei preoperative bereits vorhandene Daten einlesen lassen?
+
         # ====================   Adds buttons at the bottom of the GUI      ====================
         self.ButtonEnterMedication = QPushButton('Open GUI \nMedication')
         self.button_save = QPushButton('Save and \nReturn')

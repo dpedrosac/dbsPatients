@@ -18,7 +18,7 @@ class PreoperativeDialog(QDialog):
         self.date = 'preoperative'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
         # data_temp = General.get_data_subject(self.date, subj_details.pid[0])
-        General.synchronize_data_with_general(self.date, subj_details.id[0], messagebox=False)
+        General.synchronize_data_with_general(self.date, subj_details.id[0], messagebox=False) #todo: debugging hier erster error
 
         # ====================    Create General Layout      ====================
         self.setWindowTitle('Please enter preoperative data (PID: {})'.format(str(int(subj_details.pid))))
@@ -100,6 +100,7 @@ class PreoperativeDialog(QDialog):
         self.ProtocolNeurLabel = QLabel('In-/Exclusion criteria VERCISE-DBS\t\t')
         self.ProtocolNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
 
+
         box2line1 = QHBoxLayout()
         box2line1.addWidget(self.VideoFile)
         box2line1.addWidget(self.VideoFileLabel)
@@ -120,6 +121,36 @@ class PreoperativeDialog(QDialog):
         layout_general.addWidget(self.optionbox3, 2, 0)
 
         # TODO: the next part(s) should be moved to a helper function per condition to promote readability
+
+        # self.updrsON= QLabel('UPDRS III ON')
+        # self.LineEditupdrsON = QLineEdit()
+        # self.updrsII= QLabel('UPDRS II')
+        # self.LineEditupdrsII = QLineEdit()
+        # self.hruq= QLabel('HRUQ')
+        # self.LineEdithruq = QLineEdit()
+        # self.moca= QLabel('MoCa')
+        # self.LineEditmoca = QLineEdit()
+        # self.mmst= QLabel('MMST')
+        # self.LineEditmmst = QLineEdit()
+        # self.bdi2= QLabel('BDI-II')
+        # self.LineEditbdi2 = QLineEdit()
+        # self.nmsq= QLabel('NMSQ')
+        # self.LineEditnmsq = QLineEdit()
+        # self.updrsOFF= QLabel('UPDRS III OFF')
+        # self.LineEditupdrsOFF = QLineEdit()
+        # self.hy= QLabel('H&Y')
+        # self.LineEdithy = QLineEdit()
+        # self.eq5d= QLabel('EQ5D')
+        # self.LineEditeq5d = QLineEdit()
+        # self.demtect= QLabel('DemTect')
+        # self.LineEditdemtect = QLineEdit()
+        # self.pdq8= QLabel( 'PDQ8')
+        # self.LineEditpdq8 = QLineEdit()
+        # self.pdq39= QLabel('PDQ39')
+        # self.LineEditpdq39 = QLineEdit()
+        # self.se= QLabel('S&E')
+        # self.LineEditse = QLineEdit()
+
         self.updrsON = QLineEdit()
         self.updrsII = QLineEdit()
         self.hruq = QLineEdit()
@@ -136,19 +167,19 @@ class PreoperativeDialog(QDialog):
         self.se = QLineEdit()
 
         content = [{'UPDRS III ON': self.updrsON,
-                    'UPDRS II': self.updrsII,
-                    'HRUQ': self.hruq,
-                    'MoCa': self.moca,
-                    'MMST': self.mmst,
-                    'BDI-II': self.bdi2,
-                    'NMSQ': self.nmsq},
+                   'UPDRS II': self.updrsII,
+                   'HRUQ': self.hruq,
+                   'MoCa': self.moca,
+                   'MMST': self.mmst,
+                   'BDI-II': self.bdi2,
+                   'NMSQ': self.nmsq},
                    {'UPDRS III OFF': self.updrsOFF,
-                    'H&Y': self.hy,
-                    'EQ5D': self.eq5d,
-                    'DemTect': self.demtect,
-                    'PDQ8': self.pdq8,
-                    'PDQ39': self.pdq39,
-                    'S&E': self.se}]
+                   'H&Y': self.hy,
+                   'EQ5D': self.eq5d,
+                   'DemTect': self.demtect,
+                   'PDQ8': self.pdq8,
+                   'PDQ39': self.pdq39,
+                   'S&E': self.se}]
 
         self.GridCoordinatesLeft = QGridLayout()
         for i in range(0, 2):  # rows
@@ -215,11 +246,6 @@ class PreoperativeDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
 
-        # Edit LineEdits with content
-        self.hy.setText(str(df_subj["H&Y_preop"][0]))
-        self.updrsON.setText(str(df_subj["UPDRS_On_preop"][0]))
-        self.updrsOFF.setText(str(df_subj["UPDRS_Off_preop"][0]))
-
         # TODO: Hi Marco. I think at this point it makes sense to get familiar with the debugging mode in Pycharm. I'm
         #  sure you know, you can either run the code with "run" or with debug. In the latter case, it offers you to
         #  stop the code deliberately - especially when an error is thrown.  At the next line, there is an error, so
@@ -228,7 +254,17 @@ class PreoperativeDialog(QDialog):
         #  which is not overly sensible. If you haven't done already, please make sure that the columns in
         #  /.install/preoperative.csv are identical with /data/preoperative.csv. I have spotted errors in the UPDRSII
         #  and BDI2, although they are called differntly in the .install folder, so it should be consistent.
+        # Edit LineEdits with content
 
+        self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0]))
+        self.lineEditAdmNeurIndCheck.setText(str(df_subj['Admission_preop'][0]))
+        self.DismNeurIndCheckLabel.setText(str(df_subj['Dismissal_preop'][0]))
+        self.lineEditOutpatientContact.setText(str(df_subj['Outpat_Contact_preop'][0]))
+        self.lineEditNChContact.setText(str(df_subj['nch_preop'][0]))
+        self.lineEditDBSconferenceDate.setText(str(df_subj['DBS_Conference_preop'][0]))
+        self.hy.setText(str(df_subj["H&Y_preop"][0]))
+        self.updrsON.setText(str(df_subj["UPDRS_On_preop"][0]))
+        self.updrsOFF.setText(str(df_subj["UPDRS_Off_preop"][0]))
         self.updrsII.setText(str(df_subj["UPDRSII_preop"][0]))
         self.hruq.setText(str(df_subj["HRUQ_preop"][0]))
         self.moca.setText(str(df_subj["MoCa_preop"][0]))
@@ -251,6 +287,8 @@ class PreoperativeDialog(QDialog):
             self.MRIpreop.setChecked(True)
         elif df_subj["FPCIT_preop"][0] != 0:
             self.FPCITpreop.setChecked(True)
+
+
 
         return
 
