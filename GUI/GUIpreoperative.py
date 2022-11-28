@@ -88,16 +88,16 @@ class PreoperativeDialog(QDialog):
 
         # TODO: Check Boxes should be aligned in the middle to match the text!
         self.VideoFile = QCheckBox()
-        self.VideoFileLabel = QLabel('Report')
+        self.VideoFileLabel = QLabel('Report\t\t')
         self.VideoFileLabel.setAlignment(QtCore.Qt.AlignLeft)
         self.MRIpreop = QCheckBox()
-        self.MRIpreopLabel = QLabel('Decision for lead placement')
+        self.MRIpreopLabel = QLabel('Decision for lead placement\t\t')
         self.MRIpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
         self.FPCITpreop = QCheckBox()
-        self.FPCITpreopLabel = QLabel('Consent VERCISE DBS')
+        self.FPCITpreopLabel = QLabel('Consent VERCISE DBS\t\t')
         self.FPCITpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
         self.ProtocolNeurCheck = QCheckBox()
-        self.ProtocolNeurLabel = QLabel('In-/Exclusion criteria\n VERCISE-DBS')
+        self.ProtocolNeurLabel = QLabel('In-/Exclusion criteria VERCISE-DBS\t\t')
         self.ProtocolNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
 
         box2line1 = QHBoxLayout()
