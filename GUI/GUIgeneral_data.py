@@ -7,7 +7,8 @@ from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBox
     QWidget, QLabel, QComboBox, QCalendarWidget
 
 from utils.helper_functions import General
-from dependencies import FILEDIR, ROOTDIR
+from dependencies import FILEDIR
+
 
 class CheckForGeneralData(QDialog):
     """GUI which provides a mean to enter all the general data of a patient (Name, Surname, etc.).
@@ -27,7 +28,7 @@ class CheckForGeneralData(QDialog):
 
         # ====================    Create Content for only option box       ====================
         self.optionbox_guistart = QGroupBox('Please enter all data for the new subject:')
-        self.settings_optionsbox1 = QVBoxLayout(self.optionbox_guistart)
+        self.settings_optionbox1 = QVBoxLayout(self.optionbox_guistart)
 
         self.subj_surname = QLabel('Surname:\t\t\t')
         self.lineEditSurname = QLineEdit()
@@ -147,16 +148,16 @@ class CheckForGeneralData(QDialog):
         lay11.addWidget(self.lineEditIPG)
         lay11.addStretch()
 
-        self.settings_optionsbox1.addLayout(lay1)
-        self.settings_optionsbox1.addLayout(lay2)
-        self.settings_optionsbox1.addLayout(lay3)
-        self.settings_optionsbox1.addLayout(lay4)
-        self.settings_optionsbox1.addLayout(lay6)
-        self.settings_optionsbox1.addLayout(lay7)
-        self.settings_optionsbox1.addLayout(lay8)
-        self.settings_optionsbox1.addLayout(lay9)
-        self.settings_optionsbox1.addLayout(lay10)
-        self.settings_optionsbox1.addLayout(lay11)
+        self.settings_optionbox1.addLayout(lay1)
+        self.settings_optionbox1.addLayout(lay2)
+        self.settings_optionbox1.addLayout(lay3)
+        self.settings_optionbox1.addLayout(lay4)
+        self.settings_optionbox1.addLayout(lay6)
+        self.settings_optionbox1.addLayout(lay7)
+        self.settings_optionbox1.addLayout(lay8)
+        self.settings_optionbox1.addLayout(lay9)
+        self.settings_optionbox1.addLayout(lay10)
+        self.settings_optionbox1.addLayout(lay11)
         self.content_box.addWidget(self.optionbox_guistart)
 
         # ====================    Create Content for Buttons at the Bottom      ====================
@@ -198,7 +199,7 @@ class CheckForGeneralData(QDialog):
 
         filename2load = os.path.join(FILEDIR, 'general_data.csv')
         df = General.import_dataframe(filename2load, separator_csv=',')
-        if df.shape[1] == 1: # avoids problems with comma-separated vs. semicolon-separated csv-files
+        if df.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
             df = General.import_dataframe(filename2load, separator_csv=';')
         entered_data = [self.lineEditSurname.text(),
                         self.lineEditName.text(),

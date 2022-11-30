@@ -135,7 +135,7 @@ class PreoperativeDialog(QDialog):
         self.pdq39 = QLineEdit()
         self.se = QLineEdit()
 
-        content = [{'UPDRS III ON': self.updrsON,
+        content = [{'UPDRS III ON': self.updrsON,  # two layers, because grid has also two rows
                     'UPDRS II': self.updrsII,
                     'HRUQ': self.hruq,
                     'MoCa': self.moca,
@@ -209,10 +209,6 @@ class PreoperativeDialog(QDialog):
     def updatetext(self):
         """adds information extracted from database already provided"""
 
-        # Todo: Marco, here further input is required so that every chunk of data is retrieved and may be saved later.
-        #  Be careful by saving data, as everything may be deleted if you start pressing save before data is completely
-        #  loaded.
-
         df_subj = Content.extract_saved_data(self.date)
 
         # Edit LineEdits with content
@@ -251,10 +247,6 @@ class PreoperativeDialog(QDialog):
             self.MRIpreop.setChecked(True)
         elif df_subj["FPCIT"][0] != 0:
             self.FPCITpreop.setChecked(True)
-        #could only find a protocol column in intraop? # TODO: just remove it
-        #elif df_subj["protocol_preop"][0] != 0:
-            #self.ProtocolNeurCheck.setChecked(True)
-
         return
 
     # ====================   Defines actions when buttons are pressed      ====================

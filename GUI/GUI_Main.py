@@ -2,13 +2,12 @@ import sys
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, \
-    QWidget, QButtonGroup, QHBoxLayout, QGroupBox
+    QWidget, QButtonGroup, QGroupBox
 
 from utils.helper_functions import General
 from GUI.GUI_Intraoperative import IntraoperativeDialog
 from GUI.GUIpostoperative import PostoperativeDialog
 from GUI.GUIpreoperative import PreoperativeDialog
-from dependencies import ROOTDIR
 
 
 class ChooseGUI(QDialog):
@@ -24,7 +23,7 @@ class ChooseGUI(QDialog):
         self.layout = QVBoxLayout()  # layout for the central widget
         widget = QWidget(self)
         widget.setLayout(self.layout)
-        groupbox = QGroupBox("Which visit?", checkable=False)
+        groupbox = QGroupBox('Which visit?', checkable=False)
         self.layout.addWidget(groupbox)
 
         self.setWindowTitle('Choose GUI for subj with PID: {}'.format(str(int(subj_details.pid))))
@@ -51,7 +50,6 @@ class ChooseGUI(QDialog):
 
         hbox = QVBoxLayout()
         groupbox.setLayout(hbox)
-        #hbox.addStretch()
         hbox.addWidget(self.button_openGUI_Preoperative)
         hbox.addWidget(self.button_openGUI_Intraoperative)
         hbox.addWidget(self.button_openGUI_Postoperative)

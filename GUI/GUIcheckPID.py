@@ -9,8 +9,8 @@ from GUI.GUI_Main import ChooseGUI
 
 class CheckPID(QDialog):
     """Very first GUI only providing a means to enter a PID (according to the ORBIS system at the
-    Department of Neurology at the University Hospital of Gießen and Marburg. Several options are possible
-    after entering a PID: 1. if existent -> GUI_Start -> Gui_Main, 2. if inexistent enter data in general table"""
+    Department of Neurology at the University Hospital of Gießen and Marburg). Several options are possible
+    after entering a PID: 1. if existent -> GUI_Start -> Gui_Main, 2. if nonexistent enter data in general table"""
 
     def __init__(self, parent=None):
         """Initializer."""
@@ -27,7 +27,7 @@ class CheckPID(QDialog):
 
         # ====================    Create Content for First Option box on Top left      ====================
         self.optionbox_guistart = QGroupBox('Please enter the PID_Orbis')
-        self.settings_optionsbox1 = QVBoxLayout(self.optionbox_guistart)
+        self.settings_optionbox1 = QVBoxLayout(self.optionbox_guistart)
 
         self.subj_PID = QLabel('PID-ORBIS (without zeros):\t\t')
         self.lineEditPID = QLineEdit()
@@ -40,7 +40,7 @@ class CheckPID(QDialog):
         lay1.addWidget(self.lineEditPID)
         lay1.addStretch()
 
-        self.settings_optionsbox1.addLayout(lay1)
+        self.settings_optionbox1.addLayout(lay1)
         self.content_box.addWidget(self.optionbox_guistart)
 
         # ====================    Create Content for Buttons at the Bottom      ====================
@@ -58,7 +58,7 @@ class CheckPID(QDialog):
         self.layout.addLayout(self.content_box)
         self.layout.addLayout(layout_buttons)
 
-    # In the next lines, actions are defined when Buttons are pressed
+    # In the next lines, actions are defined when buttons are pressed
     @QtCore.pyqtSlot()
     def onClickedCheckPID(self):
         """when button pressed, a series of checks are performed to retrieve data/to set the following GUI """
@@ -85,7 +85,7 @@ class CheckPID(QDialog):
                            title='Too many PID entries')
             return
         else:
-            General.write_csv_temp(df, idx_PID) # creates a new temporary file called current_subj.csv in ./temp
+            General.write_csv_temp(df, idx_PID)  # creates a new temporary file called current_subj.csv in ./temp
             self.hide()
             self.GuiMain.show()
 
