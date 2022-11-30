@@ -122,7 +122,7 @@ class Content:
         df_subj = df.iloc[df.index[df['ID'] == subj_id].tolist()].to_dict('list')
 
         list_preop = ["ID", "PID", "Gender", "Diagnosis_preop", "First_Diagnosed_preop",
-                      "Admission_preop", "Dismissal_preop", "Report_preop", "Report_Preop_preop", "UPDRS_On_preop",
+                      "Admission_preop", "Dismissal_preop", "Report_preop", "UPDRS_On_preop",
                       "UPDRS_Off_preop", "Video_preop", "Video_File_preop", "MRI_preop", "fpcit_spect_preop",
                       "NMSQ_preop", "MoCa_preop", "DemTect_preop", "MMST_preop", "PDQ8_preop",
                       "BDI2_preop", "PDQ39_preop", "Outpat_Contact_preop", "nch_preop", "Briefing_preop",
@@ -154,7 +154,7 @@ class Content:
                         ]
 
         list_postop = ["ID", "PID", "Gender", "Diagnosis_postop", "First_Diagnosed_postop",
-                       "Admission_postop", "Dismissal_postop", "Report_postop", "Report_postop_postop", "UPDRS_On_postop",
+                       "Admission_postop", "Dismissal_postop", "Report_postop", "UPDRS_On_postop",
                        "UPDRS_Off_postop", "Video_postop", "Video_File_postop", "MRI_postop", "fpcit_spect_postop",
                        "NMSQ_postop", "MoCa_postop", "DemTect_postop", "MMST_postop", "PDQ8_postop",
                        "BDI2_postop", "PDQ39_postop", "Outpat_Contact_postop", "nch_postop", "Briefing_postop",

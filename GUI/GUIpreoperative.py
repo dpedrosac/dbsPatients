@@ -86,7 +86,6 @@ class PreoperativeDialog(QDialog):
         self.optionbox2Content = QVBoxLayout(self.optionbox2)
         layout_general.addWidget(self.optionbox2, 1, 0)
 
-        # TODO: Check Boxes should be aligned in the middle to match the text!
         self.VideoFile = QCheckBox()
         self.VideoFileLabel = QLabel('Report\t\t')
         self.VideoFileLabel.setAlignment(QtCore.Qt.AlignLeft)
@@ -122,34 +121,6 @@ class PreoperativeDialog(QDialog):
 
         # TODO: the next part(s) should be moved to a helper function per condition to promote readability
 
-        # self.updrsON= QLabel('UPDRS III ON')
-        # self.LineEditupdrsON = QLineEdit()
-        # self.updrsII= QLabel('UPDRS II')
-        # self.LineEditupdrsII = QLineEdit()
-        # self.hruq= QLabel('HRUQ')
-        # self.LineEdithruq = QLineEdit()
-        # self.moca= QLabel('MoCa')
-        # self.LineEditmoca = QLineEdit()
-        # self.mmst= QLabel('MMST')
-        # self.LineEditmmst = QLineEdit()
-        # self.bdi2= QLabel('BDI-II')
-        # self.LineEditbdi2 = QLineEdit()
-        # self.nmsq= QLabel('NMSQ')
-        # self.LineEditnmsq = QLineEdit()
-        # self.updrsOFF= QLabel('UPDRS III OFF')
-        # self.LineEditupdrsOFF = QLineEdit()
-        # self.hy= QLabel('H&Y')
-        # self.LineEdithy = QLineEdit()
-        # self.eq5d= QLabel('EQ5D')
-        # self.LineEditeq5d = QLineEdit()
-        # self.demtect= QLabel('DemTect')
-        # self.LineEditdemtect = QLineEdit()
-        # self.pdq8= QLabel( 'PDQ8')
-        # self.LineEditpdq8 = QLineEdit()
-        # self.pdq39= QLabel('PDQ39')
-        # self.LineEditpdq39 = QLineEdit()
-        # self.se= QLabel('S&E')
-        # self.LineEditse = QLineEdit()
 
         self.updrsON = QLineEdit()
         self.updrsII = QLineEdit()
@@ -240,10 +211,6 @@ class PreoperativeDialog(QDialog):
     def updatetext(self):
         """adds information extracted from database already provided"""
 
-        # Todo: Marco, here further input is required so that every chunk of data is retrieved and may be saved later.
-        #  Be careful by saving data, as everything may be deleted if you start pressing save before data is completely
-        #  loaded.
-
         df_subj = Content.extract_saved_data(self.date)
 
         # TODO: Hi Marco. I think at this point it makes sense to get familiar with the debugging mode in Pycharm. I'm
@@ -277,7 +244,7 @@ class PreoperativeDialog(QDialog):
         self.pdq39.setText(str(df_subj["PDQ39_preop"][0]))
         self.se.setText(str(df_subj["S&E_preop"][0]))
 
-        # TODO Why don't you give it a try with rest of TExtBoxes after getting all data consistent
+
 
         # Edit CheckBoxes with content
         # I hope this makes sense
@@ -285,7 +252,7 @@ class PreoperativeDialog(QDialog):
             self.VideoFile.setChecked(True)
         elif df_subj["MRI_preop"][0] != 0:
             self.MRIpreop.setChecked(True)
-        elif df_subj["FPCIT_preop"][0] != 0:
+        elif df_subj["fpcit_spect_preop"][0] != 0: #TODO: doesnt complete existing data
             self.FPCITpreop.setChecked(True)
 
 
