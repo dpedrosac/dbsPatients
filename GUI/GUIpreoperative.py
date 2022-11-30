@@ -215,12 +215,7 @@ class PreoperativeDialog(QDialog):
 
         # TODO: Hi Marco. I think at this point it makes sense to get familiar with the debugging mode in Pycharm. I'm
         #  sure you know, you can either run the code with "run" or with debug. In the latter case, it offers you to
-        #  stop the code deliberately - especially when an error is thrown.  At the next line, there is an error, so
-        #  you can see what happens: There is no key "UPDRS II" but one called UPDRSII which makes a difference. It is
-        #  still a problem, at least in my data, as no reasonable value but something called ' Venlafaxin 150mg' exists
-        #  which is not overly sensible. If you haven't done already, please make sure that the columns in
-        #  /.install/preoperative.csv are identical with /data/preoperative.csv. I have spotted errors in the UPDRSII
-        #  and BDI2, although they are called differntly in the .install folder, so it should be consistent.
+        #  stop the code deliberately - especially when an error is thrown.
         # Edit LineEdits with content
 
         self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0]))
@@ -248,7 +243,7 @@ class PreoperativeDialog(QDialog):
 
         # Edit CheckBoxes with content
         # I hope this makes sense
-        if df_subj["Video_preop"][0] != 0: # TODO: called Video in my file, so could be wrong! should exchange data !!
+        if df_subj["Video_preop"][0] != 0:
             self.VideoFile.setChecked(True)
         elif df_subj["MRI_preop"][0] != 0:
             self.MRIpreop.setChecked(True)
