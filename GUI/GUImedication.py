@@ -107,7 +107,6 @@ class MedicationDialog(QDialog):
     def onClickedSaveReturn(self):
 
         """returns to calling GUI saving data whenever the (only available) button is pressed """
-        # TODO: add a way to save data to csv files according to the flag (self.date) used
         self.date("medication")
         self.saveFileDialog()
         print('Done!')

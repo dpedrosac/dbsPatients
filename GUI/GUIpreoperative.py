@@ -18,7 +18,7 @@ class PreoperativeDialog(QDialog):
         self.date = 'preoperative'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
         # data_temp = General.get_data_subject(self.date, subj_details.pid[0])
-        General.synchronize_data_with_general(self.date, subj_details.id[0], messagebox=False)
+        General.synchronize_data_with_general(self.date, subj_details.id[0], messagebox=False) #todo: debugging hier erster error
 
         # ====================    Create General Layout      ====================
         self.setWindowTitle('Please enter preoperative data (PID: {})'.format(str(int(subj_details.pid))))
@@ -86,19 +86,19 @@ class PreoperativeDialog(QDialog):
         self.optionbox2Content = QVBoxLayout(self.optionbox2)
         layout_general.addWidget(self.optionbox2, 1, 0)
 
-        # TODO: Check Boxes should be aligned in the middle to match the text!
         self.VideoFile = QCheckBox()
-        self.VideoFileLabel = QLabel('Report')
+        self.VideoFileLabel = QLabel('Report\t\t')
         self.VideoFileLabel.setAlignment(QtCore.Qt.AlignLeft)
         self.MRIpreop = QCheckBox()
-        self.MRIpreopLabel = QLabel('Decision for lead placement')
+        self.MRIpreopLabel = QLabel('Decision for lead placement\t\t')
         self.MRIpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
         self.FPCITpreop = QCheckBox()
-        self.FPCITpreopLabel = QLabel('Consent VERCISE DBS')
+        self.FPCITpreopLabel = QLabel('Consent VERCISE DBS\t\t')
         self.FPCITpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
         self.ProtocolNeurCheck = QCheckBox()
-        self.ProtocolNeurLabel = QLabel('In-/Exclusion criteria\n VERCISE-DBS')
+        self.ProtocolNeurLabel = QLabel('In-/Exclusion criteria VERCISE-DBS\t\t')
         self.ProtocolNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
+
 
         box2line1 = QHBoxLayout()
         box2line1.addWidget(self.VideoFile)
@@ -120,6 +120,8 @@ class PreoperativeDialog(QDialog):
         layout_general.addWidget(self.optionbox3, 2, 0)
 
         # TODO: the next part(s) should be moved to a helper function per condition to promote readability
+
+
         self.updrsON = QLineEdit()
         self.updrsII = QLineEdit()
         self.hruq = QLineEdit()
@@ -135,6 +137,7 @@ class PreoperativeDialog(QDialog):
         self.pdq39 = QLineEdit()
         self.se = QLineEdit()
 
+<<<<<<< HEAD
         content = [{'UPDRS III ON': self.updrsON,  # two layers, because grid has also two rows
                     'UPDRS II': self.updrsII,
                     'HRUQ': self.hruq,
@@ -142,13 +145,22 @@ class PreoperativeDialog(QDialog):
                     'MMST': self.mmst,
                     'BDI-II': self.bdi2,
                     'NMSQ': self.nmsq},
+=======
+        content = [{'UPDRS III ON': self.updrsON,
+                   'UPDRS II': self.updrsII,
+                   'HRUQ': self.hruq,
+                   'MoCa': self.moca,
+                   'MMST': self.mmst,
+                   'BDI-II': self.bdi2,
+                   'NMSQ': self.nmsq},
+>>>>>>> c98634d1418e17918c557bca4b51c26f81d77949
                    {'UPDRS III OFF': self.updrsOFF,
-                    'H&Y': self.hy,
-                    'EQ5D': self.eq5d,
-                    'DemTect': self.demtect,
-                    'PDQ8': self.pdq8,
-                    'PDQ39': self.pdq39,
-                    'S&E': self.se}]
+                   'H&Y': self.hy,
+                   'EQ5D': self.eq5d,
+                   'DemTect': self.demtect,
+                   'PDQ8': self.pdq8,
+                   'PDQ39': self.pdq39,
+                   'S&E': self.se}]
 
         self.GridCoordinatesLeft = QGridLayout()
         for i in range(0, 2):  # rows
@@ -211,42 +223,48 @@ class PreoperativeDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
 
-        # Edit LineEdits with content
-        self.hy.setText(str(df_subj["H&Y"][0]))
-        self.updrsON.setText(str(df_subj["UPDRS On"][0]))
-        self.updrsOFF.setText(str(df_subj["UPDRS Off"][0]))
-
         # TODO: Hi Marco. I think at this point it makes sense to get familiar with the debugging mode in Pycharm. I'm
         #  sure you know, you can either run the code with "run" or with debug. In the latter case, it offers you to
-        #  stop the code deliberately - especially when an error is thrown.  At the next line, there is an error, so
-        #  you can see what happens: There is no key "UPDRS II" but one called UPDRSII which makes a difference. It is
-        #  still a problem, at least in my data, as no reasonable value but something called ' Venlafaxin 150mg' exists
-        #  which is not overly sensible. If you haven't done already, please make sure that the columns in
-        #  /.install/preoperative.csv are identical with /data/preoperative.csv. I have spotted errors in the UPDRSII
-        #  and BDI2, although they are called differntly in the .install folder, so it should be consistent.
+        #  stop the code deliberately - especially when an error is thrown.
+        # Edit LineEdits with content
 
-        self.updrsII.setText(str(df_subj["UPDRSII"][0]))
-        self.hruq.setText(str(df_subj["HRUQ"][0]))
-        self.moca.setText(str(df_subj["MoCa"][0]))
-        self.mmst.setText(str(df_subj["MMST"][0]))
-        self.bdi2.setText(str(df_subj["BDI2"][0]))
-        self.nmsq.setText(str(df_subj["NMSQ"][0]))
-        self.eq5d.setText(str(df_subj["EQ5D"][0]))
-        self.demtect.setText(str(df_subj["DemTect"][0]))
-        self.pdq8.setText(str(df_subj["PDQ8"][0]))
-        self.pdq39.setText(str(df_subj["PDQ39"][0]))
-        self.se.setText(str(df_subj["S&E"][0]))
+        self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0]))
+        self.lineEditAdmNeurIndCheck.setText(str(df_subj['Admission_preop'][0]))
+        self.DismNeurIndCheckLabel.setText(str(df_subj['Dismissal_preop'][0]))
+        self.lineEditOutpatientContact.setText(str(df_subj['Outpat_Contact_preop'][0]))
+        self.lineEditNChContact.setText(str(df_subj['nch_preop'][0]))
+        self.lineEditDBSconferenceDate.setText(str(df_subj['DBS_Conference_preop'][0]))
+        self.hy.setText(str(df_subj["H&Y_preop"][0]))
+        self.updrsON.setText(str(df_subj["UPDRS_On_preop"][0]))
+        self.updrsOFF.setText(str(df_subj["UPDRS_Off_preop"][0]))
+        self.updrsII.setText(str(df_subj["UPDRSII_preop"][0]))
+        self.hruq.setText(str(df_subj["HRUQ_preop"][0]))
+        self.moca.setText(str(df_subj["MoCa_preop"][0]))
+        self.mmst.setText(str(df_subj["MMST_preop"][0]))
+        self.bdi2.setText(str(df_subj["BDI2_preop"][0]))
+        self.nmsq.setText(str(df_subj["NMSQ_preop"][0]))
+        self.eq5d.setText(str(df_subj["EQ5D_preop"][0]))
+        self.demtect.setText(str(df_subj["DemTect_preop"][0]))
+        self.pdq8.setText(str(df_subj["PDQ8_preop"][0]))
+        self.pdq39.setText(str(df_subj["PDQ39_preop"][0]))
+        self.se.setText(str(df_subj["S&E_preop"][0]))
 
-        # TODO Why don't you give it a try with rest of TExtBoxes after getting all data consistent
+
 
         # Edit CheckBoxes with content
         # I hope this makes sense
-        if df_subj["Video"][0] != 0: # TODO: called Video in my file, so could be wrong! should exchange data !!
+        if df_subj["Video_preop"][0] != 0:
             self.VideoFile.setChecked(True)
-        elif df_subj["MRI"][0] != 0:
+        elif df_subj["MRI_preop"][0] != 0:
             self.MRIpreop.setChecked(True)
-        elif df_subj["FPCIT"][0] != 0:
+        elif df_subj["fpcit_spect_preop"][0] != 0: #TODO: doesnt complete existing data
             self.FPCITpreop.setChecked(True)
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> c98634d1418e17918c557bca4b51c26f81d77949
         return
 
     # ====================   Defines actions when buttons are pressed      ====================

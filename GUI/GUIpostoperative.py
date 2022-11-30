@@ -361,9 +361,19 @@ class PostoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
+
         # ====================   Actions when buttons are pressed      ====================
         #self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         #self.button_save.clicked.connect(self.onClickedSaveReturn)
+
+    # todo: wie bei preoperative bereits vorhandene Daten einlesen lassen?
+    #def updatetext(self):
+
+        #df_subj = Content.extract_saved_data(self.date)
+
+        #self.DemTect.setText(str(df_subj["DemTect_postop"][0]))
+        #self.self.lineEditDemTect.setText(str(df_subj["DemTect_postop"][0]))
+
 
     # ====================   Defines actions when buttons are pressed      ====================
     @QtCore.pyqtSlot()
