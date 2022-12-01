@@ -4,6 +4,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox
 from GUI.GUImedication import MedicationDialog
+from utils.helper_functions import General, Content
 
 
 class PostoperativeDialog(QDialog):
@@ -12,6 +13,7 @@ class PostoperativeDialog(QDialog):
     def __init__(self, parent=None):
         """Initializer."""
         super().__init__(parent)
+        self.date = 'postoperative'  # defines the date at which data are taken from/saved at
 
         self.setWindowTitle('Postoperative Information')
         self.setGeometry(200, 100, 280, 170)
@@ -90,7 +92,15 @@ class PostoperativeDialog(QDialog):
 
         self.subj_reason = QLabel('Reason:\t\t')
         self.lineEditreason = QComboBox()
-        self.lineEditreason.addItems(['3-month follow-up', '6-month follow-up', '12-month follow-up', '24-month follow-up', '36-month follow-up', 'Adverse event', 'IPG Problem', 'Lead Dislocation', 'Other'])
+        self.lineEditreason.addItems(['3-month follow-up',
+                                      '6-month follow-up',
+                                      '12-month follow-up',
+                                      '24-month follow-up',
+                                      '36-month follow-up',
+                                      'Adverse event',
+                                      'IPG Problem',
+                                      'Lead Dislocation',
+                                      'Other'])
         self.lineEditreason.setFixedHeight(20)
         lay8 = QHBoxLayout()
         lay8.addWidget(self.subj_reason)
@@ -361,19 +371,19 @@ class PostoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
+        self.updatetext()
 
         # ====================   Actions when buttons are pressed      ====================
-        #self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
-        #self.button_save.clicked.connect(self.onClickedSaveReturn)
+        self.ButtonEnterMedication.clicked.connect(self.on_clickedMedication)
+        # self.button_save.clicked.connect(self.onClickedSaveReturn)
 
-    # todo: wie bei preoperative bereits vorhandene Daten einlesen lassen?
-    #def updatetext(self):
+    # TODO: wie bei preoperative bereits vorhandene Daten einlesen lassen.
+    def updatetext(self):
 
-        #df_subj = Content.extract_saved_data(self.date)
+        df_subj = Content.extract_saved_data(self.date)
 
-        #self.DemTect.setText(str(df_subj["DemTect_postop"][0]))
-        #self.self.lineEditDemTect.setText(str(df_subj["DemTect_postop"][0]))
-
+        # self.DemTect.setText(str(df_subj["DemTect_postop"][0]))
+        # self.self.lineEditDemTect.setText(str(df_subj["DemTect_postop"][0]))
 
     # ====================   Defines actions when buttons are pressed      ====================
     @QtCore.pyqtSlot()
@@ -383,9 +393,9 @@ class PostoperativeDialog(QDialog):
     def close(self):
         self.saveFileDialog()
 
-    def on_click(self):
-        if self.button_openGUI_Medication.isChecked():  # selects three different options available
-            dialog = MedicationDialog(parent=self)
+    def on_clickedMedication(self):
+        """shows the medication dialog when button is pressed"""
+        dialog = MedicationDialog(visit=self.date, parent=self)
         self.hide()
         if dialog.exec():
             pass
@@ -394,15 +404,17 @@ class PostoperativeDialog(QDialog):
     def saveFileDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "test.txt", "All Files(*)", options=options)
+        fileName, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "test.txt",
+                                                  "All Files(*)", options=options)
         print(fileName)
 
     # for opening
-    def open_dialog_box (self):
+    def open_dialog_box(self):
         option = QFileDialog.Options()
         # first parameter is self; second is the Window Title, third title is Default File Name, fourth is FileType,
         # fifth is options
-        file = QFileDialog.getOpenFileName(self, "Save File Window Title", "default.txt", "All Files (*)", options=option)
+        file = QFileDialog.getOpenFileName(self, "Save File Window Title", "default.txt",
+                                           "All Files (*)", options=option)
         print(file)
 
 
@@ -412,4 +424,5 @@ if __name__ == '__main__':
     dlg = PostoperativeDialog()
     dlg.show()
     sys.exit(app.exec_())
+
 

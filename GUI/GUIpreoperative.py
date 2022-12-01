@@ -219,6 +219,8 @@ class PreoperativeDialog(QDialog):
         self.lineEditOutpatientContact.setText(str(df_subj['Outpat_Contact_preop'][0]))
         self.lineEditNChContact.setText(str(df_subj['nch_preop'][0]))
         self.lineEditDBSconferenceDate.setText(str(df_subj['DBS_Conference_preop'][0]))
+
+        # TODO: changes are applied already in the next few lines
         self.hy.setText(str(df_subj["H&Y_preop"][0])) \
             if str(df_subj["H&Y_preop"][0]) != 'nan' else self.hy.setText('')
         self.updrsON.setText(str(df_subj["UPDRS_On_preop"][0])) \
@@ -226,6 +228,7 @@ class PreoperativeDialog(QDialog):
         self.updrsOFF.setText(str(df_subj["UPDRS_Off_preop"][0]))
         self.updrsII.setText(str(df_subj["UPDRSII_preop"][0])) \
             if str(df_subj["UPDRSII_preop"][0]) != 'nan' else self.updrsII.setText('')
+
         self.hruq.setText(str(df_subj["HRUQ_preop"][0]))
         self.moca.setText(str(df_subj["MoCa_preop"][0]))
         self.mmst.setText(str(df_subj["MMST_preop"][0]))

@@ -29,7 +29,7 @@ class General:
         filename_total = os.path.join(FILEDIR, filename)
         if not os.path.isfile(filename_total):
             print('\t Filename: {} not found. Please double-check!'.format(filename_total))
-        df = pds.read_csv(filename_total, sep=separator_csv)
+        df = pds.read_csv(filename_total, sep=separator_csv, on_bad_lines='skip')
 
         return df
 
