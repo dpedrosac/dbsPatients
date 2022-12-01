@@ -18,7 +18,8 @@ class PreoperativeDialog(QDialog):
         self.date = 'preoperative'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
         # data_temp = General.get_data_subject(self.date, subj_details.pid[0])
-        General.synchronize_data_with_general(self.date, subj_details.id[0], messagebox=False) #todo: debugging hier erster error
+        General.synchronize_data_with_general(self.date, subj_details.id[0],
+                                              messagebox=False)  # todo: debugging hier erster error
 
         # ====================    Create General Layout      ====================
         self.setWindowTitle('Please enter preoperative data (PID: {})'.format(str(int(subj_details.pid))))
@@ -36,19 +37,19 @@ class PreoperativeDialog(QDialog):
         self.FirstDiagnosed = QLabel('First diagnosed:\t\t')
         self.lineEditFirstDiagnosed = QLineEdit()
         self.lineEditFirstDiagnosed.setFixedWidth(textwidth)
-        self.AdmNeurIndCheckLabel = QLabel('Admission (dd/mm/yyyy):\t')
+        self.AdmNeurIndCheckLabel = QLabel('Admission (yyyy-mm-dd):\t')
         self.lineEditAdmNeurIndCheck = QLineEdit()
         self.lineEditAdmNeurIndCheck.setFixedWidth(textwidth)
-        self.DismNeurIndCheck = QLabel('Dismission (dd/mm/yyyy):\t')
+        self.DismNeurIndCheck = QLabel('Dismission (yyyy-mm-dd):\t')
         self.DismNeurIndCheckLabel = QLineEdit()
         self.DismNeurIndCheckLabel.setFixedWidth(textwidth)
-        self.OutpatientContact = QLabel('Outpatient contact (dd/mm/yyyy):\t\t')
+        self.OutpatientContact = QLabel('Outpatient contact (yyyy-mm-dd):\t\t')
         self.lineEditOutpatientContact = QLineEdit()
         self.lineEditOutpatientContact.setFixedWidth(textwidth)
-        self.NChContact = QLabel('Neurosurgical contact (dd/mm/yyyy):\t')
+        self.NChContact = QLabel('Neurosurgical contact (yyyy-mm-dd):\t')
         self.lineEditNChContact = QLineEdit()
         self.lineEditNChContact.setFixedWidth(textwidth)
-        self.DBSconferenceDate = QLabel('DBS conference (dd/mm/yyyy):\t\t')
+        self.DBSconferenceDate = QLabel('DBS conference (yyyy-mm-dd):\t\t')
         self.lineEditDBSconferenceDate = QLineEdit()
         self.lineEditDBSconferenceDate.setFixedWidth(textwidth)
 
@@ -99,7 +100,6 @@ class PreoperativeDialog(QDialog):
         self.ProtocolNeurLabel = QLabel('In-/Exclusion criteria VERCISE-DBS\t\t')
         self.ProtocolNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
 
-
         box2line1 = QHBoxLayout()
         box2line1.addWidget(self.VideoFile)
         box2line1.addWidget(self.VideoFileLabel)
@@ -119,9 +119,6 @@ class PreoperativeDialog(QDialog):
         self.optionbox3Content = QHBoxLayout(self.optionbox3)
         layout_general.addWidget(self.optionbox3, 2, 0)
 
-        # TODO: the next part(s) should be moved to a helper function per condition to promote readability
-
-
         self.updrsON = QLineEdit()
         self.updrsII = QLineEdit()
         self.hruq = QLineEdit()
@@ -137,30 +134,20 @@ class PreoperativeDialog(QDialog):
         self.pdq39 = QLineEdit()
         self.se = QLineEdit()
 
-<<<<<<< HEAD
-        content = [{'UPDRS III ON': self.updrsON,  # two layers, because grid has also two rows
+        content = [{'UPDRS III ON': self.updrsON,
                     'UPDRS II': self.updrsII,
                     'HRUQ': self.hruq,
                     'MoCa': self.moca,
                     'MMST': self.mmst,
                     'BDI-II': self.bdi2,
                     'NMSQ': self.nmsq},
-=======
-        content = [{'UPDRS III ON': self.updrsON,
-                   'UPDRS II': self.updrsII,
-                   'HRUQ': self.hruq,
-                   'MoCa': self.moca,
-                   'MMST': self.mmst,
-                   'BDI-II': self.bdi2,
-                   'NMSQ': self.nmsq},
->>>>>>> c98634d1418e17918c557bca4b51c26f81d77949
                    {'UPDRS III OFF': self.updrsOFF,
-                   'H&Y': self.hy,
-                   'EQ5D': self.eq5d,
-                   'DemTect': self.demtect,
-                   'PDQ8': self.pdq8,
-                   'PDQ39': self.pdq39,
-                   'S&E': self.se}]
+                    'H&Y': self.hy,
+                    'EQ5D': self.eq5d,
+                    'DemTect': self.demtect,
+                    'PDQ8': self.pdq8,
+                    'PDQ39': self.pdq39,
+                    'S&E': self.se}]
 
         self.GridCoordinatesLeft = QGridLayout()
         for i in range(0, 2):  # rows
@@ -223,10 +210,8 @@ class PreoperativeDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
 
-        # TODO: Hi Marco. I think at this point it makes sense to get familiar with the debugging mode in Pycharm. I'm
-        #  sure you know, you can either run the code with "run" or with debug. In the latter case, it offers you to
-        #  stop the code deliberately - especially when an error is thrown.
-        # Edit LineEdits with content
+        # TODO: HI Marco, here is another small step that makes sure that no text is saved in the csv file but en
+        #  emtpy value in cases where there is no information available. Please add the if ... else part to the rest
 
         self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0]))
         self.lineEditAdmNeurIndCheck.setText(str(df_subj['Admission_preop'][0]))
@@ -234,10 +219,13 @@ class PreoperativeDialog(QDialog):
         self.lineEditOutpatientContact.setText(str(df_subj['Outpat_Contact_preop'][0]))
         self.lineEditNChContact.setText(str(df_subj['nch_preop'][0]))
         self.lineEditDBSconferenceDate.setText(str(df_subj['DBS_Conference_preop'][0]))
-        self.hy.setText(str(df_subj["H&Y_preop"][0]))
-        self.updrsON.setText(str(df_subj["UPDRS_On_preop"][0]))
+        self.hy.setText(str(df_subj["H&Y_preop"][0])) \
+            if str(df_subj["H&Y_preop"][0]) != 'nan' else self.hy.setText('')
+        self.updrsON.setText(str(df_subj["UPDRS_On_preop"][0])) \
+            if str(df_subj["UPDRS_On_preop"][0]) != 'nan' else self.updrsON.setText('')
         self.updrsOFF.setText(str(df_subj["UPDRS_Off_preop"][0]))
-        self.updrsII.setText(str(df_subj["UPDRSII_preop"][0]))
+        self.updrsII.setText(str(df_subj["UPDRSII_preop"][0])) \
+            if str(df_subj["UPDRSII_preop"][0]) != 'nan' else self.updrsII.setText('')
         self.hruq.setText(str(df_subj["HRUQ_preop"][0]))
         self.moca.setText(str(df_subj["MoCa_preop"][0]))
         self.mmst.setText(str(df_subj["MMST_preop"][0]))
@@ -249,22 +237,14 @@ class PreoperativeDialog(QDialog):
         self.pdq39.setText(str(df_subj["PDQ39_preop"][0]))
         self.se.setText(str(df_subj["S&E_preop"][0]))
 
-
-
         # Edit CheckBoxes with content
-        # I hope this makes sense
         if df_subj["Video_preop"][0] != 0:
             self.VideoFile.setChecked(True)
         elif df_subj["MRI_preop"][0] != 0:
             self.MRIpreop.setChecked(True)
-        elif df_subj["fpcit_spect_preop"][0] != 0: #TODO: doesnt complete existing data
+        elif df_subj["fpcit_spect_preop"][0] != 0:
             self.FPCITpreop.setChecked(True)
-<<<<<<< HEAD
-=======
 
-
-
->>>>>>> c98634d1418e17918c557bca4b51c26f81d77949
         return
 
     # ====================   Defines actions when buttons are pressed      ====================
@@ -279,7 +259,13 @@ class PreoperativeDialog(QDialog):
 
     def onClickedSaveReturn(self):
         """closes GUI and returns to calling (main) GUI"""
-        print('Done!')
+
+        df_subj = {k: [] for k in Content.extract_saved_data(self.date).keys()} # extract empty dictionary
+        df_subj["First_Diagnosed_preop"] = self.lineEditFirstDiagnosed.text()
+
+        # ToDO: Here the rest of the extracted columns must be entered again and the dataframe should replace the line
+        #  that was modified
+
         self.close()
 
 

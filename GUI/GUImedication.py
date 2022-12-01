@@ -5,6 +5,8 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QLabel, QWidget, QGridLayout, QPlainTextEdit
 
+from utils.helper_functions import General, Content
+
 
 class MedicationDialog(QDialog):
     """Dialog to introduce the medication at a specific date. All unrelated """
@@ -111,6 +113,14 @@ class MedicationDialog(QDialog):
         self.saveFileDialog()
         print('Done!')
         self.close()
+
+    def updatetext(self):
+        """adds information extracted from database already provided"""
+
+        df_subj = Content.extract_saved_data(self.date)
+
+        # TODO: ANalog to the GUIpreoperative data we need to extract the data available and stick it to the dataframe
+        #  at the end of the file.
 
 #alternative?:
         # with open("medication.csv","w", newline="") as f:
