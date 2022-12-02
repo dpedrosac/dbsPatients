@@ -210,35 +210,48 @@ class PreoperativeDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
 
-        # TODO: HI Marco, here is another small step that makes sure that no text is saved in the csv file but en
-        #  emtpy value in cases where there is no information available. Please add the if ... else part to the rest
+        self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0])) \
+            if str(df_subj["First_Diagnosed_preop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        self.lineEditAdmNeurIndCheck.setText(str(df_subj['Admission_preop'][0])) \
+            if str(df_subj["Admission_preop"][0]) != 'nan' else self.lineEditAdmNeurIndCheck.setText('')
+        self.DismNeurIndCheckLabel.setText(str(df_subj['Dismissal_preop'][0])) \
+            if str(df_subj["Dismissal_preop"][0]) != 'nan' else self.DismNeurIndCheckLabel.setText('')
+        self.lineEditOutpatientContact.setText(str(df_subj['Outpat_Contact_preop'][0])) \
+            if str(df_subj["Outpat_Contact_preop"][0]) != 'nan' else self.lineEditOutpatientContact.setText('')
+        self.lineEditNChContact.setText(str(df_subj['nch_preop'][0])) \
+            if str(df_subj["nch_preop"][0]) != 'nan' else self.lineEditNChContact.setText('')
+        self.lineEditDBSconferenceDate.setText(str(df_subj['DBS_Conference_preop'][0])) \
+            if str(df_subj["DBS_Conference_preop"][0]) != 'nan' else self.lineEditDBSconferenceDate.setText('')
 
-        self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0]))
-        self.lineEditAdmNeurIndCheck.setText(str(df_subj['Admission_preop'][0]))
-        self.DismNeurIndCheckLabel.setText(str(df_subj['Dismissal_preop'][0]))
-        self.lineEditOutpatientContact.setText(str(df_subj['Outpat_Contact_preop'][0]))
-        self.lineEditNChContact.setText(str(df_subj['nch_preop'][0]))
-        self.lineEditDBSconferenceDate.setText(str(df_subj['DBS_Conference_preop'][0]))
-
-        # TODO: changes are applied already in the next few lines
         self.hy.setText(str(df_subj["H&Y_preop"][0])) \
             if str(df_subj["H&Y_preop"][0]) != 'nan' else self.hy.setText('')
         self.updrsON.setText(str(df_subj["UPDRS_On_preop"][0])) \
             if str(df_subj["UPDRS_On_preop"][0]) != 'nan' else self.updrsON.setText('')
-        self.updrsOFF.setText(str(df_subj["UPDRS_Off_preop"][0]))
+        self.updrsOFF.setText(str(df_subj["UPDRS_Off_preop"][0])) \
+            if str(df_subj["UPDRS_Off_preop"][0]) != 'nan' else self.updrsOFF.setText('')
         self.updrsII.setText(str(df_subj["UPDRSII_preop"][0])) \
             if str(df_subj["UPDRSII_preop"][0]) != 'nan' else self.updrsII.setText('')
+        self.hruq.setText(str(df_subj["HRUQ_preop"][0])) \
+            if str(df_subj["HRUQ_preop"][0]) != 'nan' else self.hruq.setText('')
+        self.moca.setText(str(df_subj["MoCa_preop"][0])) \
+            if str(df_subj["MoCa_preop"][0]) != 'nan' else self.moca.setText('')
+        self.mmst.setText(str(df_subj["MMST_preop"][0])) \
+            if str(df_subj["MMST_preop"][0]) != 'nan' else self.mmst.setText('')
+        self.bdi2.setText(str(df_subj["BDI2_preop"][0])) \
+            if str(df_subj["BDI2_preop"][0]) != 'nan' else self.bdi2.setText('')
+        self.nmsq.setText(str(df_subj["NMSQ_preop"][0])) \
+            if str(df_subj["NMSQ_preop"][0]) != 'nan' else self.nmsq.setText('')
+        self.eq5d.setText(str(df_subj["EQ5D_preop"][0])) \
+            if str(df_subj["EQ5D_preop"][0]) != 'nan' else self.eq5d.setText('')
+        self.demtect.setText(str(df_subj["DemTect_preop"][0])) \
+            if str(df_subj["DemTect_preop"][0]) != 'nan' else self.demtect.setText('')
+        self.pdq8.setText(str(df_subj["PDQ8_preop"][0])) \
+            if str(df_subj["PDQ8_preop"][0]) != 'nan' else self.pdq8.setText('')
+        self.pdq39.setText(str(df_subj["PDQ39_preop"][0])) \
+            if str(df_subj["PDQ39_preop"][0]) != 'nan' else self.pdq39.setText('')
+        self.se.setText(str(df_subj["S&E_preop"][0])) \
+            if str(df_subj["S&E_preop"][0]) != 'nan' else self.se.setText('')
 
-        self.hruq.setText(str(df_subj["HRUQ_preop"][0]))
-        self.moca.setText(str(df_subj["MoCa_preop"][0]))
-        self.mmst.setText(str(df_subj["MMST_preop"][0]))
-        self.bdi2.setText(str(df_subj["BDI2_preop"][0]))
-        self.nmsq.setText(str(df_subj["NMSQ_preop"][0]))
-        self.eq5d.setText(str(df_subj["EQ5D_preop"][0]))
-        self.demtect.setText(str(df_subj["DemTect_preop"][0]))
-        self.pdq8.setText(str(df_subj["PDQ8_preop"][0]))
-        self.pdq39.setText(str(df_subj["PDQ39_preop"][0]))
-        self.se.setText(str(df_subj["S&E_preop"][0]))
 
         # Edit CheckBoxes with content
         if df_subj["Video_preop"][0] != 0:
