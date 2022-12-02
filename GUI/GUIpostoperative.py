@@ -382,9 +382,19 @@ class PostoperativeDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
 
+        #self.lineEditAdmission_Nch.setText(str(df_subj["Admission_postop"][0]))
+        #self.lineEditAdmission_NR.setText(str(df_subj[""][0]))
+        #self.lineEditDismission_Nch.setText(str(df_subj[""][0]))
+        #self.lineEditDismission_NR.setText(str(df_subj[""][0]))
+        #self.lineEditSurgery.setText(str(df_subj[""][0]))
+        #self.lineEditLast_Revision.setText(str(df_subj[""][0]))
+        #self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))
+
+
         # self.DemTect.setText(str(df_subj["DemTect_postop"][0]))
         # self.self.lineEditDemTect.setText(str(df_subj["DemTect_postop"][0]))
 
+        return
     # ====================   Defines actions when buttons are pressed      ====================
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):

@@ -45,7 +45,28 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\data\general_data.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\data\intraoperative.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\data\postoperative.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\data\preoperative.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />

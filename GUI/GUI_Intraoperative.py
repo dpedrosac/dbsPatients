@@ -338,6 +338,17 @@ class IntraoperativeDialog(QDialog):
         print('Done!')
         self.close()
 
+#TODO: extract data from Intraop csv
+    def updatetext(self):
+
+        df_subj = Content.extract_saved_data(self.date)
+
+        #self.lineEditAdmNCh.setText(str(df_subj["Admission_intraop"][0]))
+        #self.lineEditAdmNeur = QLineEdit()
+        #self.lineEditDismNeur = QLineEdit()
+        #self.lineEditDismNCh = QLineEdit()
+
+        return
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
