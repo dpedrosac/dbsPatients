@@ -343,10 +343,40 @@ class IntraoperativeDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
 
-        #self.lineEditAdmNCh.setText(str(df_subj["Admission_intraop"][0]))
-        #self.lineEditAdmNeur = QLineEdit()
-        #self.lineEditDismNeur = QLineEdit()
-        #self.lineEditDismNCh = QLineEdit()
+        #upper left
+        self.lineEditAdmNCh.setText(str(df_subj["admission_Nch_intraop"][0]))\
+        self.lineEditAdmNeur.setText(str(df_subj["Admission_intraop"][0]))\
+        self.lineEditDismNeur.setText(str(df_subj["Dismissal_intraop"][0]))\
+        self.lineEditDismNCh.setText(str(df_subj["dismissal_NCh_intraop"][0])) \
+        #middle left
+        self.lineEditDurationSurgery.setText(str(df_subj["op_duration_intraop"][0])) \
+        self.lineEditTrajectories.setText(str(df_subj["no_traj_intraop"][0])) \
+        #upper right
+        self.lineEditSurgeryDate.setText(str(df_subj["surgery_date_intraop"][0])) \
+        #lower left
+
+
+
+        #Edit Checkboxes with content
+        #Middle left
+        if df_subj["report_file_NR_intraop"][0] != 0:
+            self.ReportNeurCheck.setChecked(True)
+        if df_subj["awake_intraop"][0] != 0:
+            self.AwakePatientCheck.setChecked(True)
+        if df_subj["report_file_NCh_intraop"][0] != 0:
+            self.ReportNChLabel.setChecked(True)
+        if df_subj["protocol_intraop"][0] != 0:
+            self.ProtocolNeurCheck.setChecked(True)
+
+        #bottom right
+        if df_subj["CTscan_intraop"][0] != 0:
+            self.PostopCTScanCheck.setChecked(True)
+        if df_subj["implantation_visit_intraop"][0] != 0:
+            self.ImplVerciseDBSCheck.setChecked(True)
+        if df_subj["activation_visit_intraop"][0] != 0:
+            self.ActivateVerciseDBSCheck.setChecked(True)
+        if df_subj["incl_qualiPA_intraop"][0] != 0:
+            self.InclusionQualiPaLabel.setChecked(True)
 
         return
 

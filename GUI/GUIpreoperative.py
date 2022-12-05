@@ -301,6 +301,8 @@ class PreoperativeDialog(QDialog):
         # ToDO: Here the rest of the extracted columns must be entered again and the dataframe should replace the line
         #  that was modified
 
+        df_subj.to_csv("preoperative.csv", index=False)
+
         self.close()
 
 
