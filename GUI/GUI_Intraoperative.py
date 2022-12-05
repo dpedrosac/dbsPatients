@@ -345,14 +345,24 @@ class IntraoperativeDialog(QDialog):
 
         #upper left
         self.lineEditAdmNCh.setText(str(df_subj["admission_Nch_intraop"][0]))\
+         if str(df_subj["admission_Nch_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
         self.lineEditAdmNeur.setText(str(df_subj["Admission_intraop"][0]))\
+         if str(df_subj["Admission_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
         self.lineEditDismNeur.setText(str(df_subj["Dismissal_intraop"][0]))\
+         if str(df_subj["Dismissal_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
         self.lineEditDismNCh.setText(str(df_subj["dismissal_NCh_intraop"][0])) \
+         if str(df_subj["dismissal_NCh_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+
         #middle left
         self.lineEditDurationSurgery.setText(str(df_subj["op_duration_intraop"][0])) \
+         if str(df_subj["op_duration_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
         self.lineEditTrajectories.setText(str(df_subj["no_traj_intraop"][0])) \
+         if str(df_subj["no_traj_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+
         #upper right
         self.lineEditSurgeryDate.setText(str(df_subj["surgery_date_intraop"][0])) \
+         if str(df_subj["surgery_date_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+
         #lower left
 
 
