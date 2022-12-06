@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-import sys
+import os, sys
+import pandas as pds
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QCheckBox
 from GUI.GUImedication import MedicationDialog
-from utils.helper_functions import General, Content
+from utils.helper_functions import General, Content, Clean
+from dependencies import ROOTDIR, FILEDIR
 
 
 class PreoperativeDialog(QDialog):
@@ -17,7 +19,6 @@ class PreoperativeDialog(QDialog):
 
         self.date = 'preoperative'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
-        # data_temp = General.get_data_subject(self.date, subj_details.pid[0])
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
 
@@ -208,6 +209,8 @@ class PreoperativeDialog(QDialog):
     def updatetext(self):
         """adds information extracted from database already provided"""
 
+        # TODO: MEdication is still missing and it drops an error when saved/called. Please double check.
+
         df_subj = Content.extract_saved_data(self.date)
 
         self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0])) \
@@ -252,7 +255,6 @@ class PreoperativeDialog(QDialog):
         self.se.setText(str(df_subj["S&E_preop"][0])) \
             if str(df_subj["S&E_preop"][0]) != 'nan' else self.se.setText('')
 
-
         # Edit CheckBoxes with content
         if df_subj["Video_preop"][0] != 0:
             self.VideoFile.setChecked(True)
@@ -276,7 +278,14 @@ class PreoperativeDialog(QDialog):
     def onClickedSaveReturn(self):
         """closes GUI and returns to calling (main) GUI"""
 
-        df_subj = {k: [] for k in Content.extract_saved_data(self.date).keys()} # extract empty dictionary
+        df_general = Clean.get_GeneralData()
+
+        df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()} # extract empty dictionary
+        df_subj['ID'] = General.read_current_subj().id[0]
+        df_subj['PID'] = df_general['PID_ORBIS'][0]
+        df_subj['Gender'] = df_general['Gender'][0]
+        df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
+
         df_subj["First_Diagnosed_preop"] = self.lineEditFirstDiagnosed.text()
         df_subj['Admission_preop'] = self.lineEditAdmNeurIndCheck.text()
         df_subj['Dismissal_preop'] = self.DismNeurIndCheckLabel.text()
@@ -301,7 +310,19 @@ class PreoperativeDialog(QDialog):
         # ToDO: Here the rest of the extracted columns must be entered again and the dataframe should replace the line
         #  that was modified
 
-        df_subj.to_csv("preoperative.csv", index=False)
+        subj_id = General.read_current_subj().id[0] # reads data from curent_subj (saved in ./tmp)
+        df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+        if df.shape[1] == 1:
+            df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
+
+        idx2replace = df.index[df['ID'] == subj_id][0]
+
+        # TODO: Marco, you need to find a way to turn the dictionaryy df_subj into a dataframe and replace the data at
+        #  the index idxreplace of 'df' with df_subj. Later I would suggest to use line 322 to save everything to the
+        #  file
+        df.iloc[idx2replace] = pds.DataFrame([df_subj])
+        df.to_csv("preoperative.csv", index=False)
+        # df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
 
         self.close()
 

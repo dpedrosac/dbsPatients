@@ -109,7 +109,7 @@ class MedicationDialog(QDialog):
     def onClickedSaveReturn(self):
 
         """returns to calling GUI saving data whenever the (only available) button is pressed """
-        self.date("medication")
+        # self.date("medication")
         self.saveFileDialog()
         print('Done!')
         self.close()

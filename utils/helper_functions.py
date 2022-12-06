@@ -205,3 +205,19 @@ class Clean:
 
         for index, row in file_general.iterrows():
             General.synchronize_data_with_general(flag, row['ID'], messagebox=False)
+
+    @staticmethod
+    def get_GeneralData(columns_to_extract=['PID_ORBIS', 'Gender', 'diagnosis']):
+        """some data is not stored in the pre-/intra-/postoperative data, so that this function looks for the
+        subject of interest and extracts this data"""
+
+        df_general = General.import_dataframe('general_data.csv', separator_csv=',')
+        if df_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
+            df_general = General.import_dataframe('general_data.csv', separator_csv=';')
+
+        subj_id = General.read_current_subj().id[0]  # reads data from curent_subj (saved in ./tmp)
+
+        df_extracted = df_general[columns_to_extract]
+        df_subj = df_extracted.iloc[df_general.index[df_general['ID'] == subj_id].tolist()]
+
+        return df_subj
