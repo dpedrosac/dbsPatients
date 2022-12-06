@@ -96,11 +96,11 @@ class PostoperativeDialog(QDialog):
                                       '6-month follow-up',
                                       '12-month follow-up',
                                       '24-month follow-up',
-                                      '36-month follow-up',
-                                      'Adverse event',
-                                      'IPG Problem',
-                                      'Lead Dislocation',
-                                      'Other'])
+                                      '36-month follow-up'])
+                                      # 'Adverse event',
+                                      # 'IPG Problem',
+                                      # 'Lead Dislocation',
+                                      # 'Other'])
         self.lineEditreason.setFixedHeight(20)
         lay8 = QHBoxLayout()
         lay8.addWidget(self.subj_reason)
