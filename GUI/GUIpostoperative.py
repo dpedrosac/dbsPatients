@@ -382,9 +382,91 @@ class PostoperativeDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
 
-        # self.DemTect.setText(str(df_subj["DemTect_postop"][0]))
-        # self.self.lineEditDemTect.setText(str(df_subj["DemTect_postop"][0]))
 
+        #upper left
+
+        #self.lineEditAdmission_Nch.setText(str(df_subj["Admission_postop"][0]))
+            #if str(df_subj["Admission_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditAdmission_NR.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditDismission_Nch.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditDismission_NR.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditSurgery.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditLast_Revision.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+
+
+        #middle right
+        #self.lineEditUPDRSI.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditUPDRSIV.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditTSS.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditCGICPat.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditCGICClinician.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditUPDRSON.setText(str(df_subj["UPDRS_On_postop"][0]))
+        # if str(df_subj["UPDRS_On_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditUPDRSII.setText(str(df_subj["UPDRSII_postop"][0]))
+        # if str(df_subj["UPDRSII_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditHRUQ.setText(str(df_subj["HRUQ_postop"][0]))
+        # if str(df_subj["HRUQ_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditMoCa.setText(str(df_subj["MoCa_postop"][0]))
+        # if str(df_subj["MoCa_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditMMST.setText(str(df_subj["MMST_postop"][0]))
+        # if str(df_subj["MMST_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditBDIII.setText(str(df_subj["BDI2_postop"][0]))
+        # if str(df_subj["BDI2_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditNMSQ.setText(str(df_subj["NMSQ_postop"][0]))
+        # if str(df_subj["NMSQ_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditUPDRSOff.setText(str(df_subj["UPDRS_Off_postop"][0]))
+        # if str(df_subj["UPDRS_Off_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditHY.setText(str(df_subj["H&Y_postop"][0]))
+        # if str(df_subj["H&Y_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditEQ5D.setText(str(df_subj["EQ5D_postop"][0]))
+        # if str(df_subj["EQ5D_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditDemTect.setText(str(df_subj["DemTect_postop"][0]))
+        # if str(df_subj["DemTect_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditPDQ8.setText(str(df_subj["PDQ8_postop"][0]))
+        # if str(df_subj["PDQ8_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditPDQ39.setText(str(df_subj["PDQ39_postop"][0]))
+        # if str(df_subj["PDQ39_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditSE.setText(str(df_subj["S&E_postop"][0]))
+        # if str(df_subj["S&E_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditUDDRSOn.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditTRSOn.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditUDDRSOff.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditTRSOff.setText(str(df_subj[""][0]))
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+
+
+        # Edit CheckBoxes with content
+        #middle left
+        #if df_subj["Report_postop"][0] != 0:
+            #self.ReportNeurCheck.setChecked(True)
+        #if df_subj[""][0] != 0:
+            #self.ReportNeurosurgeryCheck.setChecked(True)
+        #if df_subj[""][0] != 0:
+            #self.PatProgrammerCheck.setChecked(True)
+        #if df_subj[""][0] != 0:
+            #self.PostopCTCheck.setChecked(True)
+        #if df_subj[""][0] != 0:
+            #self.BatteryReplacementCheck.setChecked(True)
+        #if df_subj[""][0] != 0:
+            #self.PlannedVisitCheck.setChecked(True)
+
+
+        return
     # ====================   Defines actions when buttons are pressed      ====================
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):
