@@ -2,6 +2,7 @@
 import sys
 from PyQt5 import QtCore
 
+
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QLabel, QWidget, QGridLayout, QPlainTextEdit
 
@@ -13,12 +14,19 @@ class MedicationDialog(QDialog):
 
     def __init__(self, visit='unknown', parent=None):
         super().__init__(parent)
+
+
+
+        # ====================    Create General Layout      ====================
+        self.date = 'medication'
         self.setWindowTitle('Medication of patient with DBS at {} visit'.format(visit))
         self.setGeometry(200, 100, 280, 170)
         self.move(700, 250)
 
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
+
+
 
         # ====================    (Only) Optionbox      ====================
         self.optionbox1 = QGroupBox('Patient Medication')
@@ -104,6 +112,7 @@ class MedicationDialog(QDialog):
 
         layout_general.addLayout(hlay_bottom, 4, 0, 1,3)
 
+
     # In the next lines, actions are defined when Buttons are pressed
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):
@@ -119,8 +128,47 @@ class MedicationDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
 
+        self.lineEditLevodopaCarbidopa.setText(str(df_subj["Levodopa_Carbidopa_preop"][0])) \
+            if str(df_subj["Levodopa_Carbidopa_preop"][0]) != 'nan' else self.lineEditLevodopaCarbidopa.setText('')
+        self.lineEditLevodopaCarbidopaCR.setText(str(df_subj["Levodopa_Carbidopa_CR_preop"][0])) \
+            if str(df_subj["Levodopa_Carbidopa_CR_preop"][0]) != 'nan' else self.lineEditLevodopaCarbidopaCR.setText('')
+        self.lineEditEntacapone.setText(str(df_subj["Entacapone_preop"][0])) \
+            if str(df_subj["Entacapone_preop"][0]) != 'nan' else self.lineEditEntacapone.setText('')
+        self.lineEditTolcapone.setText(str(df_subj["Tolcapone_preop"][0])) \
+            if str(df_subj["Tolcapone_preop"][0]) != 'nan' else self.lineEditTolcapone.setText('')
+        self.lineEditPramipexole.setText(str(df_subj["Pramipexole_preop"][0])) \
+            if str(df_subj["Pramipexole_preop"][0]) != 'nan' else self.lineEditPramipexole.setText('')
+        self.lineEditRopinirole.setText(str(df_subj["Ropinirole_preop"][0])) \
+            if str(df_subj["Ropinirole_preop"][0]) != 'nan' else self.lineEditRopinirole.setText('')
+        self.lineEditRotigotine.setText(str(df_subj["Rotigotine_preop"][0])) \
+            if str(df_subj["Rotigotine_preop"][0]) != 'nan' else self.lineEditRotigotine.setText('')
+        self.lineEditSelegiline_oral.setText(str(df_subj["Selegiline_preop"][0])) \
+            if str(df_subj["Selegiline_preop"][0]) != 'nan' else self.lineEditSelegiline_oral.setText('')
+        self.lineEditSelegiline_sublingual.setText(str(df_subj["_sublingual_preop"][0])) \
+            if str(df_subj["_sublingual_preop"][0]) != 'nan' else self.lineEditSelegiline_sublingual.setText('')
+        self.lineEditRasagiline.setText(str(df_subj["Rasagiline_preop"][0])) \
+            if str(df_subj["Rasagiline_preop"][0]) != 'nan' else self.lineEditRasagiline.setText('')
+        self.lineEditAmantadine.setText(str(df_subj["Amantadine_preop"][0])) \
+            if str(df_subj["Amantadine_preop"][0]) != 'nan' else self.lineEditAmantadine.setText('')
+        self.lineEditApomorphine.setText(str(df_subj["Apomorphine_preop"][0])) \
+            if str(df_subj["Apomorphine_preop"][0]) != 'nan' else self.lineEditApomorphine.setText('')
+        self.lineEditPiribedil.setText(str(df_subj["Piribedil_preop"][0])) \
+            if str(df_subj["Piribedil_preop"][0]) != 'nan' else self.lineEditPiribedil.setText('')
+        self.lineEditSafinamid.setText(str(df_subj["Safinamid_preop"][0])) \
+            if str(df_subj["Safinamid_preop"][0]) != 'nan' else self.lineEditSafinamid.setText('')
+        self.lineEditSafinamid.setText(str(df_subj["Opicapone_preop"][0])) \
+            if str(df_subj["Opicapone_preop"][0]) != 'nan' else self.lineEditSafinamid.setText('')
+        self.lineEditOther.setText(str(df_subj["Other_preop"][0])) \
+            #if str(df_subj["Other_preop"][0]) != 'nan' else self.lineEditOther.setText('')
+
+        return
+
+
         # TODO: ANalog to the GUIpreoperative data we need to extract the data available and stick it to the dataframe
         #  at the end of the file.
+
+
+
 
 #alternative?:
         # with open("medication.csv","w", newline="") as f:
