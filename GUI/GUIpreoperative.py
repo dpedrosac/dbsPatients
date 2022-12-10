@@ -33,7 +33,7 @@ class PreoperativeDialog(QDialog):
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
 
-        # ====================    Optionbox (1) upper      ====================
+        # ====================    Optionbox (1) middle, highest      ====================
         self.optionbox1 = QGroupBox('Diagnosis and indication check')
         self.optionbox1Content = QVBoxLayout(self.optionbox1)
         layout_general.addWidget(self.optionbox1, 0, 0)
@@ -86,7 +86,7 @@ class PreoperativeDialog(QDialog):
         self.optionbox1Content.addLayout(box1line3)
         self.optionbox1.setLayout(self.optionbox1Content)
 
-        # ====================    Optionbox (2) middle       ====================
+        # ====================    Optionbox (2) middle, high       ====================
         self.optionbox2 = QGroupBox('Reports and study participation:')
         self.optionbox2Content = QVBoxLayout(self.optionbox2)
         layout_general.addWidget(self.optionbox2, 1, 0)
@@ -118,7 +118,7 @@ class PreoperativeDialog(QDialog):
         self.optionbox2Content.addLayout(box2line1)
         self.optionbox2.setLayout(self.optionbox2Content)
 
-        # ====================    Optionbox (3) lower       ====================
+        # ====================    Optionbox (3), middle lower       ====================
         self.optionbox3 = QGroupBox('Scales and questionnaires:')
         self.optionbox3Content = QHBoxLayout(self.optionbox3)
         layout_general.addWidget(self.optionbox3, 2, 0)
@@ -165,7 +165,7 @@ class PreoperativeDialog(QDialog):
         self.optionbox3Content.addLayout(self.GridCoordinatesLeft)
         self.optionbox3Content.addStretch()
 
-        # ====================    Optionbox (2) middle       ====================
+        # ====================    Optionbox (4) middle, lowest       ====================
         self.optionbox4 = QGroupBox('Other:')
         self.optionbox4Content = QVBoxLayout(self.optionbox4)
         layout_general.addWidget(self.optionbox4, 3, 0)
