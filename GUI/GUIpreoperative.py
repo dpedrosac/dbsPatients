@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import os, sys
 import pandas as pds
+pds.options.mode.chained_assignment = None  # default='warn' cf.
+# https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
+import numpy as np
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
@@ -280,12 +283,14 @@ class PreoperativeDialog(QDialog):
 
         df_general = Clean.get_GeneralData()
 
-        df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()} # extract empty dictionary
+        # First of all, read general data so that pre-/intra- and postoperative share these
+        df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
         df_subj['ID'] = General.read_current_subj().id[0]
         df_subj['PID'] = df_general['PID_ORBIS'][0]
         df_subj['Gender'] = df_general['Gender'][0]
         df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
 
+        # Now extract teh changed data from the GUI
         df_subj["First_Diagnosed_preop"] = self.lineEditFirstDiagnosed.text()
         df_subj['Admission_preop'] = self.lineEditAdmNeurIndCheck.text()
         df_subj['Dismissal_preop'] = self.DismNeurIndCheckLabel.text()
@@ -310,20 +315,16 @@ class PreoperativeDialog(QDialog):
         # ToDO: Here the rest of the extracted columns must be entered again and the dataframe should replace the line
         #  that was modified
 
-        subj_id = General.read_current_subj().id[0] # reads data from curent_subj (saved in ./tmp)
+        subj_id = General.read_current_subj().id[0] # reads data from current_subj (saved in ./tmp)
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
         if df.shape[1] == 1:
             df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
 
         idx2replace = df.index[df['ID'] == subj_id][0]
+        df.iloc[idx2replace, :] = df_subj
+        df = df.replace(['nan', ''], [np.nan, np.nan])
 
-        # TODO: Marco, you need to find a way to turn the dictionaryy df_subj into a dataframe and replace the data at
-        #  the index idxreplace of 'df' with df_subj. Later I would suggest to use line 322 to save everything to the
-        #  file
-        df.iloc[idx2replace] = pds.DataFrame([df_subj])
-        df.to_csv("preoperative.csv", index=False)
-        # df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
-
+        df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)  # saves changed data to file
         self.close()
 
 
