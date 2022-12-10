@@ -212,8 +212,6 @@ class PreoperativeDialog(QDialog):
     def updatetext(self):
         """adds information extracted from database already provided"""
 
-        # TODO: MEdication is still missing and it drops an error when saved/called. Please double check.
-
         df_subj = Content.extract_saved_data(self.date)
 
         self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0])) \
@@ -324,7 +322,6 @@ class PreoperativeDialog(QDialog):
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
 
-        df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)  # saves changed data to file
         self.close()
 
 
