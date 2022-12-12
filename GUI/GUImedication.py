@@ -12,7 +12,7 @@ from dependencies import ROOTDIR, FILEDIR
 class MedicationDialog(QDialog):
     """Dialog to introduce the medication at a specific date. All unrelated """
 
-    def __init__(self, visit='unknown', parent=None):
+    def __init__(self, visit="unknown", parent=None):
         super().__init__(parent)
 
         # ====================    Create General Layout      ====================
@@ -107,7 +107,7 @@ class MedicationDialog(QDialog):
 
         layout_general.addLayout(hlay_bottom, 4, 0, 1,3)
 
-        self.updatetext() # Updates text from csv after creating the content!
+        self.updatetext()# Updates text from csv after creating the content!
 
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):
@@ -130,10 +130,6 @@ class MedicationDialog(QDialog):
                 else eval('self.lineEdit{}.toPlainText()'.format(v))
 
         df.iloc[idx2replace, :] = df_subj
-        # TODO: Marco, at this point the number of columns is not equal in preoperative compared to this. The reason are
-        #  two columns ('_oral_preop' and '_sublingual_preop') that are wrong because something was mixed up.
-        #  can you please make sure, the columns are right. Whenever this is done, this part should work.
-
         df = df.replace(['nan', ''], [np.nan, np.nan])
         df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)  # saves changed data to file
 
@@ -146,48 +142,12 @@ class MedicationDialog(QDialog):
         df_items = {v.format('_preop').replace(' ', '_'): v.format('').replace(' ', '_') for v in self.medication_names}
         for k, v in df_items.items():
             if v != 'Other':
-                eval('self.lineEdit{}.setText(str(df_subj["{}_preop"][o]))'.format(v, v)) \
+                eval('self.lineEdit{}.setText(str(df_subj["{}_preop"][0]))'.format(v, v)) \
                     if str(df_subj['{}_preop'.format(v)][0]) != 'nan' \
                     else eval('self.lineEdit{}.setText("")'.format(v))
             else:  # 'Other' needs a slightly different approach
                 self.lineEditOther.insertPlainText(str(df_subj["{}_preop".format(v)][0])) \
                     if str(df_subj["{}_preop".format(v)][0]) != 'nan' else self.lineEditOther.insertPlainText('')
-
-        # TODO: above is a programmatically more elegant way to do the same as below. Please delete this comment
-        #  and the part below when code is working
-
-        # self.lineEditLevodopa_Carbidopa.setText(str(df_subj["Levodopa_Carbidopa_preop"][0])) \
-        #     if str(df_subj["Levodopa_Carbidopa_preop"][0]) != 'nan' else self.lineEditLevodopa_Carbidopa.setText('')
-        # self.lineEditLevodopa_Carbidopa_CR.setText(str(df_subj["Levodopa_Carbidopa_CR_preop"][0])) \
-        #     if str(df_subj["Levodopa_Carbidopa_CR_preop"][0]) != 'nan' else self.lineEditLevodopa_Carbidopa_CR.setText('')
-        # self.lineEditEntacapone.setText(str(df_subj["Entacapone_preop"][0])) \
-        #     if str(df_subj["Entacapone_preop"][0]) != 'nan' else self.lineEditEntacapone.setText('')
-        # self.lineEditTolcapone.setText(str(df_subj["Tolcapone_preop"][0])) \
-        #     if str(df_subj["Tolcapone_preop"][0]) != 'nan' else self.lineEditTolcapone.setText('')
-        # self.lineEditPramipexole.setText(str(df_subj["Pramipexole_preop"][0])) \
-        #     if str(df_subj["Pramipexole_preop"][0]) != 'nan' else self.lineEditPramipexole.setText('')
-        # self.lineEditRopinirole.setText(str(df_subj["Ropinirole_preop"][0])) \
-        #     if str(df_subj["Ropinirole_preop"][0]) != 'nan' else self.lineEditRopinirole.setText('')
-        # self.lineEditRotigotine.setText(str(df_subj["Rotigotine_preop"][0])) \
-        #     if str(df_subj["Rotigotine_preop"][0]) != 'nan' else self.lineEditRotigotine.setText('')
-        # self.lineEditSelegiline_oral.setText(str(df_subj["Selegiline_preop"][0])) \
-        #     if str(df_subj["Selegiline_preop"][0]) != 'nan' else self.lineEditSelegiline_oral.setText('')
-        # self.lineEditSelegiline_sublingual.setText(str(df_subj["_sublingual_preop"][0])) \
-        #     if str(df_subj["_sublingual_preop"][0]) != 'nan' else self.lineEditSelegiline_sublingual.setText('')
-        # self.lineEditRasagiline.setText(str(df_subj["Rasagiline_preop"][0])) \
-        #     if str(df_subj["Rasagiline_preop"][0]) != 'nan' else self.lineEditRasagiline.setText('')
-        # self.lineEditAmantadine.setText(str(df_subj["Amantadine_preop"][0])) \
-        #     if str(df_subj["Amantadine_preop"][0]) != 'nan' else self.lineEditAmantadine.setText('')
-        # self.lineEditApomorphine.setText(str(df_subj["Apomorphine_preop"][0])) \
-        #     if str(df_subj["Apomorphine_preop"][0]) != 'nan' else self.lineEditApomorphine.setText('')
-        # self.lineEditPiribedil.setText(str(df_subj["Piribedil_preop"][0])) \
-        #     if str(df_subj["Piribedil_preop"][0]) != 'nan' else self.lineEditPiribedil.setText('')
-        # self.lineEditSafinamide.setText(str(df_subj["Safinamid_preop"][0])) \
-        #     if str(df_subj["Safinamid_preop"][0]) != 'nan' else self.lineEditSafinamide.setText('')
-        # self.lineEditOpicapone.setText(str(df_subj["Opicapone_preop"][0])) \
-        #     if str(df_subj["Opicapone_preop"][0]) != 'nan' else self.lineEditSafinamide.setText('')
-        # self.lineEditOther.setText(str(df_subj["Other_preop"][0])) \
-        #     if str(df_subj["Other_preop"][0]) != 'nan' else self.lineEditOther.toPlainText('')
 
         return
 

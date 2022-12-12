@@ -128,7 +128,7 @@ class Content:
                       "BDI2_preop", "PDQ39_preop", "Outpat_Contact_preop", "nch_preop", "Briefing_preop",
                       "Briefing_Doctor_preop", "DBS_Conference_preop", "Decision_DBS_preop", "LEDD_preop", "Levodopa_Carbidopa_preop",
                       "Levodopa_Carbidopa_CR_preop", "Entacapone_preop", "Tolcapone_preop", "Pramipexole_preop", "Ropinirole_preop",
-                      "Rotigotine_preop", "Selegiline_preop", "_oral_preop", "Selegiline.1_preop", "_sublingual_preop",
+                      "Rotigotine_preop", "Selegiline_oral_preop", "Selegiline_sublingual_preop",
                       "Rasagiline_preop", "Amantadine_preop", "Apomorphine_preop", "Piribedil_preop", "Safinamid_preop",
                       "Opicapone_preop", "Other_preop", "UPDRSII_preop", "H&Y_preop", "HRUQ_preop",
                       "EQ5D_preop", "S&E_preop", "icVRCS_preop", "inexVRCS_preop", "Notes_preop",
