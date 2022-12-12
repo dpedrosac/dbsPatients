@@ -310,9 +310,6 @@ class PreoperativeDialog(QDialog):
         df_subj["PDQ39_preop"] = self.pdq39.text()
         df_subj["S&E_preop"] = self.se.text()
 
-        # ToDO: Here the rest of the extracted columns must be entered again and the dataframe should replace the line
-        #  that was modified
-
         subj_id = General.read_current_subj().id[0] # reads data from current_subj (saved in ./tmp)
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
         if df.shape[1] == 1:
@@ -321,6 +318,7 @@ class PreoperativeDialog(QDialog):
         idx2replace = df.index[df['ID'] == subj_id][0]
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
+        #df_subj.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
 
         self.close()
 

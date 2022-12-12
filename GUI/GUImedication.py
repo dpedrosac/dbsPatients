@@ -12,7 +12,7 @@ from dependencies import ROOTDIR, FILEDIR
 class MedicationDialog(QDialog):
     """Dialog to introduce the medication at a specific date. All unrelated """
 
-    def __init__(self, visit="unknown", parent=None):
+    def __init__(self, visit="preoperative", parent=None):
         super().__init__(parent)
 
         # ====================    Create General Layout      ====================
