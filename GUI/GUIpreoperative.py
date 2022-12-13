@@ -316,9 +316,9 @@ class PreoperativeDialog(QDialog):
             df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
 
         idx2replace = df.index[df['ID'] == subj_id][0]
-        df.iloc[idx2replace, :] = df_subj
+        df_subj = df.iloc[idx2replace, :]
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        #df_subj.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
+        #df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
 
         self.close()
 

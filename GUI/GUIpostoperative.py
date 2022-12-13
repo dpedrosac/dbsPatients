@@ -385,8 +385,8 @@ class PostoperativeDialog(QDialog):
 
         #upper left
 
-        #self.lineEditAdmission_Nch.setText(str(df_subj["Admission_postop"][0]))
-            #if str(df_subj["Admission_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        #self.lineEditAdmission_Nch.setText(str(df_subj["Admission_postop"][0]))\
+        #    if str(df_subj["Admission_postop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
         #self.lineEditAdmission_NR.setText(str(df_subj[""][0]))
         # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
         #self.lineEditDismission_Nch.setText(str(df_subj[""][0]))

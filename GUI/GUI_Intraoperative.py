@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-import sys
+import sys, os
+import pandas as pds
 
+pds.options.mode.chained_assignment = None
+import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox,  QSpacerItem, QSizePolicy, \
     QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QListWidget, QCheckBox
 from GUI.GUImedication import MedicationDialog
-
+from utils.helper_functions import General, Content, Clean
+from dependencies import ROOTDIR, FILEDIR
 
 class IntraoperativeDialog(QDialog):
     """Dialog to introduce all important information of intraoperative patients. """
@@ -18,7 +22,11 @@ class IntraoperativeDialog(QDialog):
         self.setWindowTitle('Please insert the data from the intraoperative patient contact ...')
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 100)
+
         self.date = 'intraoperative'  # defines the date at which data are taken from/saved at
+        #subj_details = General.read_current_subj()
+        #General.synchronize_data_with_general(self.date, subj_details.id[0],
+                                              #messagebox=False)
 
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
@@ -323,6 +331,55 @@ class IntraoperativeDialog(QDialog):
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
 
+    def updatetext(self):
+
+        df_subj = Content.extract_saved_data(self.date)
+
+        # upper left
+        self.lineEditAdmNCh.setText(str(df_subj["admission_Nch_intraop"][0])) \
+            if str(df_subj["admission_Nch_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        self.lineEditAdmNeur.setText(str(df_subj["Admission_intraop"][0])) \
+            if str(df_subj["Admission_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        self.lineEditDismNeur.setText(str(df_subj["Dismissal_intraop"][0])) \
+            if str(df_subj["Dismissal_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        self.lineEditDismNCh.setText(str(df_subj["dismissal_NCh_intraop"][0])) \
+            if str(df_subj["dismissal_NCh_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+
+        # middle left
+        self.lineEditDurationSurgery.setText(str(df_subj["op_duration_intraop"][0])) \
+            if str(df_subj["op_duration_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        self.lineEditTrajectories.setText(str(df_subj["no_traj_intraop"][0])) \
+            if str(df_subj["no_traj_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+
+        # upper right
+        self.lineEditSurgeryDate.setText(str(df_subj["surgery_date_intraop"][0])) \
+            if str(df_subj["surgery_date_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+
+        # lower left
+
+        # Edit Checkboxes with content
+        # Middle left
+        if df_subj["report_file_NR_intraop"][0] != 0:
+            self.ReportNeurCheck.setChecked(True)
+        if df_subj["awake_intraop"][0] != 0:
+            self.AwakePatientCheck.setChecked(True)
+        if df_subj["report_file_NCh_intraop"][0] != 0:
+            self.ReportNChLabel.setChecked(True)
+        if df_subj["protocol_intraop"][0] != 0:
+            self.ProtocolNeurCheck.setChecked(True)
+
+        # bottom right
+        if df_subj["CTscan_intraop"][0] != 0:
+            self.PostopCTScanCheck.setChecked(True)
+        if df_subj["implantation_visit_intraop"][0] != 0:
+            self.ImplVerciseDBSCheck.setChecked(True)
+        if df_subj["activation_visit_intraop"][0] != 0:
+            self.ActivateVerciseDBSCheck.setChecked(True)
+        if df_subj["incl_qualiPA_intraop"][0] != 0:
+            self.InclusionQualiPaLabel.setChecked(True)
+
+        return
+
     # ====================   Defines actions when buttons are pressed      ====================
     @QtCore.pyqtSlot()
     def onClickedMedication(self):
@@ -339,56 +396,7 @@ class IntraoperativeDialog(QDialog):
         self.close()
 
 #TODO: extract data from Intraop csv
-    def updatetext(self):
 
-        df_subj = Content.extract_saved_data(self.date)
-
-        #upper left
-        self.lineEditAdmNCh.setText(str(df_subj["admission_Nch_intraop"][0]))\
-         if str(df_subj["admission_Nch_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-        self.lineEditAdmNeur.setText(str(df_subj["Admission_intraop"][0]))\
-         if str(df_subj["Admission_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-        self.lineEditDismNeur.setText(str(df_subj["Dismissal_intraop"][0]))\
-         if str(df_subj["Dismissal_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-        self.lineEditDismNCh.setText(str(df_subj["dismissal_NCh_intraop"][0])) \
-         if str(df_subj["dismissal_NCh_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-
-        #middle left
-        self.lineEditDurationSurgery.setText(str(df_subj["op_duration_intraop"][0])) \
-         if str(df_subj["op_duration_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-        self.lineEditTrajectories.setText(str(df_subj["no_traj_intraop"][0])) \
-         if str(df_subj["no_traj_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-
-        #upper right
-        self.lineEditSurgeryDate.setText(str(df_subj["surgery_date_intraop"][0])) \
-         if str(df_subj["surgery_date_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-
-        #lower left
-
-
-
-        #Edit Checkboxes with content
-        #Middle left
-        if df_subj["report_file_NR_intraop"][0] != 0:
-            self.ReportNeurCheck.setChecked(True)
-        if df_subj["awake_intraop"][0] != 0:
-            self.AwakePatientCheck.setChecked(True)
-        if df_subj["report_file_NCh_intraop"][0] != 0:
-            self.ReportNChLabel.setChecked(True)
-        if df_subj["protocol_intraop"][0] != 0:
-            self.ProtocolNeurCheck.setChecked(True)
-
-        #bottom right
-        if df_subj["CTscan_intraop"][0] != 0:
-            self.PostopCTScanCheck.setChecked(True)
-        if df_subj["implantation_visit_intraop"][0] != 0:
-            self.ImplVerciseDBSCheck.setChecked(True)
-        if df_subj["activation_visit_intraop"][0] != 0:
-            self.ActivateVerciseDBSCheck.setChecked(True)
-        if df_subj["incl_qualiPA_intraop"][0] != 0:
-            self.InclusionQualiPaLabel.setChecked(True)
-
-        return
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

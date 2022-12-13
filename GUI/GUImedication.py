@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import sys, os
+import pandas as pd
 from PyQt5 import QtCore
 import numpy as np
+pd.options.mode.chained_assignment = None
 
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QLabel, QWidget, QGridLayout, QPlainTextEdit
@@ -125,9 +127,11 @@ class MedicationDialog(QDialog):
         # TODO: to make sure nothing is entered in 'Other' separated with semicolon, comma and dots ; maybe "-"
         #  a distinct separator should be used, use replace maybe?! self.lineEditOther.toPlainText().replace(',', '-')
 
+
         for k, v in df_items.items():
             df_subj[k] = eval('self.lineEdit{}.text()'.format(v)) if v != 'Other' \
                 else eval('self.lineEdit{}.toPlainText()'.format(v))
+
 
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
