@@ -310,15 +310,30 @@ class PreoperativeDialog(QDialog):
         df_subj["PDQ39_preop"] = self.pdq39.text()
         df_subj["S&E_preop"] = self.se.text()
 
+        # Load the CSV file into a dataframe
         subj_id = General.read_current_subj().id[0] # reads data from current_subj (saved in ./tmp)
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+
+        # Update the data in the dataframe
+        idx2replace = df.index[df['ID'] == subj_id][0]
+        df.loc[idx2replace, :].update(df_subj)
         if df.shape[1] == 1:
             df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
 
-        idx2replace = df.index[df['ID'] == subj_id][0]
-        df_subj = df.iloc[idx2replace, :]
-        df = df.replace(['nan', ''], [np.nan, np.nan])
-        #df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
+        # Save the updated dataframe to the CSV file
+        df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), mode='w', index=False)
+
+        #subj_id = General.read_current_subj().id[0] # reads data from current_subj (saved in ./tmp)
+        #df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+        #if df.shape[1] == 1:
+            #df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
+
+        #idx2replace = df.index[df['ID'] == subj_id][0]
+        #df.loc[idx2replace, :].update(df_subj)
+
+        #df.to_csv(os.path.join(FILEDIR, "preoperative_updated.csv"), index=False)
+
+
 
         self.close()
 
