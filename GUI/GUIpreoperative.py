@@ -282,7 +282,15 @@ class PreoperativeDialog(QDialog):
         df_general = Clean.get_GeneralData()
 
         # First of all, read general data so that pre-/intra- and postoperative share these
-        df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
+        try:
+            subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
+            df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+            if df.shape[1] == 1:
+                df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
+            df_subj = df.iloc[df.index[df['ID'] == subj_id][0], :].to_dict()
+        except IndexError:
+            df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
+
         df_subj['ID'] = General.read_current_subj().id[0]
         df_subj['PID'] = df_general['PID_ORBIS'][0]
         df_subj['Gender'] = df_general['Gender'][0]
@@ -310,15 +318,10 @@ class PreoperativeDialog(QDialog):
         df_subj["PDQ39_preop"] = self.pdq39.text()
         df_subj["S&E_preop"] = self.se.text()
 
-        subj_id = General.read_current_subj().id[0] # reads data from current_subj (saved in ./tmp)
-        df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
-        if df.shape[1] == 1:
-            df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
-
         idx2replace = df.index[df['ID'] == subj_id][0]
-        df_subj = df.iloc[idx2replace, :]
+        df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        #df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
+        df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
 
         self.close()
 

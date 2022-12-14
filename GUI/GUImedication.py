@@ -3,13 +3,14 @@ import sys, os
 import pandas as pd
 from PyQt5 import QtCore
 import numpy as np
-pd.options.mode.chained_assignment = None
 
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QLabel, QWidget, QGridLayout, QPlainTextEdit
 
 from utils.helper_functions import General, Content
 from dependencies import ROOTDIR, FILEDIR
+pd.options.mode.chained_assignment = None
+
 
 class MedicationDialog(QDialog):
     """Dialog to introduce the medication at a specific date. All unrelated """
@@ -30,7 +31,7 @@ class MedicationDialog(QDialog):
         self.optionbox1 = QGroupBox('Patient Medication')
         self.grid_medication = QGridLayout()
         self.medication_names = ['Levodopa Carbidopa{}', 'Levodopa Carbidopa CR{}', 'Entacapone{}', 'Tolcapone{}',
-                                 'Pramipexole{}', 'Ropinirole{}', 'Rotigotine{}', 'Selegiline oral{}', 'Other',
+                                 'Pramipexole{}', 'Ropinirole{}', 'Rotigotine{}', 'Selegiline oral{}', 'Other{}',
                                  'Selegiline sublingual{}', 'Rasagiline{}', 'Amantadine{}', 'Apomorphine{}',
                                  'Piribedil{}', 'Safinamide{}', 'Opicapone{}']
         no_rows, iter_row = 9, 0
@@ -107,15 +108,15 @@ class MedicationDialog(QDialog):
         hlay_bottom.addStretch(2)
         hlay_bottom.addWidget(self.button_save_return)
 
-        layout_general.addLayout(hlay_bottom, 4, 0, 1,3)
+        layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
-        self.updatetext()# Updates text from csv after creating the content!
+        self.updatetext()  # Updates text from csv after creating the content!
 
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):
         """returns to calling GUI saving data whenever button is pressed """
 
-        subj_id = General.read_current_subj().id[0] # reads data from current_subj (saved in ./tmp)
+        subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
         if df.shape[1] == 1:
             df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
@@ -127,11 +128,9 @@ class MedicationDialog(QDialog):
         # TODO: to make sure nothing is entered in 'Other' separated with semicolon, comma and dots ; maybe "-"
         #  a distinct separator should be used, use replace maybe?! self.lineEditOther.toPlainText().replace(',', '-')
 
-
         for k, v in df_items.items():
             df_subj[k] = eval('self.lineEdit{}.text()'.format(v)) if v != 'Other' \
                 else eval('self.lineEdit{}.toPlainText()'.format(v))
-
 
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
