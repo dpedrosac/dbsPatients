@@ -125,9 +125,6 @@ class MedicationDialog(QDialog):
         df_items = {v.format('_preop').replace(' ', '_'): v.format('').replace(' ', '_') for v in self.medication_names}
         df_subj = df.iloc[idx2replace, :]
 
-        # TODO: to make sure nothing is entered in 'Other' separated with semicolon, comma and dots ; maybe "-"
-        #  a distinct separator should be used, use replace maybe?! self.lineEditOther.toPlainText().replace(',', '-')
-
         for k, v in df_items.items():
             df_subj[k] = eval('self.lineEdit{}.text()'.format(v)) if v != 'Other' \
                 else eval('self.lineEdit{}.toPlainText()'.format(v))
