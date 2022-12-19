@@ -423,7 +423,7 @@ class PostoperativeDialog(QDialog):
         self.lineEditUPDRSII.setText(str(df_subj["UPDRSII_postop"][0])) \
             if str(df_subj["UPDRSII_postop"][0]) != 'nan' else self.lineEditUPDRSII.setText('')
         # self.lineEditHRUQ.setText(str(df_subj[""][0]))
-        # if str(df_subj[""][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        # if str(df_subj[""][0]) != 'nan' else self.lineEditHRUQ.setText('')
         self.lineEditMoCa.setText(str(df_subj["MoCa_postop"][0])) \
             if str(df_subj["MoCa_postop"][0]) != 'nan' else self.lineEditMoCa.setText('')
         self.lineEditMMST.setText(str(df_subj["MMST_postop"][0])) \
@@ -542,8 +542,83 @@ class PostoperativeDialog(QDialog):
     #TODO: Edit save-function
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):
-        self.saveFileDialog()
 
+
+        df_general = Clean.get_GeneralData()
+
+        # First of all, read general data so that pre-/intra- and postoperative share these
+        try:
+            subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
+            df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+            if df.shape[1] == 1:
+                df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
+            df_subj = df.iloc[df.index[df['ID'] == subj_id][0], :].to_dict()
+        except IndexError:
+            df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
+
+        df_subj['ID'] = General.read_current_subj().id[0]
+        df_subj['PID'] = df_general['PID_ORBIS'][0]
+        df_subj['Gender'] = df_general['Gender'][0]
+        df_subj['Diagnosis_postop'] = df_general['diagnosis'][0]
+
+
+        # Now extract teh changed data from the GUI
+
+        #upper left
+        df_subj["Admission_NCh_postop"] = self.lineEditAdmission_Nch.text()
+        df_subj['Admission_NR_postop'] = self.lineEditAdmission_NR.text()
+        df_subj['Dismissal_NCh_postop'] = self.lineEditDismission_Nch.text()
+        df_subj['Dismissal_NR_postop'] = self.lineEditDismission_NR.text()
+        df_subj['Surgery_Date_postop'] = self.lineEditSurgery.text()
+        #df_subj[''] = self.lineEditLast_Revision.text()
+        #df_subj[''] = self.lineEditOutpatient_Contact.text()
+
+
+        #upper right
+        df_subj['AE_postop'] = self.lineEditAdverse_Event.text()
+
+
+        #middle right
+        df_subj["UPDRS1_postop"] = self.lineEditUPDRSI.text()
+        df_subj["UPDRS4_postop"] = self.lineEditUPDRSIV.text()
+        df_subj["TSS_postop"] = self.lineEditTSS.text()
+        df_subj["CGIG_patient_postop"] = self.lineEditCGICPat.text()
+        df_subj["CGIG_clinician_cargiver_postop"] = self.lineEditCGICClinician.text()
+        df_subj["UPDRSon_postop"] = self.lineEditUPDRSON.text()
+        df_subj["UPDRSII_postop"] = self.lineEditUPDRSII.text()
+        #df_subj[""] = self.lineEditHRUQ.text()
+        df_subj["MoCa_postop"] = self.lineEditMoCa.text()
+        df_subj["MMST_postop"] = self.lineEditMMST.text()
+        df_subj["BDI2_postop"] = self.lineEditBDIII.text()
+        df_subj["NMSQ_postop"] = self.lineEditNMSQ.text()
+        #df_subj[""] = self.lineEditUPDRSOff.text()
+        df_subj["H&Y_postop"] = self.lineEditHY.text()
+        df_subj["EQ5D_postop"] = self.lineEditEQ5D.text()
+        df_subj["DemTect_postop"] = self.lineEditDemTect.text()
+        df_subj["PDQ8_postop"] = self.lineEditPDQ8.text()
+        df_subj["PDQ39_postop"] = self.lineEditPDQ39.text()
+        df_subj["S&E_postop"] = self.lineEditSE.text()
+        #df_subj[""] = self.lineEditUDDRSOn.text()
+        df_subj["TRSon_postop"] = self.lineEditTRSOn.text()
+        df_subj["UDDRSoff_postop"] = self.lineEditUDDRSOff.text()
+        df_subj["TRSoff_postop"] = self.lineEditTRSOff.text()
+
+
+        #middle left
+        #TODO save changes in checkboxes?
+
+
+
+
+
+
+
+        idx2replace = df.index[df['ID'] == subj_id][0]
+        df.iloc[idx2replace, :] = df_subj
+        df = df.replace(['nan', ''], [np.nan, np.nan])
+        df.to_csv(os.path.join(FILEDIR, "postoperative_test.csv"), index=False)
+
+        self.close()
     def close(self):
         self.saveFileDialog()
 
