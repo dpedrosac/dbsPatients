@@ -153,17 +153,26 @@ class Content:
                         "DBS_intraop", "Comments_intraop"
                         ]
 
-        list_postop = ["ID", "PID", "Gender", "Diagnosis_postop", "First_Diagnosed_postop",
-                       "Admission_postop", "Dismissal_postop", "Report_postop", "UPDRS_On_postop",
-                       "UPDRS_Off_postop", "Video_postop", "Video_File_postop", "MRI_postop", "fpcit_spect_postop",
-                       "NMSQ_postop", "MoCa_postop", "DemTect_postop", "MMST_postop", "PDQ8_postop",
-                       "BDI2_postop", "PDQ39_postop", "Outpat_Contact_postop", "nch_postop", "Briefing_postop",
-                       "Briefing_Doctor_postop", "DBS_Conference_postop", "Decision_DBS_postop", "LEDD_postop", "Levodopa_Carbidopa_postop",
-                       "Levodopa_Carbidopa_CR_postop", "Entacapone_postop", "Tolcapone_postop", "Pramipexole_postop", "Ropinirole_postop",
-                       "Rotigotine_postop", "Selegiline_postop", "_oral_postop", "Selegiline.1_postop", "_sublingual_postop",
-                       "Rasagiline_postop", "Amantadine_postop", "Apomorphine_postop", "Piribedil_postop", "Safinamid_postop",
-                       "Opicapone_postop", "Other_postop", "UPDRSII_postop", "H&Y_postop", "HRUQ_postop",
-                       "EQ5D_postop", "S&E_postop", "icVRCS_postop", "inexVRCS_postop", "Notes_postop",
+        list_postop = ["ID", "PID", "Gender", "Diagnosis_postop", "Date_postop",
+                       "Admission_NCh_postop", "Admission_NR_postop", "Dismissal_NR_postop", "Dismissal_NCh_postop", "Report_File_NCh_postop",
+                       "Report_File_NR_postop", "Reason_postop", "Using_Programmer_postop", "CTscan_postop", "Battery_Replacement_postop",
+                       "Planned_Visit_postop", "Qualipa_Visit_postop", "Surgery_Date_postop", "UPDRSIII_On_postop", "UPDRSIII_Off_postop",
+                       "UPDRSII_postop", "H&Y_postop", "EQ5D_postop", "MoCa_postop", "DemTect_postop",
+                       "TSS_postop", "CGIG_clinician_cargiver_postop", "CGIG_patient_postop", "MMST_postop", "PDQ8_postop",
+                       "BDI2_postop", "PDQ39_postop", "NMSQ_postop", "S&E_postop", "LEDD_postop",
+                       "Levodopa/Carbidopa_postop", "Levodopa/Carbidopa_CR_postop", "Entacapone_postop", "Tolcapone_postop", "Pramipexole_postop",
+                       "Ropinirole_postop", "Rotigotine_postop", "Selegiline_oral_postop", "Selegiline_sublingual_postop", "Rasagiline_postop",
+                       "Amantadine_postop", "Apomorphine_postop", "Piribedil_postop", "Safinamid_postop", "Ongentys_postop",
+                       "Other_postop", "Perc1_postop", "Perc2_postop", "Perc3_postop", "Perc4_postop",
+                       "Perc5_postop", "Perc6_postop", "Perc7_postop", "Perc8_postop", "Perc9_postop",
+                       "Perc10_postop", "Perc11_postop", "Perc12_postop", "Perc13_postop", "Perc14_postop",
+                       "Perc15_postop", "Perc16_postop", "AmplL_postop", "AmplR_postop", "PWL_postop",
+                       "PWR_postop", "FreqL_postop","FreqR_postop", "UPDRS1_postop", "UPDRS4_postop",
+                       "UPDRSon_postop", "UDDRSoff_postop", "TRSon_postop", "TRSoff_postop", "AE_postop",
+                       "Comments_postop", "DBS_postop", "Unnamed:_84_postop", "Unnamed:_85_postop", "Unnamed:_86_postop",
+                       "Unnamed:_87_postop", "Unnamed:_88_postop", "Unnamed:_89_postop", "Unnamed:_90_postop", "Unnamed:_91_postop",
+                       "Unnamed:_92_postop", "Unnamed:_93_postop", "Unnamed:_94_postop", "Unnamed:_95_postop", "Unnamed:_96_postop"
+
                     ]
 
         return df_subj
