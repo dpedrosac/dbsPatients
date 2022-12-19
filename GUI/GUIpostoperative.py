@@ -475,6 +475,8 @@ class PostoperativeDialog(QDialog):
         #bottom left
         #DBS left
 
+        #TODO: add if-statement for empty values.
+
         DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 1).widget()
         DBSleft.setText(str(df_subj["Perc1_postop"][0]))
         DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 2).widget()
@@ -536,6 +538,8 @@ class PostoperativeDialog(QDialog):
         return
 
     # ====================   Defines actions when buttons are pressed      ====================
+
+    #TODO: Edit save-function
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):
         self.saveFileDialog()
