@@ -22,7 +22,7 @@ class PostoperativeDialog(QDialog):
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
 
-        self.setWindowTitle('Postoperative Information')
+        self.setWindowTitle('Postoperative Information (PID: {})'.format(str(int(subj_details.pid))))
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 200)
 
@@ -127,9 +127,6 @@ class PostoperativeDialog(QDialog):
                 pass
             elif followup == '36-month follow-up':
                 pass
-                # etc.
-
-            # Connect the activated signal of the lineEditreason combo box to the on_followup_selected slot
 
         self.lineEditreason.activated.connect(on_followup_selected)
 
