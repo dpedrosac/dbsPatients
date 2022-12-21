@@ -1,8 +1,11 @@
 import os
 import sys
 
+import pandas as pd
 import self as self
 from PyQt5 import QtCore
+import numpy as np
+
 
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox
@@ -104,32 +107,6 @@ class PostoperativeDialog(QDialog):
                                       '12-month follow-up',
                                       '24-month follow-up',
                                       '36-month follow-up'])
-
-        # Select follow-up
-        @QtCore.pyqtSlot(int)
-        def on_followup_selected(self, index):
-            # Read the CSV file
-            with open('postoperative_test.csv', 'r') as f:
-                reader = csv.reader(f)
-                data = list(reader)
-
-            # Get the selected follow-up option
-            followup = self.lineEditreason.itemText(index)
-
-            # Update the data based on the selected follow-up option
-            if followup == '3-month follow-up':
-                pass
-            elif followup == '6-month follow-up':
-                pass
-            elif followup == '12-month follow-up':
-                pass
-            elif followup == '24-month follow-up':
-                pass
-            elif followup == '36-month follow-up':
-                pass
-
-        self.lineEditreason.activated.connect(on_followup_selected)
-
 
 
         # 'Adverse event',
@@ -566,7 +543,39 @@ class PostoperativeDialog(QDialog):
 
         frequencyRightWidget = self.gridDBSsettings.itemAtPosition(2, 3).widget()
         frequencyRightWidget.setText(str(df_subj["FreqR_postop"][0]))
+
+        @QtCore.pyqtSlot(int)
+        def on_lineEditreason_currentIndexChanged(self, index):
+            # Declare the reason variable
+            reason = self.lineEditreason.currentText()
+            # Update the Reason_postop column in df_subj with the new value of reason
+            df_subj['Reason_postop'] = reason
+            df_subj = df_subj.assign(Reason_postop=reason)
+
+            # Filter df_subj based on the value of Reason_postop
+            df_subj = df_subj.loc[df_subj['Reason_postop'] == reason]
+
+            follow_up = self.lineEditreason.currentText()
+            if follow_up == '3-month follow-up':
+                df_subj = df_subj[df_subj['Reason_postop'] == '3-month follow-up']
+            elif follow_up == '6-month follow-up':
+                df_subj = df_subj[df_subj['Reason_postop'] == '6-month follow-up']
+            elif follow_up == '12-month follow-up':
+                df_subj = df_subj[df_subj['Reason_postop'] == '12-month follow-up']
+            elif follow_up == '24-month follow-up':
+                df_subj = df_subj[df_subj['Reason_postop'] == '24-month follow-up']
+            elif follow_up == '36-month follow-up':
+                df_subj = df_subj[df_subj['Reason_postop'] == '36-month follow-up']
+
+            df_subj = pd.DataFrame(df_subj)
+
+            reason = self.lineEditreason.currentText()
+            df_subj = df_subj.loc[df_subj['Reason_postop'] == reason]
+
+
         return
+
+
 
     # ====================   Defines actions when buttons are pressed      ====================
 
@@ -585,6 +594,7 @@ class PostoperativeDialog(QDialog):
 
     def onClickedSaveReturn(self):
 
+
         df_general = Clean.get_GeneralData()
 
         # First of all, read general data so that pre-/intra- and postoperative share these
@@ -597,8 +607,10 @@ class PostoperativeDialog(QDialog):
         except IndexError:
             df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
 
+        df_general.reset_index(inplace=True, drop=True)
+
         df_subj['ID'] = General.read_current_subj().id[0]
-        df_subj['PID'] = df_general['PID_ORBIS'][0]
+        df_subj['PID'] = df_general.iloc[0, :]['PID_ORBIS']
         df_subj['Gender'] = df_general['Gender'][0]
         df_subj['Diagnosis_postop'] = df_general['diagnosis'][0]
 
@@ -642,12 +654,12 @@ class PostoperativeDialog(QDialog):
         df_subj["TRSoff_postop"] = self.lineEditTRSOff.text()
 
         # middle left
-        # TODO save changes in checkboxes?
 
-        idx2replace = df.index[df['ID'] == subj_id][0]
+        idx2replace = df[df['ID'] == subj_id].index[0]
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
         df.to_csv(os.path.join(FILEDIR, "postoperative_test.csv"), index=False)
+
 
         self.close()
 
