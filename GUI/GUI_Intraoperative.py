@@ -19,10 +19,11 @@ class IntraoperativeDialog(QDialog):
         """Initializer."""
         super().__init__(parent)
 
-        self.date = 'intraoperative'  # defines the date at which data are taken from/saved at
+        self.date = 'intraoperative-test'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
+
 
         # ====================    Create General Layout      ====================
         self.setWindowTitle('Please insert the data from the intraoperative patient contact ...(PID: {})'
@@ -329,25 +330,29 @@ class IntraoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
+        self.updatetext()
+
         # ====================   Actions when buttons are pressed      ====================
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
+
+
+
 
     def updatetext(self):
 
         df_subj = Content.extract_saved_data(self.date)
 
+
         # upper left
-
-
-        #self.lineEditAdmNCh.setText(str(df_subj["admission_Nch_intraop"][0])) \
-            #if str(df_subj["admission_Nch_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-        #self.lineEditAdmNeur.setText(str(df_subj["Admission_intraop"][0])) \
-            #if str(df_subj["Admission_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-        #self.lineEditDismNeur.setText(str(df_subj["Dismissal_intraop"][0])) \
-            #if str(df_subj["Dismissal_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-        #self.lineEditDismNCh.setText(str(df_subj["dismissal_NCh_intraop"][0])) \
-            #if str(df_subj["dismissal_NCh_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        self.lineEditAdmNCh.setText(str(df_subj["admission_Nch_intraop"][0])) \
+            if str(df_subj["admission_Nch_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        self.lineEditAdmNeur.setText(str(df_subj["Admission_intraop"][0])) \
+            if str(df_subj["Admission_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        self.lineEditDismNeur.setText(str(df_subj["Dismissal_intraop"][0])) \
+            if str(df_subj["Dismissal_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        self.lineEditDismNCh.setText(str(df_subj["dismissal_NCh_intraop"][0])) \
+            if str(df_subj["dismissal_NCh_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
 
         # middle left
         #self.lineEditDurationSurgery.setText(str(df_subj["op_duration_intraop"][0])) \
