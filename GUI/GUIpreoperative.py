@@ -20,7 +20,7 @@ class PreoperativeDialog(QDialog):
         """Initializer."""
         super().__init__(parent)
 
-        self.date = 'preoperative'  # defines the date at which data are taken from/saved at
+        self.date = 'preoperative_test'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
@@ -291,6 +291,9 @@ class PreoperativeDialog(QDialog):
         except IndexError:
             df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
 
+        df_general.reset_index(inplace=True, drop=True)
+
+
         df_subj['ID'] = General.read_current_subj().id[0]
         df_subj['PID'] = df_general['PID_ORBIS'][0]
         df_subj['Gender'] = df_general['Gender'][0]
@@ -321,7 +324,7 @@ class PreoperativeDialog(QDialog):
         idx2replace = df.index[df['ID'] == subj_id][0]
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
+        df.to_csv(os.path.join(FILEDIR, "preoperative_test.csv"), index=False)
 
         self.close()
 
