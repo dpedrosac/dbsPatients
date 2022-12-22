@@ -131,7 +131,7 @@ class MedicationDialog(QDialog):
 
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)  # saves changed data to file
+        df.to_csv(os.path.join(FILEDIR, "preoperative_test.csv"), index=False)  # saves changed data to file
 
         self.close()
 
