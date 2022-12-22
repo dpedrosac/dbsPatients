@@ -21,8 +21,7 @@ class IntraoperativeDialog(QDialog):
 
         self.date = 'intraoperative-test'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
-        General.synchronize_data_with_general(self.date, subj_details.id[0],
-                                              messagebox=False)
+
 
 
         # ====================    Create General Layout      ====================
@@ -330,14 +329,12 @@ class IntraoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
-        self.updatetext()
 
         # ====================   Actions when buttons are pressed      ====================
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
 
-
-
+        self.updatetext()
 
     def updatetext(self):
 
