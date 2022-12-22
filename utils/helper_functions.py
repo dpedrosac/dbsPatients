@@ -121,6 +121,20 @@ class Content:
             df = General.import_dataframe('{}.csv'.format(condition), separator_csv=';')
         df_subj = df.iloc[df.index[df['ID'] == subj_id].tolist()].to_dict('list')
 
+        # Only filter the data if the condition is "postoperative" and a follow-up interval is provided
+        if condition == 'postoperative' and followup_interval is not None:
+            df_subj = df[df['Reason_postop'] == followup_interval]
+        else:
+            df_subj = df
+
+        # Filter the data by the subject id
+        df_subj = df_subj[df_subj['ID'] == subj_id]
+
+        # Convert the filtered dataframe to a dictionary
+        df_subj = df_subj.to_dict('list')
+
+
+
         list_preop = ["ID", "PID", "Gender", "Diagnosis_preop", "First_Diagnosed_preop",
                       "Admission_preop", "Dismissal_preop", "Report_preop", "UPDRS_On_preop",
                       "UPDRS_Off_preop", "Video_preop", "Video_File_preop", "MRI_preop", "fpcit_spect_preop",
@@ -169,9 +183,7 @@ class Content:
                        "Perc15_postop", "Perc16_postop", "AmplL_postop", "AmplR_postop", "PWL_postop",
                        "PWR_postop", "FreqL_postop","FreqR_postop", "UPDRS1_postop", "UPDRS4_postop",
                        "UPDRSon_postop", "UDDRSoff_postop", "TRSon_postop", "TRSoff_postop", "AE_postop",
-                       "Comments_postop", "DBS_postop", "Unnamed:_84_postop", "Unnamed:_85_postop", "Unnamed:_86_postop",
-                       "Unnamed:_87_postop", "Unnamed:_88_postop", "Unnamed:_89_postop", "Unnamed:_90_postop", "Unnamed:_91_postop",
-                       "Unnamed:_92_postop", "Unnamed:_93_postop", "Unnamed:_94_postop", "Unnamed:_95_postop", "Unnamed:_96_postop"
+                       "Comments_postop", "DBS_postop"
 
                     ]
 
