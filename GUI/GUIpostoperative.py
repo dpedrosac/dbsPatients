@@ -1,16 +1,13 @@
 import os
 import sys
 
-import pandas as pd
-import self as self
 from PyQt5 import QtCore
 import numpy as np
-
 
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox
 from GUI.GUImedication import MedicationDialog
-from utils.helper_functions import General, Content, Clean
+from utils.helper_functions import General, Content, Clean, Output
 from dependencies import ROOTDIR, FILEDIR
 
 
@@ -20,10 +17,11 @@ class PostoperativeDialog(QDialog):
     def __init__(self, parent=None):
         """Initializer."""
         super().__init__(parent)
-        self.date = 'postoperative_test'  # defines the date at which data are taken from/saved at
+        self.date = 'postoperative'  # next two lines define the postoperative date data stem from/are saved at
+        self.postoperative_date = ''
+
         subj_details = General.read_current_subj()
-        General.synchronize_data_with_general(self.date, subj_details.id[0],
-                                              messagebox=False)
+        General.synchronize_data_with_general(self.date, subj_details.id[0], messagebox=False)
 
         self.setWindowTitle('Postoperative Information (PID: {})'.format(str(int(subj_details.pid))))
         self.setGeometry(200, 100, 280, 170)
@@ -102,18 +100,10 @@ class PostoperativeDialog(QDialog):
 
         self.subj_reason = QLabel('Reason:\t\t')
         self.lineEditreason = QComboBox()
-        self.lineEditreason.addItems(['3-month follow-up',
-                                      '6-month follow-up',
-                                      '12-month follow-up',
-                                      '24-month follow-up',
-                                      '36-month follow-up'])
-
-
-        # 'Adverse event',
-        # 'IPG Problem',
-        # 'Lead Dislocation',
-        # 'Other'])
+        self.fill_combobox()
+        self.lineEditreason.currentIndexChanged.connect(self.update_context)
         self.lineEditreason.setFixedHeight(20)
+
         lay8 = QHBoxLayout()
         lay8.addWidget(self.subj_reason)
         lay8.addWidget(self.lineEditreason)
@@ -383,29 +373,41 @@ class PostoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
-        self.updatetext()
+        self.read_content_csv()
 
         # ====================   Actions when buttons are pressed      ====================
         self.ButtonEnterMedication.clicked.connect(self.on_clickedMedication)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
 
+    def fill_combobox(self):
+        """fills the ComboBox for the postoperative dates and performs some additional steps to maintain code tidy"""
 
-    def updatetext(self):
+        items_available = Content.extract_postoperative_dates()
+        items_available = ['Please select', 'Enter data'] if not items_available else items_available + ['Enter data']
 
-        df_subj = Content.extract_saved_data(self.date)
+        #        result = [''.join(map(str, element)) if isinstance(element, list) else element for element in
+        #                           items_available]
+
+        items_available = list(filter(None, items_available))
+        self.lineEditreason.addItems(items_available)
+
+    def update_text_notworking(self):
+        """I renamed this part as it was not working with my version, DP"""
+        # TODO: I would suggest starting with a new version from the scratch (see below, read_content.csv) and
+        #  copying everything from here to there
 
         # upper left
 
-        self.lineEditAdmission_Nch.setText(str(df_subj["Admission_NCh_postop"][0])) \
-            if str(df_subj["Admission_NCh_postop"][0]) != 'nan' else self.lineEditAdmission_Nch.setText('')
-        self.lineEditAdmission_NR.setText(str(df_subj["Admission_NR_postop"][0])) \
-            if str(df_subj["Admission_NR_postop"][0]) != 'nan' else self.lineEditAdmission_NR.setText('')
-        self.lineEditDismission_Nch.setText(str(df_subj["Dismissal_NCh_postop"][0])) \
-            if str(df_subj["Dismissal_NCh_postop"][0]) != 'nan' else self.lineEditDismission_Nch.setText('')
-        self.lineEditDismission_NR.setText(str(df_subj["Dismissal_NR_postop"][0])) \
-            if str(df_subj["Dismissal_NR_postop"][0]) != 'nan' else self.lineEditDismission_NR.setText('')
-        self.lineEditSurgery.setText(str(df_subj["Surgery_Date_postop"][0])) \
-            if str(df_subj["Surgery_Date_postop"][0]) != 'nan' else self.lineEditSurgery.setText('')
+        #         self.lineEditAdmission_Nch.setText(str(df_subj["Admission_NCh_postop"][0])) \
+        #            if str(df_subj["Admission_NCh_postop"][0]) != 'nan' else self.lineEditAdmission_Nch.setText('')
+        #        self.lineEditAdmission_NR.setText(str(df_subj["Admission_NR_postop"][0])) \
+        #            if str(df_subj["Admission_NR_postop"][0]) != 'nan' else self.lineEditAdmission_NR.setText('')
+        #        self.lineEditDismission_Nch.setText(str(df_subj["Dismissal_NCh_postop"][0])) \
+        #            if str(df_subj["Dismissal_NCh_postop"][0]) != 'nan' else self.lineEditDismission_Nch.setText('')
+        #        self.lineEditDismission_NR.setText(str(df_subj["Dismissal_NR_postop"][0])) \
+        #            if str(df_subj["Dismissal_NR_postop"][0]) != 'nan' else self.lineEditDismission_NR.setText('')
+        #        self.lineEditSurgery.setText(str(df_subj["Surgery_Date_postop"][0])) \
+        #            if str(df_subj["Surgery_Date_postop"][0]) != 'nan' else self.lineEditSurgery.setText('')
         # self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
         # if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
         # self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
@@ -544,58 +546,62 @@ class PostoperativeDialog(QDialog):
         frequencyRightWidget = self.gridDBSsettings.itemAtPosition(2, 3).widget()
         frequencyRightWidget.setText(str(df_subj["FreqR_postop"][0]))
 
-        @QtCore.pyqtSlot(int)
-        def on_lineEditreason_currentIndexChanged(self, index):
-            # Declare the reason variable
-            reason = self.lineEditreason.currentText()
-            # Update the Reason_postop column in df_subj with the new value of reason
-            df_subj['Reason_postop'] = reason
-            df_subj = df_subj.assign(Reason_postop=reason)
 
-            # Filter df_subj based on the value of Reason_postop
-            df_subj = df_subj.loc[df_subj['Reason_postop'] == reason]
+    # ====================   Defines what happens when ComboBox is modified      ====================
 
-            follow_up = self.lineEditreason.currentText()
-            if follow_up == '3-month follow-up':
-                df_subj = df_subj[df_subj['Reason_postop'] == '3-month follow-up']
-            elif follow_up == '6-month follow-up':
-                df_subj = df_subj[df_subj['Reason_postop'] == '6-month follow-up']
-            elif follow_up == '12-month follow-up':
-                df_subj = df_subj[df_subj['Reason_postop'] == '12-month follow-up']
-            elif follow_up == '24-month follow-up':
-                df_subj = df_subj[df_subj['Reason_postop'] == '24-month follow-up']
-            elif follow_up == '36-month follow-up':
-                df_subj = df_subj[df_subj['Reason_postop'] == '36-month follow-up']
+    def read_content_csv(self):
+        """dummy part of update text that served only to make it run; all parts of [update_text_notworking] should be
+        moved here"""
+        print('updating content ...')
+        df_subj = Content.extract_saved_data(self.date, self.postoperative_date)
 
-            df_subj = pd.DataFrame(df_subj)
+    def update_context(self):
+        """updates the context according to what was elected in the ComboBox"""
+        if self.lineEditreason.currentText() == 'Please select':
+            pass
+        elif self.lineEditreason.currentText() == 'Enter data':
+            Output.open_input_dialog_postoperative(self)
+            data_frame = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
+            subj_details = General.read_current_subj()
 
-            reason = self.lineEditreason.currentText()
-            df_subj = df_subj.loc[df_subj['Reason_postop'] == reason]
+            data_frame.loc[len(data_frame), ['ID', 'PID', 'Reason_postop']] = [subj_details.id[0], subj_details.pid[0],
+                                                                               self.postoperative_date]
+            data_frame = data_frame.replace(['nan', ''], [np.nan, np.nan])
+            data_frame = data_frame.applymap(lambda x: str(x).replace(';', ' -'))
+            data_frame.to_csv(FILEDIR / f"{self.date}.csv", index=False)
 
-
-        return
-
-
+            self.lineEditreason.clear()
+            self.fill_combobox()
+            self.read_content_csv()
+        else:
+            self.postoperative_date = self.lineEditreason.currentText()
+            self.read_content_csv()
+            print('something should happen here')
 
     # ====================   Defines actions when buttons are pressed      ====================
 
-
-    #TODO: Edit save-function
     @QtCore.pyqtSlot()
     def on_clickedMedication(self):
-        """shows the medication dialog when button is pressed"""
-        dialog = MedicationDialog(visit=self.date, parent=self)
-        self.hide()
-        if dialog.exec():
+        """shows the medication dialog when button is pressed; TODO: old part at the end may be deleted if working!"""
+
+        dialog = MedicationDialog(visit=self.date, parent=self)  # create medication dialog
+        self.hide()  # hide current window
+
+        if dialog.exec():  # Show the dialog and wait for it to complete
             pass
-        self.show()
+        self.show()  # close the medication GUI and return to the original one
 
-
+        # dialog = MedicationDialog(visit=self.date, parent=self)
+        # self.hide()
+        # if dialog.exec():
+        #    pass
+        # self.show()
 
     def onClickedSaveReturn(self):
 
-
-        df_general = Clean.get_GeneralData()
+        # TODO: a function is needed that drops "empty" data in the data_frame. Could be something like:
+        #  data_frame.isnull().iloc[:, 2:9].dropna(how='all', axis=0)
+        df_general = Clean.extract_subject_data()
 
         # First of all, read general data so that pre-/intra- and postoperative share these
         try:
@@ -660,9 +666,7 @@ class PostoperativeDialog(QDialog):
         df = df.replace(['nan', ''], [np.nan, np.nan])
         df.to_csv(os.path.join(FILEDIR, "postoperative_test.csv"), index=False)
 
-
         self.close()
-
 
     def saveFileDialog(self):
         options = QFileDialog.Options()

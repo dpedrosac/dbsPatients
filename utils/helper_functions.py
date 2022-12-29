@@ -7,8 +7,9 @@ import os
 import shutil
 
 import pandas as pds
+from pathlib import Path
 from dependencies import ROOTDIR, FILEDIR
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QInputDialog
 
 
 class General:
@@ -16,21 +17,23 @@ class General:
         pass
 
     @staticmethod
-    def generate_code(size_array):
-        """generates a code consisting of a random combination of letters, numbers and special characters; ';' and ','
+    def create_pseudonym(size_array: int) -> str:
+        """generates pseudonym of letters, numbers and special characters; ';' and ','
         are omitted to avoid confusion in 'csv-files' """
-        re_expression = '[a-zA-Z0-9_!#%$§]{}'.format('{%s}' % str(size_array))
+        re_expression = f'[a-zA-Z0-9_!#%$§]{{{size_array}}}'
         return rstr.xeger(re_expression)
 
     @staticmethod
-    def import_dataframe(filename, separator_csv=';'):
+    def import_dataframe(filename: str, separator_csv: str = ';') -> pds.DataFrame:
         """returns pandas dataframe from csv"""
 
         filename_total = os.path.join(FILEDIR, filename)
         if not os.path.isfile(filename_total):
-            print('\t Filename: {} not found. Please double-check!'.format(filename_total))
+            print(f'\t Filename: {filename_total} not found. Please double-check!')
         df = pds.read_csv(filename_total, sep=separator_csv, on_bad_lines='skip')
 
+        if df.shape[1] == 1:
+            df = pds.read_csv(filename_total, sep=';', on_bad_lines='skip')
         return df
 
     @staticmethod
@@ -47,13 +50,14 @@ class General:
 
     @staticmethod
     def read_current_subj(default_filename='current_subj.csv'):
-        """reads data from temporary information"""
+        """Reads data from temporary information"""
 
+        file_path = Path(ROOTDIR) / 'temp' / default_filename
         try:
-            subj_details = pds.read_csv(os.path.join(ROOTDIR, 'temp', default_filename))  # Read currently used subj.
+            subj_details = pds.read_csv(file_path)
         except FileNotFoundError:
-            print('Data not found! Please make sure that a file named "current_subj.csv" exists in the "temp" folder')
-            subj_details = []
+            print(f'Error: File "{file_path}" not found')
+            subj_details = pds.DataFrame()
 
         return subj_details
 
@@ -111,7 +115,18 @@ class Content:
         pass
 
     @staticmethod
-    def extract_saved_data(condition):
+    def extract_postoperative_dates(condition='postoperative'):
+        """ extracts a list with all available postoperative dates for a subject"""
+
+        subject_pid = General.read_current_subj().pid[0]
+        data_frame = General.import_dataframe('{}.csv'.format(condition), separator_csv=',')
+        data_frame = data_frame.loc[data_frame['PID'] == subject_pid]
+        list_of_dates = data_frame['Reason_postop'].tolist()
+
+        return list_of_dates
+
+    @staticmethod
+    def extract_saved_data(condition, followup_timing=''):
         """ defines a list of columns for the csv files in the data folder; if id not found,
         dictionary remains empty"""
 
@@ -119,21 +134,12 @@ class Content:
         df = General.import_dataframe('{}.csv'.format(condition), separator_csv=',')
         if df.shape[1] == 1:
             df = General.import_dataframe('{}.csv'.format(condition), separator_csv=';')
-        df_subj = df.iloc[df.index[df['ID'] == subj_id].tolist()].to_dict('list')
 
         # Only filter the data if the condition is "postoperative" and a follow-up interval is provided
-        if condition == 'postoperative' and followup_interval is not None:
-            df_subj = df[df['Reason_postop'] == followup_interval]
+        if followup_timing != '':
+            df_subj = df[(df['Reason_postop'] == followup_timing) & (df['ID'] == subj_id)]
         else:
-            df_subj = df
-
-        # Filter the data by the subject id
-        df_subj = df_subj[df_subj['ID'] == subj_id]
-
-        # Convert the filtered dataframe to a dictionary
-        df_subj = df_subj.to_dict('list')
-
-
+            df_subj = df.iloc[df.index[df['ID'] == subj_id].tolist()].to_dict('list')
 
         list_preop = ["ID", "PID", "Gender", "Diagnosis_preop", "First_Diagnosed_preop",
                       "Admission_preop", "Dismissal_preop", "Report_preop", "UPDRS_On_preop",
@@ -210,6 +216,12 @@ class Output:
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec()
 
+    def open_input_dialog_postoperative(self):
+        """Open a message box asking for user input to determine the date after surgery"""
+
+        text, ok = QInputDialog.getText(self, 'Input Dialog', 'Please enter the date after surgery or the event:')
+        self.postoperative_date = text
+
 
 class Clean:
     def __init__(self, _debug=False):
@@ -228,17 +240,19 @@ class Clean:
             General.synchronize_data_with_general(flag, row['ID'], messagebox=False)
 
     @staticmethod
-    def get_GeneralData(columns_to_extract=['PID_ORBIS', 'Gender', 'diagnosis']):
-        """some data is not stored in the pre-/intra-/postoperative data, so that this function looks for the
-        subject of interest and extracts this data"""
+    def extract_subject_data(subject_id, columns=['PID_ORBIS', 'Gender', 'diagnosis']):
+        """
+        Extract data for a subject from a CSV file.
 
-        df_general = General.import_dataframe('general_data.csv', separator_csv=',')
-        if df_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
-            df_general = General.import_dataframe('general_data.csv', separator_csv=';')
+        Parameters:
+        - subject_id (str): The ID of the subject to extract data for.
+        - columns (list): The names of the columns to extract data from.
 
-        subj_id = General.read_current_subj().id[0]  # reads data from curent_subj (saved in ./tmp)
-
-        df_extracted = df_general[columns_to_extract]
-        df_subj = df_extracted.iloc[df_general.index[df_general['ID'] == subj_id].tolist()]
-
-        return df_subj
+        Returns:
+        - df (pd.DataFrame): A dataframe containing the extracted data.
+        """
+        missing_values = ['n/a', 'na', '--']
+        df = pds.read_csv('general_data.csv', sep=',', na_values=missing_values)
+        df = df[columns]
+        df = df.loc[df['ID'] == subject_id]
+        return df

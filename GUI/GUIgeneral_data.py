@@ -87,7 +87,7 @@ class CheckForGeneralData(QDialog):
 
         self.subj_ID = QLabel('ID:\t\t\t')
         self.lineEditID = QLineEdit()
-        self.lineEditID.setText(General.generate_code(8))
+        self.lineEditID.setText(General.create_pseudonym(8))
 
         self.lineEditID.setFixedWidth(textfield_width)
         self.lineEditID.setFixedHeight(50)

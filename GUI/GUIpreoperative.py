@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import os, sys
 import pandas as pds
-pds.options.mode.chained_assignment = None  # default='warn' cf.
-# https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
 import numpy as np
 
 from PyQt5 import QtCore
@@ -10,8 +8,10 @@ from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGr
     QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QCheckBox
 from GUI.GUImedication import MedicationDialog
 from utils.helper_functions import General, Content, Clean
-from dependencies import ROOTDIR, FILEDIR
+from dependencies import FILEDIR
 
+pds.options.mode.chained_assignment = None  # default='warn' cf.
+# https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
 
 class PreoperativeDialog(QDialog):
     """Dialog to introduce all important information of preoperative data ('indication check')"""
@@ -20,7 +20,7 @@ class PreoperativeDialog(QDialog):
         """Initializer."""
         super().__init__(parent)
 
-        self.date = 'preoperative_test'  # defines the date at which data are taken from/saved at
+        self.date = 'preoperative'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
@@ -269,30 +269,30 @@ class PreoperativeDialog(QDialog):
     # ====================   Defines actions when buttons are pressed      ====================
     @QtCore.pyqtSlot()
     def onClickedMedication(self):
-        """shows the medication dialog when button is pressed"""
-        dialog = MedicationDialog(visit=self.date, parent=self)
-        self.hide()
-        if dialog.exec():
+        """shows the medication dialog when button is pressed; TODO: old part at the end may be deleted if working!"""
+
+        dialog = MedicationDialog(visit=self.date, parent=self)  # create medication dialog
+        self.hide()  # hide current window
+
+        if dialog.exec():  # Show the dialog and wait for it to complete
             pass
-        self.show()
+        self.show()  # close the medication GUI and return to the original one
 
     def onClickedSaveReturn(self):
         """closes GUI and returns to calling (main) GUI"""
 
-        df_general = Clean.get_GeneralData()
-
+        df_general = Clean.extract_subject_data()
         # First of all, read general data so that pre-/intra- and postoperative share these
         try:
             subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
             df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
-            if df.shape[1] == 1:
-                df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
+            # if df.shape[1] == 1:
+            #     df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
             df_subj = df.iloc[df.index[df['ID'] == subj_id][0], :].to_dict()
         except IndexError:
             df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
 
         df_general.reset_index(inplace=True, drop=True)
-
 
         df_subj['ID'] = General.read_current_subj().id[0]
         df_subj['PID'] = df_general['PID_ORBIS'][0]
