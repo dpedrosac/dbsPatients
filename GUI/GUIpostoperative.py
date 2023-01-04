@@ -388,30 +388,37 @@ class PostoperativeDialog(QDialog):
         #        result = [''.join(map(str, element)) if isinstance(element, list) else element for element in
         #                           items_available]
 
+        items_available = [str(item) for item in items_available]
         items_available = list(filter(None, items_available))
         self.lineEditreason.addItems(items_available)
 
-    def update_text_notworking(self):
+    #def update_text_notworking(self):
         """I renamed this part as it was not working with my version, DP"""
         # TODO: I would suggest starting with a new version from the scratch (see below, read_content.csv) and
         #  copying everything from here to there
 
-        # upper left
+    # ====================   Defines what happens when ComboBox is modified      ====================
 
-        #         self.lineEditAdmission_Nch.setText(str(df_subj["Admission_NCh_postop"][0])) \
-        #            if str(df_subj["Admission_NCh_postop"][0]) != 'nan' else self.lineEditAdmission_Nch.setText('')
-        #        self.lineEditAdmission_NR.setText(str(df_subj["Admission_NR_postop"][0])) \
-        #            if str(df_subj["Admission_NR_postop"][0]) != 'nan' else self.lineEditAdmission_NR.setText('')
-        #        self.lineEditDismission_Nch.setText(str(df_subj["Dismissal_NCh_postop"][0])) \
-        #            if str(df_subj["Dismissal_NCh_postop"][0]) != 'nan' else self.lineEditDismission_Nch.setText('')
-        #        self.lineEditDismission_NR.setText(str(df_subj["Dismissal_NR_postop"][0])) \
-        #            if str(df_subj["Dismissal_NR_postop"][0]) != 'nan' else self.lineEditDismission_NR.setText('')
-        #        self.lineEditSurgery.setText(str(df_subj["Surgery_Date_postop"][0])) \
-        #            if str(df_subj["Surgery_Date_postop"][0]) != 'nan' else self.lineEditSurgery.setText('')
-        # self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
-        # if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
-        # self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
-        # if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
+    def read_content_csv(self):
+        """dummy part of update text that served only to make it run; all parts of [update_text_notworking] should be
+        moved here"""
+        print('updating content ...')
+        df_subj = Content.extract_saved_data(self.date, self.postoperative_date)
+
+        self.lineEditAdmission_Nch.setText(str(df_subj["Admission_NCh_postop"][0])) \
+            if str(df_subj["Admission_NCh_postop"][0]) != 'nan' else self.lineEditAdmission_Nch.setText('')
+        self.lineEditAdmission_NR.setText(str(df_subj["Admission_NR_postop"][0])) \
+            if str(df_subj["Admission_NR_postop"][0]) != 'nan' else self.lineEditAdmission_NR.setText('')
+        self.lineEditDismission_Nch.setText(str(df_subj["Dismissal_NCh_postop"][0])) \
+            if str(df_subj["Dismissal_NCh_postop"][0]) != 'nan' else self.lineEditDismission_Nch.setText('')
+        self.lineEditDismission_NR.setText(str(df_subj["Dismissal_NR_postop"][0])) \
+            if str(df_subj["Dismissal_NR_postop"][0]) != 'nan' else self.lineEditDismission_NR.setText('')
+        self.lineEditSurgery.setText(str(df_subj["Surgery_Date_postop"][0])) \
+            if str(df_subj["Surgery_Date_postop"][0]) != 'nan' else self.lineEditSurgery.setText('')
+        #self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
+            #if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
+        #self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
+            #if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
 
         # upper right
 
@@ -547,14 +554,6 @@ class PostoperativeDialog(QDialog):
         frequencyRightWidget.setText(str(df_subj["FreqR_postop"][0]))
 
 
-    # ====================   Defines what happens when ComboBox is modified      ====================
-
-    def read_content_csv(self):
-        """dummy part of update text that served only to make it run; all parts of [update_text_notworking] should be
-        moved here"""
-        print('updating content ...')
-        df_subj = Content.extract_saved_data(self.date, self.postoperative_date)
-
     def update_context(self):
         """updates the context according to what was elected in the ComboBox"""
         if self.lineEditreason.currentText() == 'Please select':
@@ -664,7 +663,7 @@ class PostoperativeDialog(QDialog):
         idx2replace = df[df['ID'] == subj_id].index[0]
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "postoperative_test.csv"), index=False)
+        df.to_csv(os.path.join(FILEDIR, "postoperative.csv"), index=False)
 
         self.close()
 
