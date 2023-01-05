@@ -391,11 +391,12 @@ class PostoperativeDialog(QDialog):
         items_available = [str(item) for item in items_available]
         items_available = list(filter(None, items_available))
         self.lineEditreason.addItems(items_available)
+        self.comboBox = self.lineEditreason
+        self.comboBox.currentTextChanged.connect(self.read_content_csv)
+
 
     #def update_text_notworking(self):
         """I renamed this part as it was not working with my version, DP"""
-        # TODO: I would suggest starting with a new version from the scratch (see below, read_content.csv) and
-        #  copying everything from here to there
 
     # ====================   Defines what happens when ComboBox is modified      ====================
 
@@ -403,7 +404,16 @@ class PostoperativeDialog(QDialog):
         """dummy part of update text that served only to make it run; all parts of [update_text_notworking] should be
         moved here"""
         print('updating content ...')
-        df_subj = Content.extract_saved_data(self.date, self.postoperative_date)
+        df_subj = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
+        if df_subj.empty:
+            return
+        df_subj = df_subj[df_subj['Reason_postop'] == self.comboBox.currentText()]
+        if df_subj.empty:
+            return
+        df_subj = df_subj[df_subj['PID'] == General.read_current_subj().pid[0]]
+        if df_subj.empty:
+            return
+
 
         self.lineEditAdmission_Nch.setText(str(df_subj["Admission_NCh_postop"][0])) \
             if str(df_subj["Admission_NCh_postop"][0]) != 'nan' else self.lineEditAdmission_Nch.setText('')
