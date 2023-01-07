@@ -388,8 +388,17 @@ class PostoperativeDialog(QDialog):
         #        result = [''.join(map(str, element)) if isinstance(element, list) else element for element in
         #                           items_available]
 
+        # Remove duplicates using a set
+        items_available = list(set(items_available))
+
+        # Convert items to strings and remove "nan" values
         items_available = [str(item) for item in items_available]
+        items_available = [item for item in items_available if item != "nan"]
+
+        # Remove empty items
         items_available = list(filter(None, items_available))
+
+        # Add items to ComboBox
         self.lineEditreason.addItems(items_available)
         self.comboBox = self.lineEditreason
         self.comboBox.currentTextChanged.connect(self.read_content_csv)
@@ -592,6 +601,7 @@ class PostoperativeDialog(QDialog):
     @QtCore.pyqtSlot()
     def on_clickedMedication(self):
         """shows the medication dialog when button is pressed; TODO: old part at the end may be deleted if working!"""
+
 
         dialog = MedicationDialog(visit=self.date, parent=self)  # create medication dialog
         self.hide()  # hide current window
