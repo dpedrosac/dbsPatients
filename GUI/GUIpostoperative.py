@@ -610,8 +610,10 @@ class PostoperativeDialog(QDialog):
 
         # TODO: a function is needed that drops "empty" data in the data_frame. Could be something like:
         #  data_frame.isnull().iloc[:, 2:9].dropna(how='all', axis=0)
-        df_general = Clean.extract_subject_data()
-
+        #df_general = Clean.extract_subject_data()
+        current_subj = General.read_current_subj()
+        subject_id = current_subj['id'][0]
+        df_general = Clean.extract_subject_data(subject_id)
         # First of all, read general data so that pre-/intra- and postoperative share these
         try:
             subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
@@ -621,6 +623,9 @@ class PostoperativeDialog(QDialog):
             df_subj = df.iloc[df.index[df['ID'] == subj_id][0], :].to_dict()
         except IndexError:
             df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
+
+        # Drop rows with empty values in columns 3 through 9
+        df.drop(df[df.iloc[:, 2:9].isnull().any(axis=1)].index, inplace=True)
 
         df_general.reset_index(inplace=True, drop=True)
 
