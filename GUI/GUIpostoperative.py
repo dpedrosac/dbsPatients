@@ -416,161 +416,170 @@ class PostoperativeDialog(QDialog):
         df_subj = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
         if df_subj.empty:
             return
-        df_subj = df_subj[df_subj['Reason_postop'] == self.comboBox.currentText()]
-        if df_subj.empty:
-            return
+        #df_subj = df_subj[df_subj['PID'].isin([General.read_current_subj().pid[0]])]
+        #df_subj = df_subj[df_subj['Reason_postop'] == self.lineEditreason.currentText()]
+
         df_subj = df_subj[df_subj['PID'] == General.read_current_subj().pid[0]]
+        df_subj_filtered = df_subj[df_subj['Reason_postop'] == self.lineEditreason.currentText()]
+
+        #df_subj = df_subj[(df_subj['PID'] == General.read_current_subj().pid[0]) &
+                          #(df_subj['Reason_postop'] == self.lineEditreason.currentText())]
         if df_subj.empty:
             return
-
-
-        self.lineEditAdmission_Nch.setText(str(df_subj["Admission_NCh_postop"][0])) \
-            if str(df_subj["Admission_NCh_postop"][0]) != 'nan' else self.lineEditAdmission_Nch.setText('')
-        self.lineEditAdmission_NR.setText(str(df_subj["Admission_NR_postop"][0])) \
-            if str(df_subj["Admission_NR_postop"][0]) != 'nan' else self.lineEditAdmission_NR.setText('')
-        self.lineEditDismission_Nch.setText(str(df_subj["Dismissal_NCh_postop"][0])) \
-            if str(df_subj["Dismissal_NCh_postop"][0]) != 'nan' else self.lineEditDismission_Nch.setText('')
-        self.lineEditDismission_NR.setText(str(df_subj["Dismissal_NR_postop"][0])) \
-            if str(df_subj["Dismissal_NR_postop"][0]) != 'nan' else self.lineEditDismission_NR.setText('')
-        self.lineEditSurgery.setText(str(df_subj["Surgery_Date_postop"][0])) \
-            if str(df_subj["Surgery_Date_postop"][0]) != 'nan' else self.lineEditSurgery.setText('')
-        #self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
-            #if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
-        #self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
-            #if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
+        #df_subj = df_subj[df_subj['Reason_postop'] == self.comboBox.currentText()]
+        #if df_subj.empty:
+            #return
+        if df_subj_filtered.empty:
+            return# do something if no rows are found
+        else:
+            row = df_subj_filtered.iloc[0]
+            self.lineEditAdmission_Nch.setText(str(row["Admission_NCh_postop"])) \
+                if str(row["Admission_NCh_postop"]) != 'nan' else self.lineEditAdmission_Nch.setText('')
+            self.lineEditAdmission_NR.setText(str(row["Admission_NR_postop"])) \
+                if str(row["Admission_NR_postop"]) != 'nan' else self.lineEditAdmission_NR.setText('')
+            self.lineEditDismission_Nch.setText(str(row["Dismissal_NCh_postop"])) \
+                if str(row["Dismissal_NCh_postop"]) != 'nan' else self.lineEditDismission_Nch.setText('')
+            self.lineEditDismission_NR.setText(str(row["Dismissal_NR_postop"])) \
+                if str(row["Dismissal_NR_postop"]) != 'nan' else self.lineEditDismission_NR.setText('')
+            self.lineEditSurgery.setText(str(row["Surgery_Date_postop"])) \
+                if str(row["Surgery_Date_postop"]) != 'nan' else self.lineEditSurgery.setText('')
+            #self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
+                #if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
+            #self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
+                #if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
 
         # upper right
 
-        self.lineEditAdverse_Event.setText(str(df_subj["AE_postop"][0])) \
-            if str(df_subj["AE_postop"][0]) != 'nan' else self.lineEditAdverse_Event.setText('')
+            self.lineEditAdverse_Event.setText(str(row["AE_postop"])) \
+                if str(row["AE_postop"]) != 'nan' else self.lineEditAdverse_Event.setText('')
 
         # middle right
-        self.lineEditUPDRSI.setText(str(df_subj["UPDRS1_postop"][0])) \
-            if str(df_subj["UPDRS1_postop"][0]) != 'nan' else self.lineEditUPDRSI.setText('')
-        self.lineEditUPDRSIV.setText(str(df_subj["UPDRS4_postop"][0])) \
-            if str(df_subj["UPDRS4_postop"][0]) != 'nan' else self.lineEditUPDRSIV.setText('')
-        self.lineEditTSS.setText(str(df_subj["TSS_postop"][0])) \
-            if str(df_subj["TSS_postop"][0]) != 'nan' else self.lineEditTSS.setText('')
-        self.lineEditCGICPat.setText(str(df_subj["CGIG_patient_postop"][0])) \
-            if str(df_subj["CGIG_patient_postop"][0]) != 'nan' else self.lineEditCGICPat.setText('')
-        self.lineEditCGICClinician.setText(str(df_subj["CGIG_clinician_cargiver_postop"][0])) \
-            if str(df_subj["CGIG_clinician_cargiver_postop"][0]) != 'nan' else self.lineEditCGICClinician.setText('')
-        self.lineEditUPDRSON.setText(str(df_subj["UPDRSon_postop"][0])) \
-            if str(df_subj["UPDRSon_postop"][0]) != 'nan' else self.lineEditUPDRSON.setText('')
-        self.lineEditUPDRSII.setText(str(df_subj["UPDRSII_postop"][0])) \
-            if str(df_subj["UPDRSII_postop"][0]) != 'nan' else self.lineEditUPDRSII.setText('')
-        # self.lineEditHRUQ.setText(str(df_subj[""][0]))
-        # if str(df_subj[""][0]) != 'nan' else self.lineEditHRUQ.setText('')
-        self.lineEditMoCa.setText(str(df_subj["MoCa_postop"][0])) \
-            if str(df_subj["MoCa_postop"][0]) != 'nan' else self.lineEditMoCa.setText('')
-        self.lineEditMMST.setText(str(df_subj["MMST_postop"][0])) \
-            if str(df_subj["MMST_postop"][0]) != 'nan' else self.lineEditMMST.setText('')
-        self.lineEditBDIII.setText(str(df_subj["BDI2_postop"][0])) \
-            if str(df_subj["BDI2_postop"][0]) != 'nan' else self.lineEditBDIII.setText('')
-        self.lineEditNMSQ.setText(str(df_subj["NMSQ_postop"][0])) \
-            if str(df_subj["NMSQ_postop"][0]) != 'nan' else self.lineEditNMSQ.setText('')
-        # self.lineEditUPDRSOff.setText(str(df_subj[""][0])) \
-        # if str(df_subj[""][0]) != 'nan' else self.lineEditUPDRSOff.setText('')
-        self.lineEditHY.setText(str(df_subj["H&Y_postop"][0])) \
-            if str(df_subj["H&Y_postop"][0]) != 'nan' else self.lineEditHY.setText('')
-        self.lineEditEQ5D.setText(str(df_subj["EQ5D_postop"][0])) \
-            if str(df_subj["EQ5D_postop"][0]) != 'nan' else self.lineEditEQ5D.setText('')
-        self.lineEditDemTect.setText(str(df_subj["DemTect_postop"][0])) \
-            if str(df_subj["DemTect_postop"][0]) != 'nan' else self.lineEditDemTect.setText('')
-        self.lineEditPDQ8.setText(str(df_subj["PDQ8_postop"][0])) \
-            if str(df_subj["PDQ8_postop"][0]) != 'nan' else self.lineEditPDQ8.setText('')
-        self.lineEditPDQ39.setText(str(df_subj["PDQ39_postop"][0])) \
-            if str(df_subj["PDQ39_postop"][0]) != 'nan' else self.lineEditPDQ39.setText('')
-        self.lineEditSE.setText(str(df_subj["S&E_postop"][0])) \
-            if str(df_subj["S&E_postop"][0]) != 'nan' else self.lineEditSE.setText('')
-        # self.lineEditUDDRSOn.setText(str(df_subj[""][0])) \
-        # if str(df_subj[""][0]) != 'nan' else self.lineEditUDDRSOn.setText('')
-        self.lineEditTRSOn.setText(str(df_subj["TRSon_postop"][0])) \
-            if str(df_subj["TRSon_postop"][0]) != 'nan' else self.lineEditTRSOn.setText('')
-        self.lineEditUDDRSOff.setText(str(df_subj["UDDRSoff_postop"][0])) \
-            if str(df_subj["UDDRSoff_postop"][0]) != 'nan' else self.lineEditUDDRSOff.setText('')
-        self.lineEditTRSOff.setText(str(df_subj["TRSoff_postop"][0])) \
-            if str(df_subj["TRSoff_postop"][0]) != 'nan' else self.lineEditTRSOff.setText('')
+            self.lineEditUPDRSI.setText(str(row["UPDRS1_postop"])) \
+                if str(row["UPDRS1_postop"]) != 'nan' else self.lineEditUPDRSI.setText('')
+            self.lineEditUPDRSIV.setText(str(row["UPDRS4_postop"])) \
+                if str(row["UPDRS4_postop"]) != 'nan' else self.lineEditUPDRSIV.setText('')
+            self.lineEditTSS.setText(str(row["TSS_postop"])) \
+                if str(row["TSS_postop"]) != 'nan' else self.lineEditTSS.setText('')
+            self.lineEditCGICPat.setText(str(row["CGIG_patient_postop"])) \
+                if str(row["CGIG_patient_postop"]) != 'nan' else self.lineEditCGICPat.setText('')
+            self.lineEditCGICClinician.setText(str(row["CGIG_clinician_cargiver_postop"])) \
+                if str(row["CGIG_clinician_cargiver_postop"]) != 'nan' else self.lineEditCGICClinician.setText('')
+            self.lineEditUPDRSON.setText(str(row["UPDRSon_postop"])) \
+                if str(row["UPDRSon_postop"]) != 'nan' else self.lineEditUPDRSON.setText('')
+            self.lineEditUPDRSII.setText(str(row["UPDRSII_postop"])) \
+                if str(row["UPDRSII_postop"]) != 'nan' else self.lineEditUPDRSII.setText('')
+            # self.lineEditHRUQ.setText(str(row[""]))
+            # if str(row[""]) != 'nan' else self.lineEditHRUQ.setText('')
+            self.lineEditMoCa.setText(str(row["MoCa_postop"])) \
+                if str(row["MoCa_postop"]) != 'nan' else self.lineEditMoCa.setText('')
+            self.lineEditMMST.setText(str(row["MMST_postop"])) \
+                if str(row["MMST_postop"]) != 'nan' else self.lineEditMMST.setText('')
+            self.lineEditBDIII.setText(str(row["BDI2_postop"])) \
+                if str(row["BDI2_postop"]) != 'nan' else self.lineEditBDIII.setText('')
+            self.lineEditNMSQ.setText(str(row["NMSQ_postop"])) \
+                if str(row["NMSQ_postop"]) != 'nan' else self.lineEditNMSQ.setText('')
+            # self.lineEditUPDRSOff.setText(str(row[""])) \
+            # if str(row[""]) != 'nan' else self.lineEditUPDRSOff.setText('')
+            self.lineEditHY.setText(str(row["H&Y_postop"])) \
+                if str(row["H&Y_postop"]) != 'nan' else self.lineEditHY.setText('')
+            self.lineEditEQ5D.setText(str(row["EQ5D_postop"])) \
+                if str(row["EQ5D_postop"]) != 'nan' else self.lineEditEQ5D.setText('')
+            self.lineEditDemTect.setText(str(row["DemTect_postop"])) \
+                if str(row["DemTect_postop"]) != 'nan' else self.lineEditDemTect.setText('')
+            self.lineEditPDQ8.setText(str(row["PDQ8_postop"])) \
+                if str(row["PDQ8_postop"]) != 'nan' else self.lineEditPDQ8.setText('')
+            self.lineEditPDQ39.setText(str(row["PDQ39_postop"])) \
+                if str(row["PDQ39_postop"]) != 'nan' else self.lineEditPDQ39.setText('')
+            self.lineEditSE.setText(str(row["S&E_postop"])) \
+                if str(row["S&E_postop"]) != 'nan' else self.lineEditSE.setText('')
+            # self.lineEditUDDRSOn.setText(str(row[""])) \
+            # if str(row[""]) != 'nan' else self.lineEditUDDRSOn.setText('')
+            self.lineEditTRSOn.setText(str(row["TRSon_postop"])) \
+                if str(row["TRSon_postop"]) != 'nan' else self.lineEditTRSOn.setText('')
+            self.lineEditUDDRSOff.setText(str(row["UDDRSoff_postop"])) \
+                if str(row["UDDRSoff_postop"]) != 'nan' else self.lineEditUDDRSOff.setText('')
+            self.lineEditTRSOff.setText(str(row["TRSoff_postop"])) \
+                if str(row["TRSoff_postop"]) != 'nan' else self.lineEditTRSOff.setText('')
 
         # Edit CheckBoxes with content
         # middle left
-        if df_subj["Report_File_NCh_postop"][0] != 0:
-            self.ReportNeurCheck.setChecked(True)
-        if df_subj["Report_File_NR_postop"][0] != 0:
-            self.ReportNeurosurgeryCheck.setChecked(True)
-        if df_subj["Using_Programmer_postop"][0] != 0:
-            self.PatProgrammerCheck.setChecked(True)
-        if df_subj["CTscan_postop"][0] != 0:
-            self.PostopCTCheck.setChecked(True)
-        if df_subj["Battery_Replacement_postop"][0] != 0:
-            self.BatteryReplacementCheck.setChecked(True)
-        if df_subj["Planned_Visit_postop"][0] != 0:
-            self.PlannedVisitCheck.setChecked(True)
-        if df_subj["Qualipa_Visit_postop"][0] != 0:
-            self.QualiPaCheck.setChecked(True)
+            if row["Report_File_NCh_postop"] != 0:
+                self.ReportNeurCheck.setChecked(True)
+            if row["Report_File_NR_postop"] != 0:
+                self.ReportNeurosurgeryCheck.setChecked(True)
+            if row["Using_Programmer_postop"] != 0:
+                self.PatProgrammerCheck.setChecked(True)
+            if row["CTscan_postop"] != 0:
+                self.PostopCTCheck.setChecked(True)
+            if row["Battery_Replacement_postop"] != 0:
+                self.BatteryReplacementCheck.setChecked(True)
+            if row["Planned_Visit_postop"] != 0:
+                self.PlannedVisitCheck.setChecked(True)
+            if row["Qualipa_Visit_postop"] != 0:
+                self.QualiPaCheck.setChecked(True)
 
         # bottom left
         # DBS left
 
         # TODO: add if-statement for empty values.
 
-        DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 1).widget()
-        DBSleft.setText(str(df_subj["Perc1_postop"][0]))
-        DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 2).widget()
-        DBSleft.setText(str(df_subj["Perc2_postop"][0]))
-        DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 3).widget()
-        DBSleft.setText(str(df_subj["Perc3_postop"][0]))
-        DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 4).widget()
-        DBSleft.setText(str(df_subj["Perc4_postop"][0]))
-        DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 5).widget()
-        DBSleft.setText(str(df_subj["Perc5_postop"][0]))
-        DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 6).widget()
-        DBSleft.setText(str(df_subj["Perc6_postop"][0]))
-        DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 7).widget()
-        DBSleft.setText(str(df_subj["Perc7_postop"][0]))
-        DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 8).widget()
-        DBSleft.setText(str(df_subj["Perc8_postop"][0]))
+            DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 1).widget()
+            DBSleft.setText(str(row["Perc1_postop"]))
+            DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 2).widget()
+            DBSleft.setText(str(row["Perc2_postop"]))
+            DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 3).widget()
+            DBSleft.setText(str(row["Perc3_postop"]))
+            DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 4).widget()
+            DBSleft.setText(str(row["Perc4_postop"]))
+            DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 5).widget()
+            DBSleft.setText(str(row["Perc5_postop"]))
+            DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 6).widget()
+            DBSleft.setText(str(row["Perc6_postop"]))
+            DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 7).widget()
+            DBSleft.setText(str(row["Perc7_postop"]))
+            DBSleft = self.DBSpercentageLeft.itemAtPosition(0, 8).widget()
+            DBSleft.setText(str(row["Perc8_postop"]))
 
         # DBS right
 
-        DBSright = self.DBSpercentageRight.itemAtPosition(0, 1).widget()
-        DBSright.setText(str(df_subj["Perc9_postop"][0]))
-        DBSright = self.DBSpercentageRight.itemAtPosition(0, 2).widget()
-        DBSright.setText(str(df_subj["Perc10_postop"][0]))
-        DBSright = self.DBSpercentageRight.itemAtPosition(0, 3).widget()
-        DBSright.setText(str(df_subj["Perc11_postop"][0]))
-        DBSright = self.DBSpercentageRight.itemAtPosition(0, 4).widget()
-        DBSright.setText(str(df_subj["Perc12_postop"][0]))
-        DBSright = self.DBSpercentageRight.itemAtPosition(0, 5).widget()
-        DBSright.setText(str(df_subj["Perc13_postop"][0]))
-        DBSright = self.DBSpercentageRight.itemAtPosition(0, 6).widget()
-        DBSright.setText(str(df_subj["Perc14_postop"][0]))
-        DBSright = self.DBSpercentageRight.itemAtPosition(0, 7).widget()
-        DBSright.setText(str(df_subj["Perc15_postop"][0]))
-        DBSright = self.DBSpercentageRight.itemAtPosition(0, 8).widget()
-        DBSright.setText(str(df_subj["Perc16_postop"][0]))
+            DBSright = self.DBSpercentageRight.itemAtPosition(0, 1).widget()
+            DBSright.setText(str(row["Perc9_postop"]))
+            DBSright = self.DBSpercentageRight.itemAtPosition(0, 2).widget()
+            DBSright.setText(str(row["Perc10_postop"]))
+            DBSright = self.DBSpercentageRight.itemAtPosition(0, 3).widget()
+            DBSright.setText(str(row["Perc11_postop"]))
+            DBSright = self.DBSpercentageRight.itemAtPosition(0, 4).widget()
+            DBSright.setText(str(row["Perc12_postop"]))
+            DBSright = self.DBSpercentageRight.itemAtPosition(0, 5).widget()
+            DBSright.setText(str(row["Perc13_postop"]))
+            DBSright = self.DBSpercentageRight.itemAtPosition(0, 6).widget()
+            DBSright.setText(str(row["Perc14_postop"]))
+            DBSright = self.DBSpercentageRight.itemAtPosition(0, 7).widget()
+            DBSright.setText(str(row["Perc15_postop"]))
+            DBSright = self.DBSpercentageRight.itemAtPosition(0, 8).widget()
+            DBSright.setText(str(row["Perc16_postop"]))
 
         # Bottom right
         # setting left
 
         # Get a reference to the Amplitude widget for the left side
-        amplitudeLeftWidget = self.gridDBSsettings.itemAtPosition(1, 1).widget()
-        amplitudeLeftWidget.setText(str(df_subj["AmplL_postop"][0]))
+            amplitudeLeftWidget = self.gridDBSsettings.itemAtPosition(1, 1).widget()
+            amplitudeLeftWidget.setText(str(row["AmplL_postop"]))
 
-        pulseWidthLeftWidget = self.gridDBSsettings.itemAtPosition(1, 2).widget()
-        pulseWidthLeftWidget.setText(str(df_subj["PWL_postop"][0]))
+            pulseWidthLeftWidget = self.gridDBSsettings.itemAtPosition(1, 2).widget()
+            pulseWidthLeftWidget.setText(str(row["PWL_postop"]))
 
-        frequencyLeftWidget = self.gridDBSsettings.itemAtPosition(1, 3).widget()
-        frequencyLeftWidget.setText(str(df_subj["FreqL_postop"][0]))
+            frequencyLeftWidget = self.gridDBSsettings.itemAtPosition(1, 3).widget()
+            frequencyLeftWidget.setText(str(row["FreqL_postop"]))
 
-        amplitudeRightWidget = self.gridDBSsettings.itemAtPosition(2, 1).widget()
-        amplitudeRightWidget.setText(str(df_subj["AmplR_postop"][0]))
+            amplitudeRightWidget = self.gridDBSsettings.itemAtPosition(2, 1).widget()
+            amplitudeRightWidget.setText(str(row["AmplR_postop"]))
 
-        pulseWidthRightWidget = self.gridDBSsettings.itemAtPosition(2, 2).widget()
-        pulseWidthRightWidget.setText(str(df_subj["PWR_postop"][0]))
+            pulseWidthRightWidget = self.gridDBSsettings.itemAtPosition(2, 2).widget()
+            pulseWidthRightWidget.setText(str(row["PWR_postop"]))
 
-        frequencyRightWidget = self.gridDBSsettings.itemAtPosition(2, 3).widget()
-        frequencyRightWidget.setText(str(df_subj["FreqR_postop"][0]))
+            frequencyRightWidget = self.gridDBSsettings.itemAtPosition(2, 3).widget()
+            frequencyRightWidget.setText(str(row["FreqR_postop"]))
 
 
     def update_context(self):
