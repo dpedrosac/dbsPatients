@@ -416,21 +416,14 @@ class PostoperativeDialog(QDialog):
         df_subj = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
         if df_subj.empty:
             return
-        #df_subj = df_subj[df_subj['PID'].isin([General.read_current_subj().pid[0]])]
-        #df_subj = df_subj[df_subj['Reason_postop'] == self.lineEditreason.currentText()]
 
         df_subj = df_subj[df_subj['PID'] == General.read_current_subj().pid[0]]
         df_subj_filtered = df_subj[df_subj['Reason_postop'] == self.lineEditreason.currentText()]
-
-        #df_subj = df_subj[(df_subj['PID'] == General.read_current_subj().pid[0]) &
-                          #(df_subj['Reason_postop'] == self.lineEditreason.currentText())]
         if df_subj.empty:
             return
-        #df_subj = df_subj[df_subj['Reason_postop'] == self.comboBox.currentText()]
-        #if df_subj.empty:
-            #return
         if df_subj_filtered.empty:
-            return# do something if no rows are found
+            return
+            # do something if no rows are found
         else:
             row = df_subj_filtered.iloc[0]
             self.lineEditAdmission_Nch.setText(str(row["Admission_NCh_postop"])) \
