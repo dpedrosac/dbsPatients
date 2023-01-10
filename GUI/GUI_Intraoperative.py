@@ -352,37 +352,74 @@ class IntraoperativeDialog(QDialog):
             if str(df_subj["dismissal_NCh_intraop"][0]) != 'nan' else self.lineEditDismNCh.setText('')
 
         # middle left
-        #self.lineEditDurationSurgery.setText(str(df_subj["op_duration_intraop"][0])) \
-            #if str(df_subj["op_duration_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-        #self.lineEditTrajectories.setText(str(df_subj["no_traj_intraop"][0])) \
-        #    if str(df_subj["no_traj_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+        self.lineEditDurationSurgery.setText(str(df_subj["op_duration_intraop"][0])) \
+            if str(df_subj["op_duration_intraop"][0]) != 'nan' else self.lineEditDurationSurgery.setText('')
+        self.lineEditTrajectories.setText(str(df_subj["no_traj_intraop"][0])) \
+            if str(df_subj["no_traj_intraop"][0]) != 'nan' else self.lineEditTrajectories.setText('')
 
         # upper right
-        #self.SurgeryDate.setText(str(df_subj["surgery_date_intraop"][0])) \
-         #   if str(df_subj["surgery_date_intraop"][0]) != 'nan' else self.SurgeryDate.setText('')
+        self.lineEditSurgeryDate.setText(str(df_subj["surgery_date_intraop"][0])) \
+            if str(df_subj["surgery_date_intraop"][0]) != 'nan' else self.lineEditSurgeryDate.setText('')
 
         # lower left
 
         # Edit Checkboxes with content
         # Middle left
-        #if df_subj["report_file_NR_intraop"][0] != 0:
-         #   self.ReportNeurCheck.setChecked(True)
-        #if df_subj["awake_intraop"][0] != 0:
-        #    self.AwakePatientCheck.setChecked(True)
-        #if df_subj["report_file_NCh_intraop"][0] != 0:
-        #    self.ReportNChLabel.setChecked(True)
-        #if df_subj["protocol_intraop"][0] != 0:
-        #    self.ProtocolNeurCheck.setChecked(True)
+        if df_subj["report_file_NR_intraop"][0] != 0:
+            self.ReportNeurCheck.setChecked(True)
+        if df_subj["awake_intraop"][0] != 0:
+            self.AwakePatientCheck.setChecked(True)
+        if df_subj["report_file_NCh_intraop"][0] != 0:
+            self.ReportNChCheck.setChecked(True)
+        if df_subj["protocol_intraop"][0] != 0:
+            self.ProtocolNeurCheck.setChecked(True)
 
         # bottom right
-        #if df_subj["CTscan_intraop"][0] != 0:
-        #    self.PostopCTScanCheck.setChecked(True)
-        #if df_subj["implantation_visit_intraop"][0] != 0:
-        #    self.ImplVerciseDBSCheck.setChecked(True)
-        #if df_subj["activation_visit_intraop"][0] != 0:
-        #    self.ActivateVerciseDBSCheck.setChecked(True)
-        #if df_subj["incl_qualiPA_intraop"][0] != 0:
-        #    self.InclusionQualiPaLabel.setChecked(True)
+        if df_subj["CTscan_intraop"][0] != 0:
+            self.PostopCTScanCheck.setChecked(True)
+        if df_subj["implantation_visit_intraop"][0] != 0:
+            self.ImplVerciseDBSCheck.setChecked(True)
+        if df_subj["activation_visit_intraop"][0] != 0:
+            self.ActivateVerciseDBSCheck.setChecked(True)
+        if df_subj["incl_qualiPA_intraop"][0] != 0:
+            self.InclusionQualiPaCheck.setChecked(True)
+
+        #bottom left
+        #DBS left
+        DBSleft = self.GridCoordinatesLeft.itemAtPosition(0, 1).widget()
+        DBSleft.setText(str(df_subj["targetL1_intraop"]))
+        DBSleft = self.GridCoordinatesLeft.itemAtPosition(1, 1).widget()
+        DBSleft.setText(str(df_subj["targetL2_intraop"]))
+        DBSleft = self.GridCoordinatesLeft.itemAtPosition(2, 1).widget()
+        DBSleft.setText(str(df_subj["targetL3_intraop"]))
+        DBSleft = self.GridCoordinatesLeft.itemAtPosition(3, 1).widget()
+        DBSleft.setText(str(df_subj["targetL4_intraop"]))
+        DBSleft = self.GridCoordinatesLeft.itemAtPosition(4, 1).widget()
+        DBSleft.setText(str(df_subj["targetL5_intraop"]))
+        DBSleft = self.GridCoordinatesLeft.itemAtPosition(5, 1).widget()
+        DBSleft.setText(str(df_subj["targetL6_intraop"]))
+        DBSleft = self.GridCoordinatesLeft.itemAtPosition(6, 1).widget()
+        DBSleft.setText(str(df_subj["targetL7_intraop"]))
+        DBSleft = self.GridCoordinatesLeft.itemAtPosition(7, 1).widget()
+        DBSleft.setText(str(df_subj["targetL8_intraop"]))
+
+        #DBS right
+        DBSright = self.GridCoordinatesRight.itemAtPosition(0, 1).widget()
+        DBSright.setText(str(df_subj["targetR1_intraop"]))
+        #DBSright = self.GridCoordinatesRight.itemAtPosition(0, 1).widget()
+        #DBSright.setText(str(df_subj["targetR2_intraop"]))
+        #DBSright = self.GridCoordinatesRight.itemAtPosition(2, 3).widget()
+        #DBSright.setText(str(df_subj["targetR3_intraop"]))
+        #DBSright = self.GridCoordinatesRight.itemAtPosition(3, 4).widget()
+        #DBSright.setText(str(df_subj["targetR4_intraop"]))
+        # DBSright = self.GridCoordinatesRight.itemAtPosition(3, 4).widget()
+        # DBSright.setText(str(df_subj["targetR5_intraop"]))
+        # DBSright = self.GridCoordinatesRight.itemAtPosition(3, 4).widget()
+        # DBSright.setText(str(df_subj["targetR6_intraop"]))
+        # DBSright = self.GridCoordinatesRight.itemAtPosition(3, 4).widget()
+        # DBSright.setText(str(df_subj["targetR7_intraop"]))
+        # DBSright = self.GridCoordinatesRight.itemAtPosition(3, 4).widget()
+        # DBSright.setText(str(df_subj["targetR8_intraop"]))
 
         return
 
