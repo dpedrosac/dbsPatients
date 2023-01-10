@@ -19,7 +19,7 @@ class IntraoperativeDialog(QDialog):
         """Initializer."""
         super().__init__(parent)
 
-        self.date = 'intraoperative-test'  # defines the date at which data are taken from/saved at
+        self.date = 'intraop_test'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
 
 
@@ -343,13 +343,13 @@ class IntraoperativeDialog(QDialog):
 
         # upper left
         self.lineEditAdmNCh.setText(str(df_subj["admission_Nch_intraop"][0])) \
-            if str(df_subj["admission_Nch_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+            if str(df_subj["admission_Nch_intraop"][0]) != 'nan' else self.lineEditAdmNCh.setText('')
         self.lineEditAdmNeur.setText(str(df_subj["Admission_intraop"][0])) \
-            if str(df_subj["Admission_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+            if str(df_subj["Admission_intraop"][0]) != 'nan' else self.lineEditAdmNeur.setText('')
         self.lineEditDismNeur.setText(str(df_subj["Dismissal_intraop"][0])) \
-            if str(df_subj["Dismissal_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+            if str(df_subj["Dismissal_intraop"][0]) != 'nan' else self.lineEditDismNeur.setText('')
         self.lineEditDismNCh.setText(str(df_subj["dismissal_NCh_intraop"][0])) \
-            if str(df_subj["dismissal_NCh_intraop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
+            if str(df_subj["dismissal_NCh_intraop"][0]) != 'nan' else self.lineEditDismNCh.setText('')
 
         # middle left
         #self.lineEditDurationSurgery.setText(str(df_subj["op_duration_intraop"][0])) \
