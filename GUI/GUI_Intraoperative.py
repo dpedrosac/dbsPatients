@@ -19,7 +19,7 @@ class IntraoperativeDialog(QDialog):
         """Initializer."""
         super().__init__(parent)
 
-        self.date = 'intraop_test'  # defines the date at which data are taken from/saved at
+        self.date = 'intraop_test_comma'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
 
 

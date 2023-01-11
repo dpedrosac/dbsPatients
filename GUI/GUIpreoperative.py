@@ -20,7 +20,7 @@ class PreoperativeDialog(QDialog):
         """Initializer."""
         super().__init__(parent)
 
-        self.date = 'preoperative'  # defines the date at which data are taken from/saved at
+        self.date = 'preoperative_test'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
@@ -269,7 +269,7 @@ class PreoperativeDialog(QDialog):
     # ====================   Defines actions when buttons are pressed      ====================
     @QtCore.pyqtSlot()
     def onClickedMedication(self):
-        """shows the medication dialog when button is pressed; TODO: old part at the end may be deleted if working!"""
+        """shows the medication dialog when button is pressed; """
 
         dialog = MedicationDialog(visit=self.date, parent=self)  # create medication dialog
         self.hide()  # hide current window
@@ -281,7 +281,7 @@ class PreoperativeDialog(QDialog):
     def onClickedSaveReturn(self):
         """closes GUI and returns to calling (main) GUI"""
 
-        df_general = Clean.extract_subject_data()
+        df_general = Clean.extract_subject_data(self.date)
         # First of all, read general data so that pre-/intra- and postoperative share these
         try:
             subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
