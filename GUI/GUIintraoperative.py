@@ -442,7 +442,6 @@ class IntraoperativeDialog(QDialog):
         print('Done!')
         self.close()
 
-
         return
         subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
         df_general = Clean.extract_subject_data(subj_id)
