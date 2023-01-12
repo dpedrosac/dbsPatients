@@ -1,9 +1,8 @@
-import os
-import sys
+#!/usr/bin/env python3
+import os, sys
 
 from PyQt5 import QtCore
 import numpy as np
-
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox
 from GUI.GUImedication import MedicationDialog
@@ -20,10 +19,11 @@ class PostoperativeDialog(QDialog):
         self.date = 'postoperative'  # next two lines define the postoperative date data stem from/are saved at
         self.postoperative_date = ''
 
+        # ====================    Create General Layout      ====================
         subj_details = General.read_current_subj()
         General.synchronize_data_with_general(self.date, subj_details.id[0], messagebox=False)
 
-        self.setWindowTitle('Postoperative Information (PID: {})'.format(str(int(subj_details.pid))))
+        self.setWindowTitle('Postoperative Information (PID: {})'.format(str(int(subj_details.pid)))) # not necessary
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 200)
 
@@ -588,7 +588,7 @@ class PostoperativeDialog(QDialog):
                                                                                self.postoperative_date]
             data_frame = data_frame.replace(['nan', ''], [np.nan, np.nan])
             data_frame = data_frame.applymap(lambda x: str(x).replace(';', ' -'))
-            data_frame.to_csv(FILEDIR / f"{self.date}.csv", index=False)
+            data_frame.to_csv(os.path.join(FILEDIR, f"{self.date}.csv"), index=False)
 
             self.lineEditreason.clear()
             self.fill_combobox()

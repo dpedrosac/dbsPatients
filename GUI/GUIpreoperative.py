@@ -13,6 +13,7 @@ from dependencies import FILEDIR
 pds.options.mode.chained_assignment = None  # default='warn' cf.
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
 
+
 class PreoperativeDialog(QDialog):
     """Dialog to introduce all important information of preoperative data ('indication check')"""
 
@@ -214,6 +215,9 @@ class PreoperativeDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
 
+        if not df_subj["ID"]:
+            return
+
         self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0])) \
             if str(df_subj["First_Diagnosed_preop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
         self.lineEditAdmNeurIndCheck.setText(str(df_subj['Admission_preop'][0])) \
@@ -281,10 +285,10 @@ class PreoperativeDialog(QDialog):
     def onClickedSaveReturn(self):
         """closes GUI and returns to calling (main) GUI"""
 
-        df_general = Clean.extract_subject_data()
+        subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
+        df_general = Clean.extract_subject_data(subj_id)
         # First of all, read general data so that pre-/intra- and postoperative share these
         try:
-            subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
             df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
             # if df.shape[1] == 1:
             #     df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')

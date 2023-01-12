@@ -1,33 +1,35 @@
 #!/usr/bin/env python3
-import sys, os
+import os, sys
 import pandas as pds
-
-pds.options.mode.chained_assignment = None
-import numpy as np
 from PyQt5 import QtCore
+import numpy as np
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, QSpacerItem, QSizePolicy, \
     QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QListWidget, QCheckBox
 from GUI.GUImedication import MedicationDialog
 from utils.helper_functions import General, Content, Clean
 from dependencies import ROOTDIR, FILEDIR
 
+pds.options.mode.chained_assignment = None  # default='warn' cf.
+# https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
+
 
 class IntraoperativeDialog(QDialog):
-    """Dialog to introduce all important information of intraoperative patients. """
+    """Dialog to introduce all important information of intraoperative visit. """
 
     def __init__(self, parent=None):
         """Initializer."""
         super().__init__(parent)
 
-        self.date = 'intraop_test'  # defines the date at which data are taken from/saved at
+        self.date = 'intraoperative'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
-
-
+        General.synchronize_data_with_general(self.date, subj_details.id[0],
+                                              messagebox=False)
 
         # ====================    Create General Layout      ====================
         self.setWindowTitle('Please insert the data from the intraoperative patient contact ...(PID: {})'
                             .format(str(int(subj_details.pid))))
-        #self.setWindowTitle('Please enter preoperative data (PID: {})'.format(str(int(subj_details.pid))))
+
+        # self.setWindowTitle('Please enter preoperative data (PID: {})'.format(str(int(subj_details.pid))))
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 100)
         layout_general = QGridLayout(self)
@@ -329,17 +331,19 @@ class IntraoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
+        self.updatetext()
 
         # ====================   Actions when buttons are pressed      ====================
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
 
-        self.updatetext()
-
     def updatetext(self):
+        """adds information extracted from database already provided"""
 
         df_subj = Content.extract_saved_data(self.date)
 
+        if not df_subj["ID"]:
+            return
 
         # upper left
         self.lineEditAdmNCh.setText(str(df_subj["admission_Nch_intraop"][0])) \
@@ -439,8 +443,55 @@ class IntraoperativeDialog(QDialog):
         self.close()
 
 
-# TODO: extract data from Intraop csv
+        return
+        subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
+        df_general = Clean.extract_subject_data(subj_id)
+        # First of all, read general data so that pre-/intra- and postoperative share these
+        try:
+            subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
+            df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+            # if df.shape[1] == 1:
+            #     df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
+            df_subj = df.iloc[df.index[df['ID'] == subj_id][0], :].to_dict()
+        except IndexError:
+            df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
 
+        df_general.reset_index(inplace=True, drop=True)
+
+        df_subj['ID'] = General.read_current_subj().id[0]
+        df_subj['PID'] = df_general['PID_ORBIS'][0]
+        df_subj['Gender'] = df_general['Gender'][0]
+        df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
+        # TODO: Here a list of what must be saved should be included so that data is stored in the csv!
+        
+        # Now extract teh changed data from the GUI
+        df_subj["First_Diagnosed_preop"] = self.lineEditFirstDiagnosed.text()
+        df_subj['Admission_preop'] = self.lineEditAdmNeurIndCheck.text()
+        df_subj['Dismissal_preop'] = self.DismNeurIndCheckLabel.text()
+        df_subj['Outpat_Contact_preop'] = self.lineEditOutpatientContact.text()
+        df_subj['nch_preop'] = self.lineEditNChContact.text()
+        df_subj['DBS_Conference_preop'] = self.lineEditDBSconferenceDate.text()
+        df_subj["H&Y_preop"] = self.hy.text()
+        df_subj["UPDRS_On_preop"] = self.updrsON.text()
+        df_subj["UPDRS_Off_preop"] = self.updrsOFF.text()
+        df_subj["UPDRSII_preop"] = self.updrsII.text()
+        df_subj["HRUQ_preop"] = self.hruq.text()
+        df_subj["MoCa_preop"] = self.moca.text()
+        df_subj["MMST_preop"] = self.mmst.text()
+        df_subj["BDI2_preop"] = self.bdi2.text()
+        df_subj["NMSQ_preop"] = self.nmsq.text()
+        df_subj["EQ5D_preop"] = self.eq5d.text()
+        df_subj["DemTect_preop"] = self.demtect.text()
+        df_subj["PDQ8_preop"] = self.pdq8.text()
+        df_subj["PDQ39_preop"] = self.pdq39.text()
+        df_subj["S&E_preop"] = self.se.text()
+
+        idx2replace = df.index[df['ID'] == subj_id][0]
+        df.iloc[idx2replace, :] = df_subj
+        df = df.replace(['nan', ''], [np.nan, np.nan])
+        df.to_csv(os.path.join(FILEDIR, "preoperative_test.csv"), index=False)
+
+        # self.close()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

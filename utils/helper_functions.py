@@ -24,16 +24,16 @@ class General:
         return rstr.xeger(re_expression)
 
     @staticmethod
-    def import_dataframe(filename: str, separator_csv: str = ';') -> pds.DataFrame:
+    def import_dataframe(filename: str, separator_csv: str = ',', missing_values: str = '') -> pds.DataFrame:
         """returns pandas dataframe from csv"""
 
         filename_total = os.path.join(FILEDIR, filename)
         if not os.path.isfile(filename_total):
             print(f'\t Filename: {filename_total} not found. Please double-check!')
-        df = pds.read_csv(filename_total, sep=separator_csv, on_bad_lines='skip')
+        df = pds.read_csv(filename_total, sep=separator_csv, on_bad_lines='skip', na_values=missing_values)
 
         if df.shape[1] == 1:
-            df = pds.read_csv(filename_total, sep=';', on_bad_lines='skip')
+            df = pds.read_csv(filename_total, sep=';', on_bad_lines='skip', na_values=missing_values)
         return df
 
     @staticmethod
@@ -233,8 +233,8 @@ class Clean:
         pre-/intra-/postoperative.csv in the ./data folder"""
 
         file_general = General.import_dataframe('general_data.csv', separator_csv=',')
-        if file_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
-            file_general = General.import_dataframe('general_data.csv', separator_csv=';')
+        #if file_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
+        #    file_general = General.import_dataframe('general_data.csv', separator_csv=';')
 
         for index, row in file_general.iterrows():
             General.synchronize_data_with_general(flag, row['ID'], messagebox=False)
@@ -252,7 +252,6 @@ class Clean:
         - df (pd.DataFrame): A dataframe containing the extracted data.
         """
         missing_values = ['n/a', 'na', '--']
-        df = pds.read_csv('general_data.csv', sep=',', na_values=missing_values)
-        df = df[columns]
+        df = General.import_dataframe(os.path.join(FILEDIR, 'general_data.csv'))
         df = df.loc[df['ID'] == subject_id]
         return df
