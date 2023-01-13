@@ -20,7 +20,7 @@ class IntraoperativeDialog(QDialog):
         """Initializer."""
         super().__init__(parent)
 
-        self.date = 'intraoperative'  # defines the date at which data are taken from/saved at
+        self.date = 'intraop_test_comma'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
@@ -368,7 +368,7 @@ class IntraoperativeDialog(QDialog):
         # lower left
 
         # Edit Checkboxes with content
-        # Middle left
+        # Middle left Checkboxes
         if df_subj["report_file_NR_intraop"][0] != 0:
             self.ReportNeurCheck.setChecked(True)
         if df_subj["awake_intraop"][0] != 0:
@@ -378,7 +378,7 @@ class IntraoperativeDialog(QDialog):
         if df_subj["protocol_intraop"][0] != 0:
             self.ProtocolNeurCheck.setChecked(True)
 
-        # bottom right
+        # Middle right Checkboxes
         if df_subj["CTscan_intraop"][0] != 0:
             self.PostopCTScanCheck.setChecked(True)
         if df_subj["implantation_visit_intraop"][0] != 0:
@@ -389,41 +389,45 @@ class IntraoperativeDialog(QDialog):
             self.InclusionQualiPaCheck.setChecked(True)
 
         #bottom left
-        #DBS left
-        DBSleft = self.GridCoordinatesLeft.itemAtPosition(0, 1).widget()
-        DBSleft.setText(str(df_subj["targetL1_intraop"]))
-        DBSleft = self.GridCoordinatesLeft.itemAtPosition(1, 1).widget()
-        DBSleft.setText(str(df_subj["targetL2_intraop"]))
-        DBSleft = self.GridCoordinatesLeft.itemAtPosition(2, 1).widget()
-        DBSleft.setText(str(df_subj["targetL3_intraop"]))
-        DBSleft = self.GridCoordinatesLeft.itemAtPosition(3, 1).widget()
-        DBSleft.setText(str(df_subj["targetL4_intraop"]))
-        DBSleft = self.GridCoordinatesLeft.itemAtPosition(4, 1).widget()
-        DBSleft.setText(str(df_subj["targetL5_intraop"]))
-        DBSleft = self.GridCoordinatesLeft.itemAtPosition(5, 1).widget()
-        DBSleft.setText(str(df_subj["targetL6_intraop"]))
-        DBSleft = self.GridCoordinatesLeft.itemAtPosition(6, 1).widget()
-        DBSleft.setText(str(df_subj["targetL7_intraop"]))
-        DBSleft = self.GridCoordinatesLeft.itemAtPosition(7, 1).widget()
-        DBSleft.setText(str(df_subj["targetL8_intraop"]))
+        #DBS Coordinates left
+        for i in range(8):
+            DBSleft = self.GridCoordinatesLeft.itemAtPosition(i, 1).widget()
+            DBSleft.setText(str(df_subj["targetL{}_intraop".format(i + 1)][0]))
 
-        #DBS right
-        DBSright = self.GridCoordinatesRight.itemAtPosition(0, 1).widget()
-        DBSright.setText(str(df_subj["targetR1_intraop"]))
-        #DBSright = self.GridCoordinatesRight.itemAtPosition(0, 1).widget()
-        #DBSright.setText(str(df_subj["targetR2_intraop"]))
-        #DBSright = self.GridCoordinatesRight.itemAtPosition(2, 3).widget()
-        #DBSright.setText(str(df_subj["targetR3_intraop"]))
-        #DBSright = self.GridCoordinatesRight.itemAtPosition(3, 4).widget()
-        #DBSright.setText(str(df_subj["targetR4_intraop"]))
-        # DBSright = self.GridCoordinatesRight.itemAtPosition(3, 4).widget()
-        # DBSright.setText(str(df_subj["targetR5_intraop"]))
-        # DBSright = self.GridCoordinatesRight.itemAtPosition(3, 4).widget()
-        # DBSright.setText(str(df_subj["targetR6_intraop"]))
-        # DBSright = self.GridCoordinatesRight.itemAtPosition(3, 4).widget()
-        # DBSright.setText(str(df_subj["targetR7_intraop"]))
-        # DBSright = self.GridCoordinatesRight.itemAtPosition(3, 4).widget()
-        # DBSright.setText(str(df_subj["targetR8_intraop"]))
+        #DBS Coordinates left
+        #TODO: doesnt work yet
+        #for i in range(8):
+        #    DBSright = self.GridCoordinatesRight.itemAtPosition(i, 1).widget()
+        #    DBSright.setText(str(df_subj["targetR{}_intraop".format(i + 1)][0]))
+
+        #Activation Checkboxes
+
+
+        #DBS Settings after dismissal
+        for j in range(8):
+            DBSright = self.DBSpercentageRight.itemAtPosition(0, j + 1).widget()
+            DBSright.setText(str(df_subj["Perc{}_intraop".format(j + 8)][0]))
+            for j in range(8):
+                DBSleft = self.DBSpercentageLeft.itemAtPosition(0, j + 1).widget()
+                DBSleft.setText(str(df_subj["Perc{}_intraop".format(j)][0]))
+
+
+        #Amplitude, Pulse, Frequency
+        for i in range(1, 3):
+            for j in range(1, 4):
+                DBSsettings = self.gridDBSsettings.itemAtPosition(i, j).widget()
+                if i == 1 and j == 1:
+                    DBSsettings.setText(str(df_subj["AmplL_intraop"][0]))
+                elif i == 1 and j == 2:
+                    DBSsettings.setText(str(df_subj["PWL_intraop"][0]))
+                elif i == 1 and j == 3:
+                    DBSsettings.setText(str(df_subj["FreqL_intraop"][0]))
+                elif i == 2 and j == 1:
+                    DBSsettings.setText(str(df_subj["AmplR_intraop"][0]))
+                elif i == 2 and j == 2:
+                    DBSsettings.setText(str(df_subj["PWR_intraop"][0]))
+                elif i == 2 and j == 3:
+                    DBSsettings.setText(str(df_subj["FreqR_intraop"][0]))
 
         return
 
@@ -439,10 +443,7 @@ class IntraoperativeDialog(QDialog):
 
     def onClickedSaveReturn(self):
         """closes this GUI and returns to calling (main) GUI"""
-        print('Done!')
-        self.close()
 
-        return
         subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
         df_general = Clean.extract_subject_data(subj_id)
         # First of all, read general data so that pre-/intra- and postoperative share these
@@ -461,36 +462,81 @@ class IntraoperativeDialog(QDialog):
         df_subj['PID'] = df_general['PID_ORBIS'][0]
         df_subj['Gender'] = df_general['Gender'][0]
         df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
-        # TODO: Here a list of what must be saved should be included so that data is stored in the csv!
-        
+
         # Now extract teh changed data from the GUI
-        df_subj["First_Diagnosed_preop"] = self.lineEditFirstDiagnosed.text()
-        df_subj['Admission_preop'] = self.lineEditAdmNeurIndCheck.text()
-        df_subj['Dismissal_preop'] = self.DismNeurIndCheckLabel.text()
-        df_subj['Outpat_Contact_preop'] = self.lineEditOutpatientContact.text()
-        df_subj['nch_preop'] = self.lineEditNChContact.text()
-        df_subj['DBS_Conference_preop'] = self.lineEditDBSconferenceDate.text()
-        df_subj["H&Y_preop"] = self.hy.text()
-        df_subj["UPDRS_On_preop"] = self.updrsON.text()
-        df_subj["UPDRS_Off_preop"] = self.updrsOFF.text()
-        df_subj["UPDRSII_preop"] = self.updrsII.text()
-        df_subj["HRUQ_preop"] = self.hruq.text()
-        df_subj["MoCa_preop"] = self.moca.text()
-        df_subj["MMST_preop"] = self.mmst.text()
-        df_subj["BDI2_preop"] = self.bdi2.text()
-        df_subj["NMSQ_preop"] = self.nmsq.text()
-        df_subj["EQ5D_preop"] = self.eq5d.text()
-        df_subj["DemTect_preop"] = self.demtect.text()
-        df_subj["PDQ8_preop"] = self.pdq8.text()
-        df_subj["PDQ39_preop"] = self.pdq39.text()
-        df_subj["S&E_preop"] = self.se.text()
+        # upper left
+        df_subj["admission_Nch_intraop"] = self.lineEditAdmNCh.text()
+        df_subj['Admission_intraop'] = self.lineEditAdmNeur.text()
+        df_subj['Dismissal_intraop'] = self.lineEditDismNeur.text()
+        df_subj['dismissal_NCh_intraop'] = self.lineEditDismNCh.text()
+
+        # middle left
+        df_subj['op_duration_intraop'] = self.lineEditDurationSurgery.text()
+        df_subj['no_traj_intraop'] = self.lineEditTrajectories.text()
+
+        # upper right
+        df_subj["surgery_date_intraop"] = self.lineEditSurgeryDate.text()
+
+        # Middle left checkboxes
+        df_subj["report_file_NR_intraop"] = self.ReportNeurCheck.isChecked()
+        df_subj["awake_intraop"] = self.AwakePatientCheck.isChecked()
+        df_subj["report_file_NCh_intraop"] = self.ReportNChCheck.isChecked()
+        df_subj["protocol_intraop"] = self.ProtocolNeurCheck.isChecked()
+
+        # bottom right checkboxes
+        df_subj["CTscan_intraop"] = self.PostopCTScanCheck.isChecked()
+        df_subj["implantation_visit_intraop"] = self.ImplVerciseDBSCheck.isChecked()
+        df_subj["activation_visit_intraop"] = self.ActivateVerciseDBSCheck.isChecked()
+        df_subj["incl_qualiPA_intraop"] = self.InclusionQualiPaCheck.isChecked()
+
+        #DBS Coordinates left
+        for i in range(8):
+            for j in range(4):
+                if j != 0:
+                    df_subj['targetL{}_intraop'.format(i + 1)] = self.GridCoordinatesLeft.itemAtPosition(i,
+                                                                                                            1).widget().text()
+
+        #DBS Coordinates Right
+        #TODO: doesnt work yet
+        #for i in range(8):
+        #    for j in range(4):
+        #        if j != 3:
+        #            DBSright = self.GridCoordinatesRight.itemAtPosition(i, j).widget()
+        #            df_subj['targetR{}_intraop'.format(i + 1)] = DBSright.text()
+
+
+        #DBS settings after dismissal
+        for j in range(8):
+            DBSright = self.DBSpercentageRight.itemAtPosition(0, j + 1).widget()
+            df_subj["Perc{}_intraop".format(j + 8)] = DBSright.text()
+        for j in range(8):
+            DBSleft = self.DBSpercentageLeft.itemAtPosition(0, j + 1).widget()
+            df_subj["Perc{}_intraop".format(j)] = DBSleft.text()
+
+        #Amplitude, Pulse, Frequency
+        for i in range(1, 3):
+            for j in range(1, 4):
+                DBSsettings = self.gridDBSsettings.itemAtPosition(i, j).widget()
+                if i == 1 and j == 1:
+                    df_subj["AmplL_intraop"] = DBSsettings.text()
+                elif i == 1 and j == 2:
+                    df_subj["PWL_intraop"] = DBSsettings.text()
+                elif i == 1 and j == 3:
+                    df_subj["FreqL_intraop"] = DBSsettings.text()
+                elif i == 2 and j == 1:
+                    df_subj["AmplR_intraop"] = DBSsettings.text()
+                elif i == 2 and j == 2:
+                    df_subj["PWR_intraop"] = DBSsettings.text()
+                elif i == 2 and j == 3:
+                    df_subj["FreqR_intraop"] = DBSsettings.text()
+
 
         idx2replace = df.index[df['ID'] == subj_id][0]
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "preoperative_test.csv"), index=False)
+        df.to_csv(os.path.join(FILEDIR, "intraop_test_comma.csv"), index=False)
 
-        # self.close()
+        self.close()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
