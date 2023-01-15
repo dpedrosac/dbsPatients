@@ -19,9 +19,10 @@ class PreoperativeDialog(QDialog):
 
     def __init__(self, parent=None):
         """Initializer."""
-        super().__init__(parent)
+        super(PreoperativeDialog, self).__init__(parent)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
-        self.date = 'preoperative_test'  # defines the date at which data are taken from/saved at
+        self.date = 'preoperative'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
@@ -275,10 +276,10 @@ class PreoperativeDialog(QDialog):
     def onClickedMedication(self):
         """shows the medication dialog when button is pressed; """
 
-        dialog = MedicationDialog(visit=self.date, parent=self)  # create medication dialog
+        dialog_medication = MedicationDialog(parent=self)  # create medication dialog
         self.hide()  # hide current window
 
-        if dialog.exec():  # Show the dialog and wait for it to complete
+        if dialog_medication.exec():  # Show the dialog and wait for it to complete
             pass
         self.show()  # close the medication GUI and return to the original one
 
@@ -291,8 +292,6 @@ class PreoperativeDialog(QDialog):
         # First of all, read general data so that pre-/intra- and postoperative share these
         try:
             df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
-            # if df.shape[1] == 1:
-            #     df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
             df_subj = df.iloc[df.index[df['ID'] == subj_id][0], :].to_dict()
         except IndexError:
             df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
@@ -329,14 +328,13 @@ class PreoperativeDialog(QDialog):
         idx2replace = df.index[df['ID'] == subj_id][0]
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "preoperative_test.csv"), index=False)
+        df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
 
         self.close()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    widget = QWidget
     dlg = PreoperativeDialog()
     dlg.show()
     sys.exit(app.exec_())

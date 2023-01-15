@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-import os
-import sys
+import sys, os
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, QHBoxLayout, \
@@ -17,12 +16,14 @@ class CheckForGeneralData(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.calendarWindow = QWidget()
+
+        # ====================    Create General Layout      ====================
         self.setWindowTitle('Enter data for the unknown subject')
         self.setGeometry(400, 100, 1000, 400)  # left, right, width, height
         self.move(550, 200)
         textfield_width = 450
 
+        self.calendarWindow = QWidget()
         self.layout = QVBoxLayout(self)  # entire layout for GUI
         self.content_box = QVBoxLayout(self)  # content of the box
 
@@ -30,7 +31,7 @@ class CheckForGeneralData(QDialog):
         self.optionbox_guistart = QGroupBox('Please enter all data for the new subject:')
         self.settings_optionbox1 = QVBoxLayout(self.optionbox_guistart)
 
-        self.subj_surname = QLabel('Surname:\t\t\t')
+        self.subj_surname = QLabel('Surname:\t\t')
         self.lineEditSurname = QLineEdit()
 
         self.lineEditSurname.setFixedWidth(textfield_width)
@@ -110,7 +111,7 @@ class CheckForGeneralData(QDialog):
 
         self.subj_diagnosis = QLabel('Diagnosis:\t\t')
         self.lineEditDiagnosis = QComboBox()
-        self.lineEditDiagnosis.addItems(['Hypokinetic-rigid parkinson-syndrome (PD1)',
+        self.lineEditDiagnosis.addItems(['Bradykinetic-rigid parkinson-syndrome (PD1)',
                                          'Tremordominant parkinson-syndrome(PD2)',
                                          'Mixed-type parkinson-syndrome (PD3)',
                                          'Dystonia (DT)',
@@ -137,7 +138,7 @@ class CheckForGeneralData(QDialog):
         lay10.addWidget(self.lineEditDominance)
         lay10.addStretch()
 
-        self.subj_side = QLabel('IPG serial number:\t\t\t')
+        self.subj_side = QLabel('IPG serial number:\t')
         self.lineEditIPG = QLineEdit()
 
         self.lineEditIPG.setFixedWidth(textfield_width)
@@ -199,8 +200,6 @@ class CheckForGeneralData(QDialog):
 
         filename2load = os.path.join(FILEDIR, 'general_data.csv')
         df = General.import_dataframe(filename2load, separator_csv=',')
-        if df.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
-            df = General.import_dataframe(filename2load, separator_csv=';')
         entered_data = [self.lineEditSurname.text(),
                         self.lineEditName.text(),
                         self.lineEditBirthdate.text(),
@@ -212,7 +211,7 @@ class CheckForGeneralData(QDialog):
                         str(self.lineEditDominance.currentText()),
                         self.lineEditIPG.text()]
         df.loc[len(df)] = entered_data
-        df.to_csv(filename2load, index=False, sep=';')
+        df.to_csv(filename2load, index=False, sep=',')
         self.close()
         return
 

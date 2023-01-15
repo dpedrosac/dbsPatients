@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, QHBoxLayout, \
@@ -15,6 +16,7 @@ class CheckPID(QDialog):
     def __init__(self, parent=None):
         """Initializer."""
         super().__init__(parent)
+
         self.EnterNewPID = CheckForGeneralData()
         self.GuiMain = ChooseGUI()
 
@@ -22,8 +24,8 @@ class CheckPID(QDialog):
         self.setGeometry(400, 100, 500, 300)  # left, right, width, height
         self.move(750, 300)
 
+        self.content_box = QVBoxLayout()  # content of the box
         self.layout = QVBoxLayout(self)  # entire layout for GUI
-        self.content_box = QVBoxLayout(self)  # content of the box
 
         # ====================    Create Content for First Option box on Top left      ====================
         self.optionbox_guistart = QGroupBox('Please enter the PID_Orbis')
@@ -32,8 +34,8 @@ class CheckPID(QDialog):
         self.subj_PID = QLabel('PID-ORBIS (without zeros):\t\t')
         self.lineEditPID = QLineEdit()
 
-        self.lineEditPID.setFixedWidth(150)
-        self.lineEditPID.setFixedHeight(20)
+        self.lineEditPID.setFixedWidth(200)
+        # self.lineEditPID.setFixedHeight(40)
 
         lay1 = QHBoxLayout()
         lay1.addWidget(self.subj_PID)

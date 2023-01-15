@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys, os
+import sys, os, re
 import pandas as pd
 from PyQt5 import QtCore
 import numpy as np
@@ -16,9 +16,10 @@ class MedicationDialog(QDialog):
     """Dialog to introduce the medication at a specific date. All unrelated """
 
     def __init__(self, visit="preoperative", parent=None):
-        super().__init__(parent)
-
+        super(MedicationDialog, self).__init__(parent)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         # ====================    Create General Layout      ====================
+
         self.date = visit  # ensures the right date is entered
         self.setWindowTitle('Medication of patient with DBS at {} visit'.format(visit))
         self.setGeometry(200, 100, 280, 170)
@@ -131,7 +132,7 @@ class MedicationDialog(QDialog):
 
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "preoperative_test.csv"), index=False)  # saves changed data to file
+        df.to_csv(os.path.join(FILEDIR, "preoperative_saved.csv"), index=False)  # saves changed data to file
 
         self.close()
 
@@ -139,22 +140,27 @@ class MedicationDialog(QDialog):
         """adds information extracted from database already provided"""
 
         df_subj = Content.extract_saved_data(self.date)
-        df_items = {v.format('_preop').replace(' ', '_'): v.format('').replace(' ', '_') for v in self.medication_names}
+        match = re.search(r'^(pre|intra|post)op', self.date)
+        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_') for v in self.medication_names}
+
+        if not df_subj["ID"]:
+            return
+
         for k, v in df_items.items():
             if v != 'Other':
-                eval('self.lineEdit{}.setText(str(df_subj["{}_preop"][0]))'.format(v, v)) \
-                    if str(df_subj['{}_preop'.format(v)][0]) != 'nan' \
+                eval('self.lineEdit{}.setText(str(df_subj["{}_{}"][0]))'.format(v, v, match.group())) \
+                    if str(df_subj['{}_{}'.format(v, match.group())][0]) != 'nan' \
                     else eval('self.lineEdit{}.setText("")'.format(v))
             else:  # 'Other' needs a slightly different approach
-                self.lineEditOther.insertPlainText(str(df_subj["{}_preop".format(v)][0])) \
-                    if str(df_subj["{}_preop".format(v)][0]) != 'nan' else self.lineEditOther.insertPlainText('')
+                self.lineEditOther.insertPlainText(str(df_subj["{}_{}".format(v, match.group())][0])) \
+                    if str(df_subj["{}_{}".format(v, match.group())][0]) != 'nan' else self.lineEditOther.insertPlainText('')
 
         return
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    widget = QWidget
+    # widget = QWidget
     dlg = MedicationDialog()
     dlg.show()
     sys.exit(app.exec_())

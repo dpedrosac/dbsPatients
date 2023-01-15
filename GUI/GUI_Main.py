@@ -59,15 +59,16 @@ class ChooseGUI(QDialog):
     def on_click(self):
         """select the further steps/GUI to open"""
         if self.button_openGUI_Preoperative.isChecked():  # selects three different options available
-            dialog = PreoperativeDialog(parent=self)
+            dialog_date = PreoperativeDialog(parent=self)
         elif self.button_openGUI_Intraoperative.isChecked():
-            dialog = IntraoperativeDialog(parent=self)
+            dialog_date = IntraoperativeDialog(parent=self)
         else:
-            dialog = PostoperativeDialog(parent=self)
+            dialog_date = PostoperativeDialog(parent=self)
 
         self.hide()
-        if dialog.exec():
+        if dialog_date.exec():
             pass
+
         self.show()
 
 
