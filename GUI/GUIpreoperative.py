@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys
+import sys
 import pandas as pds
 import numpy as np
 from PyQt5 import QtCore
@@ -305,6 +305,8 @@ class PreoperativeDialog(QDialog):
         df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
 
         # Now extract changed data from the GUI
+        # TODO: In a future, lineEditsXXX should be called the same way as df_subj columns, so that it may be
+        #  incorporated into a list; This would shorten the entire script considerably!
         df_subj["First_Diagnosed_preop"] = self.lineEditFirstDiagnosed.text()
         df_subj['Admission_preop'] = self.lineEditAdmNeurIndCheck.text()
         df_subj['Dismissal_preop'] = self.DismNeurIndCheckLabel.text()
@@ -349,6 +351,7 @@ class PreoperativeDialog(QDialog):
                       "Decision_DBS_preop", "icVRCS_preop", "inexVRCS_preop"]
         for checkbox in checkboxes:
             df_subj[checkbox] = 1 if getattr(self, checkbox).isChecked() else 0
+        # TODO: Some chechboxes are not saved. Possibly an error in the way they are "called"
 
         # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
         idx2replace = df.index[df['ID'] == subj_id][0]
