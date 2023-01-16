@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBox
     QWidget, QLabel
 from utils.helper_functions import General, Output
 from GUI.GUIgeneral_data import CheckForGeneralData
-from GUI.GUI_Main import ChooseGUI
+from GUI.GUImain import ChooseGUI
 
 
 class CheckPID(QDialog):
