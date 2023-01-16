@@ -2,8 +2,8 @@
 import os, sys
 import pandas as pds
 import numpy as np
-
 from PyQt5 import QtCore
+from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QCheckBox
 from GUI.GUImedication import MedicationDialog
@@ -17,21 +17,23 @@ pds.options.mode.chained_assignment = None  # default='warn' cf.
 class PreoperativeDialog(QDialog):
     """Dialog to introduce all important information of preoperative data ('indication check')"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, textwidth=300):
         """Initializer."""
         super(PreoperativeDialog, self).__init__(parent)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
-        self.date = 'preoperative'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
+        self.date = 'preoperative'  # defines the date at which data are taken from/saved at
+
         General.synchronize_data_with_general(self.date, subj_details.id[0],
-                                              messagebox=False)
+                                              messagebox=False)  # ensures identical first columns in preoperative.csv
+        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog (preop)
+        self.dialog_medication.hide()
 
         # ====================    Create General Layout      ====================
         self.setWindowTitle('Please enter preoperative data (PID: {})'.format(str(int(subj_details.pid))))
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 100)
-        textwidth = 300
+
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
 
@@ -93,28 +95,28 @@ class PreoperativeDialog(QDialog):
         self.optionbox2Content = QVBoxLayout(self.optionbox2)
         layout_general.addWidget(self.optionbox2, 1, 0)
 
-        self.VideoFile = QCheckBox()
-        self.VideoFileLabel = QLabel('Report\t\t')
-        self.VideoFileLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.MRIpreop = QCheckBox()
-        self.MRIpreopLabel = QLabel('Decision for lead placement\t\t')
-        self.MRIpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.FPCITpreop = QCheckBox()
-        self.FPCITpreopLabel = QLabel('Consent VERCISE DBS\t\t')
-        self.FPCITpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.ProtocolNeurCheck = QCheckBox()
-        self.ProtocolNeurLabel = QLabel('In-/Exclusion criteria VERCISE-DBS\t\t')
-        self.ProtocolNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
+        self.Report_preop = QCheckBox()
+        self.Report_preop_Label = QLabel('Report\t\t')
+        self.Report_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
+        self.Decision_DBS_preop = QCheckBox()
+        self.Decision_DBS_preop_Label = QLabel('Decision for lead placement\t\t')
+        self.Decision_DBS_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
+        self.icVRCS_preop = QCheckBox()
+        self.icVRCS_preop_Label = QLabel('Consent VERCISE DBS\t\t')
+        self.icVRCS_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
+        self.inexVRCS_preop = QCheckBox()
+        self.inexVRCS_preop_Label = QLabel('In-/Exclusion criteria VERCISE-DBS\t\t')
+        self.inexVRCS_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
 
         box2line1 = QHBoxLayout()
-        box2line1.addWidget(self.VideoFile)
-        box2line1.addWidget(self.VideoFileLabel)
-        box2line1.addWidget(self.MRIpreop)
-        box2line1.addWidget(self.MRIpreopLabel)
-        box2line1.addWidget(self.FPCITpreop)
-        box2line1.addWidget(self.FPCITpreopLabel)
-        box2line1.addWidget(self.ProtocolNeurCheck)
-        box2line1.addWidget(self.ProtocolNeurLabel)
+        box2line1.addWidget(self.Report_preop)
+        box2line1.addWidget(self.Report_preop_Label)
+        box2line1.addWidget(self.Decision_DBS_preop)
+        box2line1.addWidget(self.Decision_DBS_preop_Label)
+        box2line1.addWidget(self.icVRCS_preop)
+        box2line1.addWidget(self.icVRCS_preop_Label)
+        box2line1.addWidget(self.inexVRCS_preop)
+        box2line1.addWidget(self.inexVRCS_preop_Label)
         box2line1.addStretch()
 
         self.optionbox2Content.addLayout(box2line1)
@@ -172,23 +174,23 @@ class PreoperativeDialog(QDialog):
         self.optionbox4Content = QVBoxLayout(self.optionbox4)
         layout_general.addWidget(self.optionbox4, 3, 0)
 
-        self.VideoFile = QCheckBox()
-        self.VideoFileLabel = QLabel('Video')
-        self.VideoFileLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.MRIpreop = QCheckBox()
-        self.MRIpreopLabel = QLabel('MRI')
-        self.MRIpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.FPCITpreop = QCheckBox()
-        self.FPCITpreopLabel = QLabel('FP-CIT SPECT')
-        self.FPCITpreopLabel.setAlignment(QtCore.Qt.AlignLeft)
+        self.Video_File_preop = QCheckBox()
+        self.Video_File_preop_Label = QLabel('Video')
+        self.Video_File_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
+        self.MRI_preop = QCheckBox()
+        self.MRI_preop_Label = QLabel('MRI')
+        self.MRI_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
+        self.fpcit_spect_preop = QCheckBox()
+        self.fpcit_spect_preop_Label = QLabel('FP-CIT SPECT')
+        self.fpcit_spect_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
 
         box4line1 = QHBoxLayout()
-        box4line1.addWidget(self.VideoFile)
-        box4line1.addWidget(self.VideoFileLabel)
-        box4line1.addWidget(self.MRIpreop)
-        box4line1.addWidget(self.MRIpreopLabel)
-        box4line1.addWidget(self.FPCITpreop)
-        box4line1.addWidget(self.FPCITpreopLabel)
+        box4line1.addWidget(self.Video_File_preop)
+        box4line1.addWidget(self.Video_File_preop_Label)
+        box4line1.addWidget(self.MRI_preop)
+        box4line1.addWidget(self.MRI_preop_Label)
+        box4line1.addWidget(self.fpcit_spect_preop)
+        box4line1.addWidget(self.fpcit_spect_preop_Label)
         box4line1.addStretch(1)
 
         self.optionbox4Content.addLayout(box4line1)
@@ -205,18 +207,17 @@ class PreoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
-        self.updatetext()
+        self.updatePreoperativeData()
 
         # ====================   Actions when buttons are pressed      ====================
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
 
-    def updatetext(self):
-        """adds information extracted from database already provided"""
+    def updatePreoperativeData(self):
+        """Displays all the information that has been stored already in the csv files"""
 
         df_subj = Content.extract_saved_data(self.date)
-
-        if not df_subj["ID"]:
+        if not df_subj["ID"]:  # this is only for when no information could be found
             return
 
         self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0])) \
@@ -261,27 +262,25 @@ class PreoperativeDialog(QDialog):
         self.se.setText(str(df_subj["S&E_preop"][0])) \
             if str(df_subj["S&E_preop"][0]) != 'nan' else self.se.setText('')
 
-        # Edit CheckBoxes with content
-        if df_subj["Video_preop"][0] != 0:
-            self.VideoFile.setChecked(True)
-        elif df_subj["MRI_preop"][0] != 0:
-            self.MRIpreop.setChecked(True)
-        elif df_subj["fpcit_spect_preop"][0] != 0:
-            self.FPCITpreop.setChecked(True)
+        # Edit Upper CheckBoxes with content using a ternary operator
+        self.Report_preop.setChecked(True) if df_subj["Report_preop"][0] != 0 else self.Report_preop.setChecked(False)
+        self.Decision_DBS_preop.setChecked(True) if df_subj["Decision_DBS_preop"][0] != 0 else self.Decision_DBS_preop.setChecked(False)
+        self.icVRCS_preop.setChecked(True) if df_subj["icVRCS_preop"][0] != 0 else self.icVRCS_preop.setChecked(False)
+        self.inexVRCS_preop.setChecked(True) if df_subj["inexVRCS_preop"][0] != 0 else self.inexVRCS_preop.setChecked(False)
+
+        # Edit Lower CheckBoxes with content using a ternary operator
+        self.Video_File_preop.setChecked(True) if df_subj["Video_preop"][0] != 0 else self.Video_File_preop.setChecked(False)
+        self.MRI_preop.setChecked(True) if df_subj["MRI_preop"][0] != 0 else self.MRI_preop.setChecked(False)
+        self.fpcit_spect_preop.setChecked(True) if df_subj["fpcit_spect_preop"][0] != 0 else self.fpcit_spect_preop.setChecked(False)
 
         return
 
     # ====================   Defines actions when buttons are pressed      ====================
     @QtCore.pyqtSlot()
     def onClickedMedication(self):
-        """shows the medication dialog when button is pressed; """
-
-        dialog_medication = MedicationDialog(parent=self)  # create medication dialog
-        self.hide()  # hide current window
-
-        if dialog_medication.exec():  # Show the dialog and wait for it to complete
-            pass
-        self.show()  # close the medication GUI and return to the original one
+        """Shows medication dialog ; former implementation with creating GUI was replaced with show/hide GUI which is
+        initiated at beginning at the disadvantage of not being saved until GUIpreoperative is closed"""
+        self.dialog_medication.show()
 
     def onClickedSaveReturn(self):
         """closes GUI and returns to calling (main) GUI"""
@@ -296,14 +295,16 @@ class PreoperativeDialog(QDialog):
         except IndexError:
             df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
 
+        # Start filling the dataframe [df_subj] with data from the entries in the GUI
         df_general.reset_index(inplace=True, drop=True)
 
+        # Compare with general_data.csv
         df_subj['ID'] = General.read_current_subj().id[0]
         df_subj['PID'] = df_general['PID_ORBIS'][0]
         df_subj['Gender'] = df_general['Gender'][0]
         df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
 
-        # Now extract teh changed data from the GUI
+        # Now extract changed data from the GUI
         df_subj["First_Diagnosed_preop"] = self.lineEditFirstDiagnosed.text()
         df_subj['Admission_preop'] = self.lineEditAdmNeurIndCheck.text()
         df_subj['Dismissal_preop'] = self.DismNeurIndCheckLabel.text()
@@ -325,10 +326,35 @@ class PreoperativeDialog(QDialog):
         df_subj["PDQ39_preop"] = self.pdq39.text()
         df_subj["S&E_preop"] = self.se.text()
 
+        # df_subj["Video_preop"], df_subj["MRI_preop"], df_subj["fpcit_spect_preop"] = 0, 0, 0
+        # if self.VideoFile.isChecked():
+        #     df_subj["Video_preop"] = 1
+        # if self.MRIpreop.isChecked():
+        #     df_subj["MRI_preop"] = 1
+        # if self.FPCITpreop.isChecked():
+        #     df_subj["fpcit_spect_preop"] = 1
+        #
+        # df_subj["Report_preop"], df_subj["Decision_DBS_preop"], \
+        #     df_subj["icVRCS_preop"], df_subj["inexVRCS_preop"] = 0, 0, 0, 0
+        # if self.Report.isChecked():
+        #     df_subj["Report_preop"] = 1
+        # if self.DecisionDBS.isChecked():
+        #     df_subj["Decision_DBS_preop"] = 1
+        # if self.ConsentVercise.isChecked():
+        #     df_subj["icVRCS_preop"] = 1
+        # if self.In_ExclusionCheckVercise.isChecked():
+        #     df_subj["inexVRCS_preop"] = 1
+
+        checkboxes = ["Video_File_preop", "MRI_preop", "fpcit_spect_preop", "Report_preop",
+                      "Decision_DBS_preop", "icVRCS_preop", "inexVRCS_preop"]
+        for checkbox in checkboxes:
+            df_subj[checkbox] = 1 if getattr(self, checkbox).isChecked() else 0
+
+        # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
         idx2replace = df.index[df['ID'] == subj_id][0]
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "preoperative.csv"), index=False)
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 
         self.close()
 

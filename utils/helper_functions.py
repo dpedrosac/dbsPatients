@@ -24,6 +24,17 @@ class General:
         return rstr.xeger(re_expression)
 
     @staticmethod
+    def available_PDmedication():
+        """Generates a list with all available medications to treat PD_patients; the parenthesis works as a possible
+        mean to introduce the condition pre|intra|postoperative"""
+
+        medication = ['Levodopa Carbidopa{}', 'Levodopa Carbidopa CR{}', 'Entacapone{}', 'Tolcapone{}',
+                      'Pramipexole{}', 'Ropinirole{}', 'Rotigotine{}', 'Selegiline oral{}', 'Other{}',
+                      'Selegiline sublingual{}', 'Rasagiline{}', 'Amantadine{}', 'Apomorphine{}',
+                      'Piribedil{}', 'Safinamide{}', 'Opicapone{}']
+        return medication
+
+    @staticmethod
     def import_dataframe(filename: str, separator_csv: str = ',', missing_values: str = '') -> pds.DataFrame:
         """returns pandas dataframe from csv"""
 

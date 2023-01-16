@@ -10,15 +10,29 @@ from GUI.GUIpostoperative import PostoperativeDialog
 from GUI.GUIpreoperative import PreoperativeDialog
 
 
+class Worker(QRunnable):
+    """Worker thread intended to prevent the GUI from freezing. """
+
+    def __init__(self, *args, **kwargs):
+        super(Worker, self).__init__()
+        self.args = args
+        self.kwargs = kwargs
+
+    @pyqtSlot()
+    def run(self):
+        """Initialise the runner function with passed self.args, self.kwargs."""
+        print(self.args, self.kwargs)
+
+
 class ChooseGUI(QDialog):
     """GUI responsible to offer further GUI's: 1. Preoperative 2. Intraoperative 3. Postoperative"""
 
     def __init__(self, parent=None):
         """Initialize GUImain, a window in which all other "sub-GUIs" may be called from."""
-        super(ChooseGUI, self).__init__(parent)
 
+        super().__init__(parent)
+        self.threadpool = QThreadPool()
         subj_details = General.read_current_subj()
-        self.date = ''  # to be defined by selection in this GUI
 
         # ====================    Create General Layout      ====================
         self.layout = QVBoxLayout()  # layout for the central widget
@@ -47,6 +61,7 @@ class ChooseGUI(QDialog):
         btn_grp.addButton(self.button_openGUI_Preoperative)
         btn_grp.addButton(self.button_openGUI_Intraoperative)
         btn_grp.addButton(self.button_openGUI_Postoperative)
+        btn_grp.buttonClicked.connect(self.on_click)
 
         hbox = QVBoxLayout()
         groupbox.setLayout(hbox)
@@ -54,28 +69,28 @@ class ChooseGUI(QDialog):
         hbox.addWidget(self.button_openGUI_Intraoperative)
         hbox.addWidget(self.button_openGUI_Postoperative)
 
-        btn_grp.buttonClicked.connect(self.on_click)
-
     # ====================    In the next lines, actions are defined when Buttons are pressed      ====================
     @pyqtSlot()
     def on_click(self):
-        """Calls the respective GUI to enter data"""
+        """select the further steps/GUI to open"""
 
-        if self.button_openGUI_Preoperative.isChecked():
+        if self.button_openGUI_Preoperative.isChecked():  # selects three different options available
             dialog_date = PreoperativeDialog(parent=self)
         elif self.button_openGUI_Intraoperative.isChecked():
             dialog_date = IntraoperativeDialog(parent=self)
         else:
             dialog_date = PostoperativeDialog(parent=self)
 
-        self.hide()
-        if dialog_date.exec():
-            pass
-        self.show()
+        #self.hide()
+        #if dialog_date.exec():
+        #    pass
+
+        #self.show()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    widget = QWidget
     dlg = ChooseGUI()
     dlg.show()
     sys.exit(app.exec_())

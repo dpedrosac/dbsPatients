@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
-import sys, os, re
+import sys, re
 import pandas as pd
-from PyQt5 import QtCore
 import numpy as np
-
+from PyQt5 import QtCore
+from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
-    QHBoxLayout, QLabel, QWidget, QGridLayout, QPlainTextEdit
-
+    QHBoxLayout, QLabel, QGridLayout, QPlainTextEdit
 from utils.helper_functions import General, Content
-from dependencies import ROOTDIR, FILEDIR
+from dependencies import FILEDIR
 pd.options.mode.chained_assignment = None
 
 
 class MedicationDialog(QDialog):
-    """Dialog to introduce the medication at a specific date. All unrelated """
+    """Dialog to introduce the medication at a specific date."""
 
-    def __init__(self, visit="preoperative", parent=None):
+    def __init__(self, visit='preoperative', parent=None):
         super(MedicationDialog, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        # ====================    Create General Layout      ====================
 
+        # ====================    Create General Layout      ====================
         self.date = visit  # ensures the right date is entered
-        self.setWindowTitle('Medication of patient with DBS at {} visit'.format(visit))
+        df_subj = Content.extract_saved_data(self.date)
+        self.setWindowTitle('Medication of PID: {} at {} visit'.format(int(df_subj["PID"][0]), visit))
         self.setGeometry(200, 100, 280, 170)
         self.move(700, 250)
 
@@ -31,11 +31,9 @@ class MedicationDialog(QDialog):
         # ====================    (Only) Optionbox      ====================
         self.optionbox1 = QGroupBox('Patient Medication')
         self.grid_medication = QGridLayout()
-        self.medication_names = ['Levodopa Carbidopa{}', 'Levodopa Carbidopa CR{}', 'Entacapone{}', 'Tolcapone{}',
-                                 'Pramipexole{}', 'Ropinirole{}', 'Rotigotine{}', 'Selegiline oral{}', 'Other{}',
-                                 'Selegiline sublingual{}', 'Rasagiline{}', 'Amantadine{}', 'Apomorphine{}',
-                                 'Piribedil{}', 'Safinamide{}', 'Opicapone{}']
-        no_rows, iter_row = 9, 0
+        self.medication_names = General.available_PDmedication()
+
+        no_rows, iter_row = 9, 0  # creates nine rows of
         for idx, med in enumerate(self.medication_names):
             col = 2 if idx >= no_rows else 0
             if idx == no_rows:
@@ -43,6 +41,7 @@ class MedicationDialog(QDialog):
             self.grid_medication.addWidget(QLabel(med.format('')), iter_row, col)
             iter_row += 1
 
+        # Start adding lineEdits to the created rows
         self.lineEditLevodopa_Carbidopa = QLineEdit()
         self.grid_medication.addWidget(self.lineEditLevodopa_Carbidopa, 0, 1)
 
@@ -99,7 +98,7 @@ class MedicationDialog(QDialog):
 
         # ====================    Create Content for Buttons at the Bottom      ====================
         layout_bottom = QHBoxLayout()
-        self.button_save_return = QPushButton('Save settings \nand return')
+        self.button_save_return = QPushButton('Return')
         self.button_save_return.clicked.connect(self.onClickedSaveReturn)
 
         layout_bottom.addStretch(1)
@@ -111,37 +110,39 @@ class MedicationDialog(QDialog):
 
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
-        self.updatetext()  # Updates text from csv after creating the content!
+        self.updateDisplayedMedication()  # Updates text from csv after creating the content!
 
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):
-        """returns to calling GUI saving data whenever button is pressed """
+        """Saves the entered information in a csv-file according to the self.date information"""
 
         subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
-        if df.shape[1] == 1:
-            df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=';')
 
+        match = re.search(r'^(pre|intra|post)op', self.date)  # gets the condition, to ensure correct saving.
         idx2replace = df.index[df['ID'] == subj_id][0]  # looks for index at dataframe in which data shall be stored
-        df_items = {v.format('_preop').replace(' ', '_'): v.format('').replace(' ', '_') for v in self.medication_names}
+        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
+                    for v in self.medication_names}
         df_subj = df.iloc[idx2replace, :]
 
         for k, v in df_items.items():
             df_subj[k] = eval('self.lineEdit{}.text()'.format(v)) if v != 'Other' \
                 else eval('self.lineEdit{}.toPlainText()'.format(v))
+        df_subj['Other_preop'] = df_subj['Other_preop'] = re.sub(r"[,;]", "-", df_subj['Other_preop'])
 
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "preoperative_saved.csv"), index=False)  # saves changed data to file
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 
-        self.close()
+        self.hide()
 
-    def updatetext(self):
-        """adds information extracted from database already provided"""
+    def updateDisplayedMedication(self):
+        """Displays the information extracted from the database; so everything already stored is shown"""
 
         df_subj = Content.extract_saved_data(self.date)
         match = re.search(r'^(pre|intra|post)op', self.date)
-        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_') for v in self.medication_names}
+        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
+                    for v in self.medication_names}
 
         if not df_subj["ID"]:
             return
@@ -160,7 +161,6 @@ class MedicationDialog(QDialog):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    # widget = QWidget
     dlg = MedicationDialog()
     dlg.show()
     sys.exit(app.exec_())
