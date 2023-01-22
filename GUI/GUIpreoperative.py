@@ -174,9 +174,9 @@ class PreoperativeDialog(QDialog):
         self.optionbox4Content = QVBoxLayout(self.optionbox4)
         layout_general.addWidget(self.optionbox4, 3, 0)
 
-        self.Video_File_preop = QCheckBox()
-        self.Video_File_preop_Label = QLabel('Video')
-        self.Video_File_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
+        self.Video_preop = QCheckBox()
+        self.Video_preop_Label = QLabel('Video')
+        self.Video_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
         self.MRI_preop = QCheckBox()
         self.MRI_preop_Label = QLabel('MRI')
         self.MRI_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
@@ -185,8 +185,8 @@ class PreoperativeDialog(QDialog):
         self.fpcit_spect_preop_Label.setAlignment(QtCore.Qt.AlignLeft)
 
         box4line1 = QHBoxLayout()
-        box4line1.addWidget(self.Video_File_preop)
-        box4line1.addWidget(self.Video_File_preop_Label)
+        box4line1.addWidget(self.Video_preop)
+        box4line1.addWidget(self.Video_preop_Label)
         box4line1.addWidget(self.MRI_preop)
         box4line1.addWidget(self.MRI_preop_Label)
         box4line1.addWidget(self.fpcit_spect_preop)
@@ -213,6 +213,28 @@ class PreoperativeDialog(QDialog):
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
 
+    column_widgets = [
+        ("First_Diagnosed_preop", "lineEditFirstDiagnosed"),
+        ("Admission_preop", "lineEditAdmNeurIndCheck"),
+        ("Dismissal_preop", "DismNeurIndCheckLabel"),
+        ("Outpat_Contact_preop", "lineEditOutpatientContact"),
+        ("nch_preop", "lineEditNChContact"),
+        ("DBS_Conference_preop", "lineEditDBSconferenceDate"),
+        ("H&Y_preop", "hy"),
+        ("UPDRS_On_preop", "updrsON"),
+        ("UPDRS_Off_preop", "updrsOFF"),
+        ("UPDRSII_preop", "updrsII"),
+        ("HRUQ_preop", "hruq"),
+        ("MoCa_preop", "moca"),
+        ("MMST_preop", "mmst"),
+        ("BDI2_preop", "bdi2"),
+        ("NMSQ_preop", "nmsq"),
+        ("EQ5D_preop", "eq5d"),
+        ("DemTect_preop", "demtect"),
+        ("PDQ8_preop", "pdq8"),
+        ("PDQ39_preop", "pdq39"),
+        ("S&E_preop", "se"),
+    ]
     def updatePreoperativeData(self):
         """Displays all the information that has been stored already in the csv files"""
 
@@ -220,58 +242,32 @@ class PreoperativeDialog(QDialog):
         if not df_subj["ID"]:  # this is only for when no information could be found
             return
 
-        self.lineEditFirstDiagnosed.setText(str(df_subj["First_Diagnosed_preop"][0])) \
-            if str(df_subj["First_Diagnosed_preop"][0]) != 'nan' else self.lineEditFirstDiagnosed.setText('')
-        self.lineEditAdmNeurIndCheck.setText(str(df_subj['Admission_preop'][0])) \
-            if str(df_subj["Admission_preop"][0]) != 'nan' else self.lineEditAdmNeurIndCheck.setText('')
-        self.DismNeurIndCheckLabel.setText(str(df_subj['Dismissal_preop'][0])) \
-            if str(df_subj["Dismissal_preop"][0]) != 'nan' else self.DismNeurIndCheckLabel.setText('')
-        self.lineEditOutpatientContact.setText(str(df_subj['Outpat_Contact_preop'][0])) \
-            if str(df_subj["Outpat_Contact_preop"][0]) != 'nan' else self.lineEditOutpatientContact.setText('')
-        self.lineEditNChContact.setText(str(df_subj['nch_preop'][0])) \
-            if str(df_subj["nch_preop"][0]) != 'nan' else self.lineEditNChContact.setText('')
-        self.lineEditDBSconferenceDate.setText(str(df_subj['DBS_Conference_preop'][0])) \
-            if str(df_subj["DBS_Conference_preop"][0]) != 'nan' else self.lineEditDBSconferenceDate.setText('')
-
-        self.hy.setText(str(df_subj["H&Y_preop"][0])) \
-            if str(df_subj["H&Y_preop"][0]) != 'nan' else self.hy.setText('')
-        self.updrsON.setText(str(df_subj["UPDRS_On_preop"][0])) \
-            if str(df_subj["UPDRS_On_preop"][0]) != 'nan' else self.updrsON.setText('')
-        self.updrsOFF.setText(str(df_subj["UPDRS_Off_preop"][0])) \
-            if str(df_subj["UPDRS_Off_preop"][0]) != 'nan' else self.updrsOFF.setText('')
-        self.updrsII.setText(str(df_subj["UPDRSII_preop"][0])) \
-            if str(df_subj["UPDRSII_preop"][0]) != 'nan' else self.updrsII.setText('')
-        self.hruq.setText(str(df_subj["HRUQ_preop"][0])) \
-            if str(df_subj["HRUQ_preop"][0]) != 'nan' else self.hruq.setText('')
-        self.moca.setText(str(df_subj["MoCa_preop"][0])) \
-            if str(df_subj["MoCa_preop"][0]) != 'nan' else self.moca.setText('')
-        self.mmst.setText(str(df_subj["MMST_preop"][0])) \
-            if str(df_subj["MMST_preop"][0]) != 'nan' else self.mmst.setText('')
-        self.bdi2.setText(str(df_subj["BDI2_preop"][0])) \
-            if str(df_subj["BDI2_preop"][0]) != 'nan' else self.bdi2.setText('')
-        self.nmsq.setText(str(df_subj["NMSQ_preop"][0])) \
-            if str(df_subj["NMSQ_preop"][0]) != 'nan' else self.nmsq.setText('')
-        self.eq5d.setText(str(df_subj["EQ5D_preop"][0])) \
-            if str(df_subj["EQ5D_preop"][0]) != 'nan' else self.eq5d.setText('')
-        self.demtect.setText(str(df_subj["DemTect_preop"][0])) \
-            if str(df_subj["DemTect_preop"][0]) != 'nan' else self.demtect.setText('')
-        self.pdq8.setText(str(df_subj["PDQ8_preop"][0])) \
-            if str(df_subj["PDQ8_preop"][0]) != 'nan' else self.pdq8.setText('')
-        self.pdq39.setText(str(df_subj["PDQ39_preop"][0])) \
-            if str(df_subj["PDQ39_preop"][0]) != 'nan' else self.pdq39.setText('')
-        self.se.setText(str(df_subj["S&E_preop"][0])) \
-            if str(df_subj["S&E_preop"][0]) != 'nan' else self.se.setText('')
+        for column, widget in self.column_widgets:
+            widget_object = getattr(self, widget)
+            widget_object.setText(str(df_subj[column][0])) if str(
+                df_subj[column][0]) != 'nan' else widget_object.setText('')
 
         # Edit Upper CheckBoxes with content using a ternary operator
-        self.Report_preop.setChecked(True) if df_subj["Report_preop"][0] != 0 else self.Report_preop.setChecked(False)
-        self.Decision_DBS_preop.setChecked(True) if df_subj["Decision_DBS_preop"][0] != 0 else self.Decision_DBS_preop.setChecked(False)
-        self.icVRCS_preop.setChecked(True) if df_subj["icVRCS_preop"][0] != 0 else self.icVRCS_preop.setChecked(False)
-        self.inexVRCS_preop.setChecked(True) if df_subj["inexVRCS_preop"][0] != 0 else self.inexVRCS_preop.setChecked(False)
+
+        checkboxes = ["Video_preop", "MRI_preop", "fpcit_spect_preop", "Report_preop",
+                      "Decision_DBS_preop", "icVRCS_preop", "inexVRCS_preop"]
+
+        for checkbox in checkboxes:
+            if df_subj[checkbox][0] == 1:
+                getattr(self, checkbox).setCheckState(QtCore.Qt.Checked)
+            else:
+                getattr(self, checkbox).setCheckState(QtCore.Qt.Unchecked)
+
+
+        #self.Report_preop.setChecked(True) if df_subj["Report_preop"][0] != 0 else self.Report_preop.setChecked(False)
+        #self.Decision_DBS_preop.setChecked(True) if df_subj["Decision_DBS_preop"][0] != 0 else self.Decision_DBS_preop.setChecked(False)
+        #self.icVRCS_preop.setChecked(True) if df_subj["icVRCS_preop"][0] != 0 else self.icVRCS_preop.setChecked(False)
+        #self.inexVRCS_preop.setChecked(True) if df_subj["inexVRCS_preop"][0] != 0 else self.inexVRCS_preop.setChecked(False)
 
         # Edit Lower CheckBoxes with content using a ternary operator
-        self.Video_File_preop.setChecked(True) if df_subj["Video_preop"][0] != 0 else self.Video_File_preop.setChecked(False)
-        self.MRI_preop.setChecked(True) if df_subj["MRI_preop"][0] != 0 else self.MRI_preop.setChecked(False)
-        self.fpcit_spect_preop.setChecked(True) if df_subj["fpcit_spect_preop"][0] != 0 else self.fpcit_spect_preop.setChecked(False)
+        #self.Video_preop.setChecked(True) if df_subj["Video_preop"][0] != 0 else self.Video_preop.setChecked(False)
+        #self.MRI_preop.setChecked(True) if df_subj["MRI_preop"][0] != 0 else self.MRI_preop.setChecked(False)
+        #self.fpcit_spect_preop.setChecked(True) if df_subj["fpcit_spect_preop"][0] != 0 else self.fpcit_spect_preop.setChecked(False)
 
         return
 
@@ -281,6 +277,7 @@ class PreoperativeDialog(QDialog):
         """Shows medication dialog ; former implementation with creating GUI was replaced with show/hide GUI which is
         initiated at beginning at the disadvantage of not being saved until GUIpreoperative is closed"""
         self.dialog_medication.show()
+
 
     def onClickedSaveReturn(self):
         """closes GUI and returns to calling (main) GUI"""
@@ -307,50 +304,17 @@ class PreoperativeDialog(QDialog):
         # Now extract changed data from the GUI
         # TODO: In a future, lineEditsXXX should be called the same way as df_subj columns, so that it may be
         #  incorporated into a list; This would shorten the entire script considerably!
-        df_subj["First_Diagnosed_preop"] = self.lineEditFirstDiagnosed.text()
-        df_subj['Admission_preop'] = self.lineEditAdmNeurIndCheck.text()
-        df_subj['Dismissal_preop'] = self.DismNeurIndCheckLabel.text()
-        df_subj['Outpat_Contact_preop'] = self.lineEditOutpatientContact.text()
-        df_subj['nch_preop'] = self.lineEditNChContact.text()
-        df_subj['DBS_Conference_preop'] = self.lineEditDBSconferenceDate.text()
-        df_subj["H&Y_preop"] = self.hy.text()
-        df_subj["UPDRS_On_preop"] = self.updrsON.text()
-        df_subj["UPDRS_Off_preop"] = self.updrsOFF.text()
-        df_subj["UPDRSII_preop"] = self.updrsII.text()
-        df_subj["HRUQ_preop"] = self.hruq.text()
-        df_subj["MoCa_preop"] = self.moca.text()
-        df_subj["MMST_preop"] = self.mmst.text()
-        df_subj["BDI2_preop"] = self.bdi2.text()
-        df_subj["NMSQ_preop"] = self.nmsq.text()
-        df_subj["EQ5D_preop"] = self.eq5d.text()
-        df_subj["DemTect_preop"] = self.demtect.text()
-        df_subj["PDQ8_preop"] = self.pdq8.text()
-        df_subj["PDQ39_preop"] = self.pdq39.text()
-        df_subj["S&E_preop"] = self.se.text()
 
-        # df_subj["Video_preop"], df_subj["MRI_preop"], df_subj["fpcit_spect_preop"] = 0, 0, 0
-        # if self.VideoFile.isChecked():
-        #     df_subj["Video_preop"] = 1
-        # if self.MRIpreop.isChecked():
-        #     df_subj["MRI_preop"] = 1
-        # if self.FPCITpreop.isChecked():
-        #     df_subj["fpcit_spect_preop"] = 1
-        #
-        # df_subj["Report_preop"], df_subj["Decision_DBS_preop"], \
-        #     df_subj["icVRCS_preop"], df_subj["inexVRCS_preop"] = 0, 0, 0, 0
-        # if self.Report.isChecked():
-        #     df_subj["Report_preop"] = 1
-        # if self.DecisionDBS.isChecked():
-        #     df_subj["Decision_DBS_preop"] = 1
-        # if self.ConsentVercise.isChecked():
-        #     df_subj["icVRCS_preop"] = 1
-        # if self.In_ExclusionCheckVercise.isChecked():
-        #     df_subj["inexVRCS_preop"] = 1
+        for column, widget in self.column_widgets:
+            widget_object = getattr(self, widget)
+            df_subj[column] = widget_object.text()
 
-        checkboxes = ["Video_File_preop", "MRI_preop", "fpcit_spect_preop", "Report_preop",
+        checkboxes = ["Video_preop", "MRI_preop", "fpcit_spect_preop", "Report_preop",
                       "Decision_DBS_preop", "icVRCS_preop", "inexVRCS_preop"]
+
         for checkbox in checkboxes:
             df_subj[checkbox] = 1 if getattr(self, checkbox).isChecked() else 0
+
         # TODO: Some chechboxes are not saved. Possibly an error in the way they are "called"
 
         # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
