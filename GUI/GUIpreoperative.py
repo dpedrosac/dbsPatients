@@ -253,10 +253,11 @@ class PreoperativeDialog(QDialog):
                       "Decision_DBS_preop", "icVRCS_preop", "inexVRCS_preop"]
 
         for checkbox in checkboxes:
-            if df_subj[checkbox][0] == 1:
+            if df_subj[checkbox][0] == True:
                 getattr(self, checkbox).setCheckState(QtCore.Qt.Checked)
             else:
                 getattr(self, checkbox).setCheckState(QtCore.Qt.Unchecked)
+        # or QtCore.Qt.Checked
 
 
         #self.Report_preop.setChecked(True) if df_subj["Report_preop"][0] != 0 else self.Report_preop.setChecked(False)
@@ -302,8 +303,6 @@ class PreoperativeDialog(QDialog):
         df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
 
         # Now extract changed data from the GUI
-        # TODO: In a future, lineEditsXXX should be called the same way as df_subj columns, so that it may be
-        #  incorporated into a list; This would shorten the entire script considerably!
 
         for column, widget in self.column_widgets:
             widget_object = getattr(self, widget)

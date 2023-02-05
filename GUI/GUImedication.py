@@ -21,7 +21,7 @@ class MedicationDialog(QDialog):
         # ====================    Create General Layout      ====================
         self.date = visit  # ensures the right date is entered
         df_subj = Content.extract_saved_data(self.date)
-        self.setWindowTitle('Medication of PID: {} at {} visit'.format(int(df_subj["PID"][0]), visit))
+        self.setWindowTitle('Medication of PID: {} '.format(int(df_subj["PID"][0]), visit))
         self.setGeometry(200, 100, 280, 170)
         self.move(700, 250)
 

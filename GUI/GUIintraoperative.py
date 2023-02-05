@@ -20,7 +20,7 @@ class IntraoperativeDialog(QDialog):
         """Initializer."""
         super().__init__(parent)
 
-        self.date = 'intraoperative'  # defines the date at which data are taken from/saved at
+        self.date = 'intraoperative_test'  # defines the date at which data are taken from/saved at
         subj_details = General.read_current_subj()
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
@@ -531,10 +531,11 @@ class IntraoperativeDialog(QDialog):
                     df_subj["FreqR_intraop"] = DBSsettings.text()
 
 
+
         idx2replace = df.index[df['ID'] == subj_id][0]
         df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "intraoperative.csv"), index=False)
+        df.to_csv(os.path.join(FILEDIR, "intraoperative_test.csv"), index=False)
 
         self.close()
 
