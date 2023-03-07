@@ -22,7 +22,7 @@ class PreoperativeDialog(QDialog):
         super(PreoperativeDialog, self).__init__(parent)
 
         subj_details = General.read_current_subj()
-        self.date = 'preoperative'  # defines the date at which data are taken from/saved at
+        self.date = 'preoperative_test'  # defines the date at which data are taken from/saved at
 
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)  # ensures identical first columns in preoperative.csv
@@ -253,22 +253,11 @@ class PreoperativeDialog(QDialog):
                       "Decision_DBS_preop", "icVRCS_preop", "inexVRCS_preop"]
 
         for checkbox in checkboxes:
-            if df_subj[checkbox][0] == True:
+            if str(df_subj[checkbox][0]) == '1':
                 getattr(self, checkbox).setCheckState(QtCore.Qt.Checked)
             else:
                 getattr(self, checkbox).setCheckState(QtCore.Qt.Unchecked)
         # or QtCore.Qt.Checked
-
-
-        #self.Report_preop.setChecked(True) if df_subj["Report_preop"][0] != 0 else self.Report_preop.setChecked(False)
-        #self.Decision_DBS_preop.setChecked(True) if df_subj["Decision_DBS_preop"][0] != 0 else self.Decision_DBS_preop.setChecked(False)
-        #self.icVRCS_preop.setChecked(True) if df_subj["icVRCS_preop"][0] != 0 else self.icVRCS_preop.setChecked(False)
-        #self.inexVRCS_preop.setChecked(True) if df_subj["inexVRCS_preop"][0] != 0 else self.inexVRCS_preop.setChecked(False)
-
-        # Edit Lower CheckBoxes with content using a ternary operator
-        #self.Video_preop.setChecked(True) if df_subj["Video_preop"][0] != 0 else self.Video_preop.setChecked(False)
-        #self.MRI_preop.setChecked(True) if df_subj["MRI_preop"][0] != 0 else self.MRI_preop.setChecked(False)
-        #self.fpcit_spect_preop.setChecked(True) if df_subj["fpcit_spect_preop"][0] != 0 else self.fpcit_spect_preop.setChecked(False)
 
         return
 
@@ -313,8 +302,6 @@ class PreoperativeDialog(QDialog):
 
         for checkbox in checkboxes:
             df_subj[checkbox] = 1 if getattr(self, checkbox).isChecked() else 0
-
-        # TODO: Some chechboxes are not saved. Possibly an error in the way they are "called"
 
         # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
         idx2replace = df.index[df['ID'] == subj_id][0]
