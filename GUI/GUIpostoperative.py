@@ -440,10 +440,10 @@ class PostoperativeDialog(QDialog):
                 if str(row["Dismissal_NR_postop"]) != 'nan' else self.lineEditDismission_NR.setText('')
             self.lineEditSurgery.setText(str(row["Surgery_Date_postop"])) \
                 if str(row["Surgery_Date_postop"]) != 'nan' else self.lineEditSurgery.setText('')
-            # self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
-            # if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
-            # self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
-            # if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
+            #self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
+                #if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
+            #self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
+                #if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
 
             # upper right
 
@@ -500,6 +500,8 @@ class PostoperativeDialog(QDialog):
 
             # Edit CheckBoxes with content
             # middle left
+
+
             if row["Report_File_NCh_postop"] != 0:
                 self.ReportNeurCheck.setChecked(True)
             if row["Report_File_NR_postop"] != 0:
@@ -679,6 +681,18 @@ class PostoperativeDialog(QDialog):
         df_subj["TRSoff_postop"] = self.lineEditTRSOff.text()
 
         # middle left
+        checkbox_cols = [("ReportNeurCheck", "Report_File_NCh_postop"),
+                         ("ReportNeurosurgeryCheck", "Report_File_NR_postop"),
+                         ("PatProgrammerCheck", "Using_Programmer_postop"), ("PostopCTCheck", "CTscan_postop"),
+                         ("BatteryReplacementCheck", "Battery_Replacement_postop"),
+                         ("PlannedVisitCheck", "Planned_Visit_postop"), ("QualiPaCheck", "Qualipa_Visit_postop")]
+
+        for checkbox, col_name in checkbox_cols:
+            if getattr(self, checkbox).isChecked():
+                df_subj[col_name] = 1
+            else:
+                df_subj[col_name] = 0
+
 
         idx2replace = df[df['ID'] == subj_id].index[0]
         df.iloc[idx2replace, :] = df_subj
