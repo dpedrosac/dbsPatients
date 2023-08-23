@@ -16,15 +16,15 @@ class PostoperativeDialog(QDialog):
     def __init__(self, parent=None):
         """Initializer."""
         super(PostoperativeDialog, self).__init__(parent)
-        self.date = 'postoperative'  # next two lines define the postoperative date data stem from/are saved at
+        self.date = 'postoperative_test'  # next two lines define the postoperative date data stem from/are saved at
         self.postoperative_date = ''
 
         subj_details = General.read_current_subj()
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
-
-        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # create medication dialog
-        self.dialog_medication.hide()
+        #Todo: can't run the code with these two lines:
+        #self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # create medication dialog
+        #self.dialog_medication.hide()
 
         # ====================    Create General Layout      ====================
         self.setWindowTitle('Postoperative Information (PID: {})'.format(str(int(subj_details.pid))))  # not necessary
@@ -412,6 +412,7 @@ class PostoperativeDialog(QDialog):
 
     # ====================   Defines what happens when ComboBox is modified      ====================
 
+
     def read_content_csv(self):
         """dummy part of update text that served only to make it run; all parts of [update_text_notworking] should be
         moved here"""
@@ -439,10 +440,10 @@ class PostoperativeDialog(QDialog):
                 if str(row["Dismissal_NR_postop"]) != 'nan' else self.lineEditDismission_NR.setText('')
             self.lineEditSurgery.setText(str(row["Surgery_Date_postop"])) \
                 if str(row["Surgery_Date_postop"]) != 'nan' else self.lineEditSurgery.setText('')
-            # self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
-            # if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
-            # self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
-            # if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
+            #self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
+                #if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
+            #self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
+                #if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
 
             # upper right
 
@@ -499,6 +500,8 @@ class PostoperativeDialog(QDialog):
 
             # Edit CheckBoxes with content
             # middle left
+
+
             if row["Report_File_NCh_postop"] != 0:
                 self.ReportNeurCheck.setChecked(True)
             if row["Report_File_NR_postop"] != 0:
@@ -611,8 +614,7 @@ class PostoperativeDialog(QDialog):
 
     def onClickedSaveReturn(self):
 
-        # TODO: a function is needed that drops "empty" data in the data_frame. Could be something like:
-        #  data_frame.isnull().iloc[:, 2:9].dropna(how='all', axis=0)
+
         # df_general = Clean.extract_subject_data()
         current_subj = General.read_current_subj()
         subject_id = current_subj['id'][0]
@@ -679,6 +681,18 @@ class PostoperativeDialog(QDialog):
         df_subj["TRSoff_postop"] = self.lineEditTRSOff.text()
 
         # middle left
+        checkbox_cols = [("ReportNeurCheck", "Report_File_NCh_postop"),
+                         ("ReportNeurosurgeryCheck", "Report_File_NR_postop"),
+                         ("PatProgrammerCheck", "Using_Programmer_postop"), ("PostopCTCheck", "CTscan_postop"),
+                         ("BatteryReplacementCheck", "Battery_Replacement_postop"),
+                         ("PlannedVisitCheck", "Planned_Visit_postop"), ("QualiPaCheck", "Qualipa_Visit_postop")]
+
+        for checkbox, col_name in checkbox_cols:
+            if getattr(self, checkbox).isChecked():
+                df_subj[col_name] = 1
+            else:
+                df_subj[col_name] = 0
+
 
         idx2replace = df[df['ID'] == subj_id].index[0]
         df.iloc[idx2replace, :] = df_subj
