@@ -71,7 +71,14 @@ class CheckPID(QDialog):
 
         if self.lineEditPID.text():
             filename2load = 'general_data.csv'
-            df = General.import_dataframe(filename2load, separator_csv=',')
+            General.get_data_subject(flag='general_data', pid2lookfor=self.lineEditPID.text())
+
+            try:
+                df = General.import_dataframe(filename2load, separator_csv=',')
+            except FileNotFoundError:
+                General.generate_template_files()
+                df = General.import_dataframe(filename2load, separator_csv=',')
+
             if df.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
                 df = General.import_dataframe(filename2load, separator_csv=';')
 
