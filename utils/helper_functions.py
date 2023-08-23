@@ -17,20 +17,6 @@ class General:
         pass
 
     @staticmethod
-    def generate_template_files(source_folder='.install', destination_folder='data'):
-        """when started the first time, empty data for general_data, preoperative and postoprtative is generated"""
-
-        if not os.path.exists(os.path.join(ROOTDIR, destination_folder)):
-            os.makedirs(os.path.join(ROOTDIR, destination_folder))
-
-        for filename in os.listdir(os.path.join(ROOTDIR, source_folder)):
-            if filename.endswith('_template.csv'):
-                source_path = os.path.join(os.path.join(ROOTDIR, source_folder), filename)
-                destination_path = os.path.join(os.path.join(ROOTDIR, destination_folder), filename.replace('_template.csv', '.csv'))
-
-                shutil.copy(source_path, destination_path)
-
-    @staticmethod
     def create_pseudonym(size_array: int) -> str:
         """generates pseudonym of letters, numbers and special characters; ';' and ','
         are omitted to avoid confusion in 'csv-files' """
@@ -98,10 +84,10 @@ class General:
             pid2lookfor = str(pid2lookfor).lstrip('0')  # string that is searched for in metadata file
             idxPID = data_all.index[data_all['PID_ORBIS'] == int(pid2lookfor)].to_list()
             data_subj = data_all.iloc[idxPID]
-        except FileNotFoundError:
+        except FileNotFoundError: # creates empty file from template (/.install) in case of first use
             print('No file names {} found, creating new file from template in {}/.install '.format(file2read, ROOTDIR))
-            file2write = os.path.join(ROOTDIR, '.install', '{}_template.csv'.format(flag))
-            shutil.copyfile(file2read, file2write)
+            file2copy = os.path.join(ROOTDIR, '.install', '{}_template.csv'.format(flag))
+            shutil.copyfile(file2copy, os.path.join(FILEDIR, file2read))
             data_subj = []
 
         return data_subj

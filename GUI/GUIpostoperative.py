@@ -16,7 +16,7 @@ class PostoperativeDialog(QDialog):
     def __init__(self, parent=None):
         """Initializer."""
         super(PostoperativeDialog, self).__init__(parent)
-        self.date = 'postoperative_test'  # next two lines define the postoperative date data stem from/are saved at
+        self.date = 'postoperative'  # next two lines define the postoperative date data stem from/are saved at
         self.postoperative_date = ''
 
         subj_details = General.read_current_subj()

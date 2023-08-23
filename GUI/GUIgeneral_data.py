@@ -178,6 +178,8 @@ class CheckForGeneralData(QDialog):
 
     @QtCore.pyqtSlot()
     def open_calendar(self):
+        """opens a calender in order to enter the birthdate of a subject"""
+
         self.cal = QCalendarWidget(self)
         self.cal.setGridVisible(True)
         self.cal.clicked[QtCore.QDate].connect(self.showDate)

@@ -22,7 +22,7 @@ class PreoperativeDialog(QDialog):
         super(PreoperativeDialog, self).__init__(parent)
 
         subj_details = General.read_current_subj()
-        self.date = 'preoperative_test'  # defines the date at which data are taken from/saved at
+        self.date = 'preoperative'  # defines the date at which data are taken from/saved at
 
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)  # ensures identical first columns in preoperative.csv

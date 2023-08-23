@@ -71,16 +71,9 @@ class CheckPID(QDialog):
 
         if self.lineEditPID.text():
             filename2load = 'general_data.csv'
+
             General.get_data_subject(flag='general_data', pid2lookfor=self.lineEditPID.text())
-
-            try:
-                df = General.import_dataframe(filename2load, separator_csv=',')
-            except FileNotFoundError:
-                General.generate_template_files()
-                df = General.import_dataframe(filename2load, separator_csv=',')
-
-            if df.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
-                df = General.import_dataframe(filename2load, separator_csv=';')
+            df = General.import_dataframe(filename2load, separator_csv=',')
 
             PID2lookfor = self.lineEditPID.text().lstrip('0')  # string that is searched for in metadata file
             idx_PID = df.index[df['PID_ORBIS'] == int(PID2lookfor)].to_list()
@@ -89,6 +82,7 @@ class CheckPID(QDialog):
             Output.msg_box(text='No corresponding subject found, please create new entry', title='Missing PID')
             self.EnterNewPID.show()
             self.hide()
+
         elif len(idx_PID) > 1:
             Output.msg_box(text='Too many entries for PID, please double check file manually: {}'.format(filename2load),
                            title='Too many PID entries')
