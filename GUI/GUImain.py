@@ -63,13 +63,13 @@ class ChooseGUI(QDialog):
 
         subj_details = General.read_current_subj()
         if self.button_openGUI_Preoperative.isChecked():
-            General.get_data_subject(flag='preoperative', pid2lookfor=subj_details.pid)
+            General.get_data_subject(flag='preoperative', pid2lookfor=int(subj_details.pid))
             dialog_date = PreoperativeDialog(parent=self)
         elif self.button_openGUI_Intraoperative.isChecked():
-            General.get_data_subject(flag='intraoperative', pid2lookfor=subj_details.pid)
+            General.get_data_subject(flag='intraoperative', pid2lookfor=int(subj_details.pid))
             dialog_date = IntraoperativeDialog(parent=self)
         else:
-            General.get_data_subject(flag='postoperative', pid2lookfor=subj_details.pid)
+            General.get_data_subject(flag='postoperative', pid2lookfor=int(subj_details.pid))
             dialog_date = PostoperativeDialog(parent=self)
 
         self.hide()

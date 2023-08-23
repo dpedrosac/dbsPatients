@@ -29,9 +29,9 @@ class General:
         mean to introduce the condition pre|intra|postoperative"""
 
         medication = ['Levodopa Carbidopa{}', 'Levodopa Carbidopa CR{}', 'Entacapone{}', 'Tolcapone{}',
-                      'Pramipexole{}', 'Ropinirole{}', 'Rotigotine{}', 'Selegiline oral{}', 'Other{}',
-                      'Selegiline sublingual{}', 'Rasagiline{}', 'Amantadine{}', 'Apomorphine{}',
-                      'Piribedil{}', 'Safinamide{}', 'Opicapone{}']
+                      'Pramipexole{}', 'Ropinirole{}', 'Rotigotin{}', 'Selegilin oral{}', 'Other{}',
+                      'Selegilin sublingual{}', 'Rasagilin{}', 'Amantadine{}', 'Apomorphine{}',
+                      'Piribedil{}', 'Safinamid{}', 'Opicapone{}']
         return medication
 
     @staticmethod
@@ -107,9 +107,9 @@ class General:
             file2change = General.import_dataframe('{}.csv'.format(flag), separator_csv=';')
 
         indices2change = file2change.index[file2change['ID'] == id2lookfor].to_list()
-        for k in indices2change:
-            file2change['Gender'].loc[int(k)] = int(df_general['Gender'].iloc[idx1])
-            file2change['PID'].loc[int(k)] = int(df_general['PID_ORBIS'].iloc[idx1])
+        for k in indices2change: # TODO: is this necessary
+            # file2change['Gender'].loc[int(k)] = int(df_general['Gender'].iloc[idx1])
+            file2change['PID_ORBIS'].loc[int(k)] = int(df_general['PID_ORBIS'].iloc[idx1])
 
         if messagebox:
             Output.msg_box(text='There were changes in the file \n\t{} \nfor subj\n\t{}.\n Please '
@@ -146,6 +146,12 @@ class Content:
         if df.shape[1] == 1:
             df = General.import_dataframe('{}.csv'.format(condition), separator_csv=';')
 
+        if df.shape[0] == 0:
+            ID_to_add = {'PID_ORBIS': General.read_current_subj().pid[0],
+                         'ID': General.read_current_subj().id[0]}  # Fill in the actual value for PID_ORBIS
+            new_row_df = pds.DataFrame(ID_to_add, index=[0])
+            df = df.append(new_row_df, ignore_index=True)
+
         # Only filter the data if the condition is "postoperative" and a follow-up interval is provided
         if followup_timing != '':
             df_subj = df[(df['Reason_postop'] == followup_timing) & (df['ID'] == subj_id)]
@@ -174,7 +180,7 @@ class Content:
                         "targetR5_intraop", "targetR6_intraop", "targetR7_intraop", "targetR8_intraop", "protocol_intraop",
                         "protocol_file_intraop", "op_duration_intraop", "LEDD_intraop", "Levodopa_Carbidopa_intraop", "Levodopa_Carbidopa_CR_intraop",
                         "Entacapone_intraop", "Tolcapone_intraop", "Pramipexole_intraop", "Ropinirole_intraop", "Rotigotine_intraop",
-                        "Selegiline,_oral_intraop", "Selegiline,_sublingual_intraop", "Rasagiline_intraop", "Amantadine_intraop", "Apomorphine_intraop",
+                        "Selegiline_oral_intraop", "Selegiline_sublingual_intraop", "Rasagiline_intraop", "Amantadine_intraop", "Apomorphine_intraop",
                         "Piribedil_intraop", "Safinamid_intraop", "Opicapone_intraop", "Other_intraop", "Perc0_intraop",
                         "Perc1_intraop", "Perc2_intraop", "Perc3_intraop", "Perc4_intraop", "Perc5_intraop",
                         "Perc6_intraop", "Perc7_intraop", "Perc8_intraop", "Perc9_intraop", "Perc10_intraop",

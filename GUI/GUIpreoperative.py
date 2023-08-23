@@ -287,7 +287,7 @@ class PreoperativeDialog(QDialog):
 
         # Compare with general_data.csv
         df_subj['ID'] = General.read_current_subj().id[0]
-        df_subj['PID'] = df_general['PID_ORBIS'][0]
+        df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][0] # is this necessary?
         df_subj['Gender'] = df_general['Gender'][0]
         df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
 
@@ -304,9 +304,14 @@ class PreoperativeDialog(QDialog):
             df_subj[checkbox] = 1 if getattr(self, checkbox).isChecked() else 0
 
         # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
-        idx2replace = df.index[df['ID'] == subj_id][0]
-        df.iloc[idx2replace, :] = df_subj
-        df = df.replace(['nan', ''], [np.nan, np.nan])
+        try:
+            idx2replace = df.index[df['ID'] == subj_id][0]
+            df.iloc[idx2replace, :] = df_subj
+            df = df.replace(['nan', ''], [np.nan, np.nan])
+        except IndexError:
+            df = df.append(df_subj, ignore_index=True)
+            df = df.replace(['nan', ''], [np.nan, np.nan])
+
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 
         self.close()

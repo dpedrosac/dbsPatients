@@ -21,7 +21,7 @@ class MedicationDialog(QDialog):
         # ====================    Create General Layout      ====================
         self.date = visit  # ensures the right date is entered
         df_subj = Content.extract_saved_data(self.date)
-        self.setWindowTitle('Medication of PID: {} '.format(int(df_subj["PID"][0]), visit))
+        self.setWindowTitle('Medication of PID: {} '.format(int(df_subj["PID_ORBIS"][0]), visit))
         self.setGeometry(200, 100, 280, 170)
         self.move(700, 250)
 
@@ -60,20 +60,20 @@ class MedicationDialog(QDialog):
         self.lineEditRopinirole = QLineEdit()
         self.grid_medication.addWidget(self.lineEditRopinirole, 5, 1)
 
-        self.lineEditRotigotine = QLineEdit()
-        self.grid_medication.addWidget(self.lineEditRotigotine, 6, 1)
+        self.lineEditRotigotin = QLineEdit()
+        self.grid_medication.addWidget(self.lineEditRotigotin, 6, 1)
 
-        self.lineEditSelegiline_oral = QLineEdit()
-        self.grid_medication.addWidget(self.lineEditSelegiline_oral, 7, 1)
+        self.lineEditSelegilin_oral = QLineEdit()
+        self.grid_medication.addWidget(self.lineEditSelegilin_oral, 7, 1)
 
         self.lineEditOther = QPlainTextEdit()
         self.grid_medication.addWidget(self.lineEditOther, 8, 1, 3, 4)
 
-        self.lineEditSelegiline_sublingual = QLineEdit()
-        self.grid_medication.addWidget(self.lineEditSelegiline_sublingual, 0, 3)
+        self.lineEditSelegilin_sublingual = QLineEdit()
+        self.grid_medication.addWidget(self.lineEditSelegilin_sublingual, 0, 3)
 
-        self.lineEditRasagiline = QLineEdit()
-        self.grid_medication.addWidget(self.lineEditRasagiline, 1, 3)
+        self.lineEditRasagilin = QLineEdit()
+        self.grid_medication.addWidget(self.lineEditRasagilin, 1, 3)
 
         self.lineEditAmantadine = QLineEdit()
         self.grid_medication.addWidget(self.lineEditAmantadine, 2, 3)
@@ -84,8 +84,8 @@ class MedicationDialog(QDialog):
         self.lineEditPiribedil = QLineEdit()
         self.grid_medication.addWidget(self.lineEditPiribedil, 4, 3)
 
-        self.lineEditSafinamide = QLineEdit()
-        self.grid_medication.addWidget(self.lineEditSafinamide, 5, 3)
+        self.lineEditSafinamid = QLineEdit()
+        self.grid_medication.addWidget(self.lineEditSafinamid, 5, 3)
 
         self.lineEditOpicapone = QLineEdit()
         self.grid_medication.addWidget(self.lineEditOpicapone, 6, 3)
