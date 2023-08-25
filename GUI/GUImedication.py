@@ -21,7 +21,7 @@ class MedicationDialog(QDialog):
         # ====================    Create General Layout      ====================
         self.date = visit  # ensures the right date is entered
         df_subj = Content.extract_saved_data(self.date)
-        self.setWindowTitle('Medication of PID: {} '.format(int(df_subj["PID_ORBIS"][0]), visit))
+        self.setWindowTitle('Medication of PID: {} '.format(int(General.read_current_subj().pid)))
         self.setGeometry(200, 100, 280, 170)
         self.move(700, 250)
 
@@ -120,17 +120,28 @@ class MedicationDialog(QDialog):
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
 
         match = re.search(r'^(pre|intra|post)op', self.date)  # gets the condition, to ensure correct saving.
-        idx2replace = df.index[df['ID'] == subj_id][0]  # looks for index at dataframe in which data shall be stored
         df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
                     for v in self.medication_names}
-        df_subj = df.iloc[idx2replace, :]
+
+        try:
+            idx2replace = df.index[df['ID'] == subj_id][0]  # looks for index at dataframe in which data shall be stored
+            df_subj = df.iloc[idx2replace, :]
+            df.iloc[idx2replace, :] = df_subj
+            first_index = False
+        except IndexError:
+            df_subj = df
+            df_subj.loc[0,'ID'] = General.read_current_subj().id[0]
+            df_subj.loc[0,'PID_ORBIS'] = General.read_current_subj().pid[0]
+            first_index = True
 
         for k, v in df_items.items():
             df_subj[k] = eval('self.lineEdit{}.text()'.format(v)) if v != 'Other' \
                 else eval('self.lineEdit{}.toPlainText()'.format(v))
-        df_subj['Other_preop'] = df_subj['Other_preop'] = re.sub(r"[,;]", "-", df_subj['Other_preop'])
+        if first_index:
+            df = df.append(df_subj, ignore_index=True)
+        else:
+            df.iloc[idx2replace, :] = df_subj
 
-        df.iloc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 

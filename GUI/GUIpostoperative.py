@@ -23,6 +23,9 @@ class PostoperativeDialog(QDialog):
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
         #Todo: can't run the code with these two lines:
+        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog (preop)
+        self.dialog_medication.hide()
+
         #self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # create medication dialog
         #self.dialog_medication.hide()
 
@@ -421,7 +424,7 @@ class PostoperativeDialog(QDialog):
         if df_subj.empty:
             return
 
-        df_subj = df_subj[df_subj['PID'] == General.read_current_subj().pid[0]]
+        df_subj = df_subj[df_subj['PID_ORBIS'] == General.read_current_subj().pid[0]]
         df_subj_filtered = df_subj[df_subj['Reason_postop'] == self.lineEditreason.currentText()]
         if df_subj.empty:
             return
@@ -614,8 +617,6 @@ class PostoperativeDialog(QDialog):
 
     def onClickedSaveReturn(self):
 
-
-        # df_general = Clean.extract_subject_data()
         current_subj = General.read_current_subj()
         subject_id = current_subj['id'][0]
         df_general = Clean.extract_subject_data(subject_id)
@@ -693,9 +694,11 @@ class PostoperativeDialog(QDialog):
             else:
                 df_subj[col_name] = 0
 
-
-        idx2replace = df[df['ID'] == subj_id].index[0]
-        df.iloc[idx2replace, :] = df_subj
+        try:
+            idx2replace = df[df['ID'] == subj_id].index[0]
+        except IndexError:
+            idx2replace = 0
+        df.loc[idx2replace, :] = df_subj
         df = df.replace(['nan', ''], [np.nan, np.nan])
         df.to_csv(os.path.join(FILEDIR, "{}.csv".format(self.date)), index=False)
 

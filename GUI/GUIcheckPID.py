@@ -71,7 +71,6 @@ class CheckPID(QDialog):
 
         if self.lineEditPID.text():
             filename2load = 'general_data.csv'
-
             General.get_data_subject(flag='general_data', pid2lookfor=self.lineEditPID.text())
             df = General.import_dataframe(filename2load, separator_csv=',')
 

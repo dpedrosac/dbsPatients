@@ -13,7 +13,6 @@ from dependencies import FILEDIR
 pds.options.mode.chained_assignment = None  # default='warn' cf.
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
 
-
 class PreoperativeDialog(QDialog):
     """Dialog to introduce all important information of preoperative data ('indication check')"""
 

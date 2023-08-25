@@ -131,7 +131,7 @@ class Content:
 
         subject_pid = General.read_current_subj().pid[0]
         data_frame = General.import_dataframe('{}.csv'.format(condition), separator_csv=',')
-        data_frame = data_frame.loc[data_frame['PID'] == subject_pid]
+        data_frame = data_frame.loc[data_frame['PID_ORBIS'] == subject_pid]
         list_of_dates = data_frame['Reason_postop'].tolist()
 
         return list_of_dates
