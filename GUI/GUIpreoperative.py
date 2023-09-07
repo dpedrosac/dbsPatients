@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import logging
+logging.basicConfig(filename='error.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+import csv
 import sys
 import pandas as pds
 import numpy as np
@@ -12,6 +15,19 @@ from dependencies import FILEDIR
 
 pds.options.mode.chained_assignment = None  # default='warn' cf.
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
+
+@staticmethod  # Versuch Speicherproblem?
+def fill_missing_demographics(flag):
+    """very unique function without much versatility intended to fill missing data from general_data.csv to
+    pre-/intra-/postoperative.csv in the ./data folder"""
+
+    file_general = General.import_dataframe('general_data.csv', separator_csv=',')
+    # if file_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
+    #    file_general = General.import_dataframe('general_data.csv', separator_csv=';')
+
+    for index, row in file_general.iterrows():
+        General.synchronize_data_with_general(flag, row['ID'], messagebox=False)
+
 
 class PreoperativeDialog(QDialog):
     """Dialog to introduce all important information of preoperative data ('indication check')"""
@@ -234,6 +250,7 @@ class PreoperativeDialog(QDialog):
         ("PDQ39_preop", "pdq39"),
         ("S&E_preop", "se"),
     ]
+
     def updatePreoperativeData(self):
         """Displays all the information that has been stored already in the csv files"""
 
@@ -295,7 +312,6 @@ class PreoperativeDialog(QDialog):
         for column, widget in self.column_widgets:
             widget_object = getattr(self, widget)
             df_subj[column] = widget_object.text()
-
         checkboxes = ["Video_preop", "MRI_preop", "fpcit_spect_preop", "Report_preop",
                       "Decision_DBS_preop", "icVRCS_preop", "inexVRCS_preop"]
 
@@ -305,11 +321,13 @@ class PreoperativeDialog(QDialog):
         # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
         try:
             idx2replace = df.index[df['ID'] == subj_id][0]
-            df.iloc[idx2replace, :] = df_subj
+            df.loc[idx2replace, :] = df_subj
             df = df.replace(['nan', ''], [np.nan, np.nan])
         except IndexError:
-            df = df.append(df_subj, ignore_index=True)
-            df = df.replace(['nan', ''], [np.nan, np.nan])
+            df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
+            df = pds.concat([df, df_subj], ignore_index=True)
+            # df = df.append(df_subj, ignore_index=True)
+            df = df.replace('nan', np.nan)
 
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 

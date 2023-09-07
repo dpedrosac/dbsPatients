@@ -5,11 +5,12 @@ import rstr
 import csv
 import os
 import shutil
-
+import inspect
 import pandas as pds
 from pathlib import Path
 from dependencies import ROOTDIR, FILEDIR
 from PyQt5.QtWidgets import QMessageBox, QInputDialog
+from utils.logger import logger
 
 
 class General:
@@ -39,12 +40,16 @@ class General:
         """returns pandas dataframe from csv"""
 
         filename_total = os.path.join(FILEDIR, filename)
+        logger.debug(f"opening file: {filename_total}")
         if not os.path.isfile(filename_total):
             print(f'\t Filename: {filename_total} not found. Please double-check!')
         df = pds.read_csv(filename_total, sep=separator_csv, on_bad_lines='skip', na_values=missing_values)
 
         if df.shape[1] == 1:
             df = pds.read_csv(filename_total, sep=';', on_bad_lines='skip', na_values=missing_values)
+        caller1 = inspect.getouterframes(inspect.currentframe(), 2)[1][0]
+        caller2 = inspect.getouterframes(inspect.currentframe(), 3)[2][0]
+        logger.debug(f"{inspect.currentframe()}\n called from {caller1}\ncalled from {caller2}\n returns dataframe \n{df}")
         return df
 
     @staticmethod
@@ -67,7 +72,7 @@ class General:
         try:
             subj_details = pds.read_csv(file_path)
         except FileNotFoundError:
-            print(f'Error: File "{file_path}" not found')
+            logger.error(f'Error: File "{file_path}" not found')
             subj_details = pds.DataFrame()
 
         return subj_details
@@ -84,7 +89,7 @@ class General:
             pid2lookfor = str(pid2lookfor).lstrip('0')  # string that is searched for in metadata file
             idxPID = data_all.index[data_all['PID_ORBIS'] == int(pid2lookfor)].to_list()
             data_subj = data_all.iloc[idxPID]
-        except FileNotFoundError: # creates empty file from template (/.install) in case of first use
+        except FileNotFoundError:  # creates empty file from template (/.install) in case of first use
             print('No file names {} found, creating new file from template in {}/.install '.format(file2read, ROOTDIR))
             file2copy = os.path.join(ROOTDIR, '.install', '{}_template.csv'.format(flag))
             shutil.copyfile(file2copy, os.path.join(FILEDIR, file2read))
@@ -107,7 +112,7 @@ class General:
             file2change = General.import_dataframe('{}.csv'.format(flag), separator_csv=';')
 
         indices2change = file2change.index[file2change['ID'] == id2lookfor].to_list()
-        for k in indices2change: # TODO: is this necessary
+        for k in indices2change:  # TODO: is this necessary
             # file2change['Gender'].loc[int(k)] = int(df_general['Gender'].iloc[idx1])
             file2change['PID_ORBIS'].loc[int(k)] = int(df_general['PID_ORBIS'].iloc[idx1])
 
@@ -117,6 +122,7 @@ class General:
                                                              int(df_general['PID_ORBIS'].iloc[idx1])),
                            title='Changed data in {}.csv'.format(flag), flag='Warning')
         file2change.to_csv(os.path.join(FILEDIR, '{}.csv'.format(flag)), index=False)
+        logger.debug(f"file2change.csv: \n{file2change}")
 
         return
 
@@ -131,6 +137,7 @@ class Content:
 
         subject_pid = General.read_current_subj().pid[0]
         data_frame = General.import_dataframe('{}.csv'.format(condition), separator_csv=',')
+
         data_frame = data_frame.loc[data_frame['PID_ORBIS'] == subject_pid]
         list_of_dates = data_frame['Reason_postop'].tolist()
 
@@ -141,7 +148,7 @@ class Content:
         """ defines a list of columns for the csv files in the data folder; if id not found,
         dictionary remains empty"""
 
-        subj_id = General.read_current_subj().id[0] # reads data from curent_subj (saved in ./tmp)
+        subj_id = General.read_current_subj().id[0]  # reads data from curent_subj (saved in ./tmp)
         df = General.import_dataframe('{}.csv'.format(condition), separator_csv=',')
         if df.shape[1] == 1:
             df = General.import_dataframe('{}.csv'.format(condition), separator_csv=';')
@@ -150,7 +157,7 @@ class Content:
             ID_to_add = {'PID_ORBIS': General.read_current_subj().pid[0],
                          'ID': General.read_current_subj().id[0]}  # Fill in the actual value for PID_ORBIS
             new_row_df = pds.DataFrame(ID_to_add, index=[0])
-            df = df.append(new_row_df, ignore_index=True)
+            df = df._append(new_row_df, ignore_index=True)
 
         # Only filter the data if the condition is "postoperative" and a follow-up interval is provided
         if followup_timing != '':
@@ -163,53 +170,71 @@ class Content:
                       "UPDRS_Off_preop", "Video_preop", "Video_File_preop", "MRI_preop", "fpcit_spect_preop",
                       "NMSQ_preop", "MoCa_preop", "DemTect_preop", "MMST_preop", "PDQ8_preop",
                       "BDI2_preop", "PDQ39_preop", "Outpat_Contact_preop", "nch_preop", "Briefing_preop",
-                      "Briefing_Doctor_preop", "DBS_Conference_preop", "Decision_DBS_preop", "LEDD_preop", "Levodopa_Carbidopa_preop",
-                      "Levodopa_Carbidopa_CR_preop", "Entacapone_preop", "Tolcapone_preop", "Pramipexole_preop", "Ropinirole_preop",
+                      "Briefing_Doctor_preop", "DBS_Conference_preop", "Decision_DBS_preop", "LEDD_preop",
+                      "Levodopa_Carbidopa_preop",
+                      "Levodopa_Carbidopa_CR_preop", "Entacapone_preop", "Tolcapone_preop", "Pramipexole_preop",
+                      "Ropinirole_preop",
                       "Rotigotine_preop", "Selegiline_oral_preop", "Selegiline_sublingual_preop",
-                      "Rasagiline_preop", "Amantadine_preop", "Apomorphine_preop", "Piribedil_preop", "Safinamide_preop",
+                      "Rasagiline_preop", "Amantadine_preop", "Apomorphine_preop", "Piribedil_preop",
+                      "Safinamide_preop",
                       "Opicapone_preop", "Other_preop", "UPDRSII_preop", "H&Y_preop", "HRUQ_preop",
                       "EQ5D_preop", "S&E_preop", "icVRCS_preop", "inexVRCS_preop", "Notes_preop",
-                     ]
+                      ]
 
         list_intraop = ["ID", "Gender", "pat_contact_intraop", "Diagnosis", "sugery_no_intraop",
-                        "Admission_intraop", "Dismissal_intraop", "admission_Nch_intraop", "dismissal_NCh_intraop", "report_file_NCh_intraop",
-                        "report_file_NR_intraop", "awake_intraop", "surgery_date_intraop", "target_intraop", "electrode_intraop",
+                        "Admission_intraop", "Dismissal_intraop", "admission_Nch_intraop", "dismissal_NCh_intraop",
+                        "report_file_NCh_intraop",
+                        "report_file_NR_intraop", "awake_intraop", "surgery_date_intraop", "target_intraop",
+                        "electrode_intraop",
                         "IPG_intraop", "no_traj_intraop", "neur_test_intraop", "targetL1_intraop", "targetL2_intraop",
-                        "targetL3_intraop", "targetL4_intraop", "targetL5_intraop", "targetL6_intraop", "targetL7_intraop",
-                        "targetL8_intraop", "targetR1_intraop", "targetR2_intraop", "targetR3_intraop", "targetR4_intraop",
-                        "targetR5_intraop", "targetR6_intraop", "targetR7_intraop", "targetR8_intraop", "protocol_intraop",
-                        "protocol_file_intraop", "op_duration_intraop", "LEDD_intraop", "Levodopa_Carbidopa_intraop", "Levodopa_Carbidopa_CR_intraop",
-                        "Entacapone_intraop", "Tolcapone_intraop", "Pramipexole_intraop", "Ropinirole_intraop", "Rotigotine_intraop",
-                        "Selegiline_oral_intraop", "Selegiline_sublingual_intraop", "Rasagiline_intraop", "Amantadine_intraop", "Apomorphine_intraop",
+                        "targetL3_intraop", "targetL4_intraop", "targetL5_intraop", "targetL6_intraop",
+                        "targetL7_intraop",
+                        "targetL8_intraop", "targetR1_intraop", "targetR2_intraop", "targetR3_intraop",
+                        "targetR4_intraop",
+                        "targetR5_intraop", "targetR6_intraop", "targetR7_intraop", "targetR8_intraop",
+                        "protocol_intraop",
+                        "protocol_file_intraop", "op_duration_intraop", "LEDD_intraop", "Levodopa_Carbidopa_intraop",
+                        "Levodopa_Carbidopa_CR_intraop",
+                        "Entacapone_intraop", "Tolcapone_intraop", "Pramipexole_intraop", "Ropinirole_intraop",
+                        "Rotigotine_intraop",
+                        "Selegiline_oral_intraop", "Selegiline_sublingual_intraop", "Rasagiline_intraop",
+                        "Amantadine_intraop", "Apomorphine_intraop",
                         "Piribedil_intraop", "Safinamid_intraop", "Opicapone_intraop", "Other_intraop", "Perc0_intraop",
                         "Perc1_intraop", "Perc2_intraop", "Perc3_intraop", "Perc4_intraop", "Perc5_intraop",
                         "Perc6_intraop", "Perc7_intraop", "Perc8_intraop", "Perc9_intraop", "Perc10_intraop",
                         "Perc11_intraop", "Perc12_intraop", "Perc13_intraop", "Perc14_intraop", "Perc15_intraop",
                         "AmplL_intraop", "AmplR_intraop", "PWL_intraop", "PWR_intraop", "FreqL_intraop",
-                        "FreqR_intraop", "CTscan_intraop", "activation_visit_intraop", "implantation_visit_intraop", "incl_qualiPA_intraop",
+                        "FreqR_intraop", "CTscan_intraop", "activation_visit_intraop", "implantation_visit_intraop",
+                        "incl_qualiPA_intraop",
                         "DBS_intraop", "Comments_intraop"
                         ]
 
         list_postop = ["ID", "PID", "Gender", "Diagnosis_postop", "Date_postop",
-                       "Admission_NCh_postop", "Admission_NR_postop", "Dismissal_NR_postop", "Dismissal_NCh_postop", "Report_File_NCh_postop",
-                       "Report_File_NR_postop", "Reason_postop", "Using_Programmer_postop", "CTscan_postop", "Battery_Replacement_postop",
-                       "Planned_Visit_postop", "Qualipa_Visit_postop", "Surgery_Date_postop", "UPDRSIII_On_postop", "UPDRSIII_Off_postop",
+                       "Admission_NCh_postop", "Admission_NR_postop", "Dismissal_NR_postop", "Dismissal_NCh_postop",
+                       "Report_File_NCh_postop",
+                       "Report_File_NR_postop", "Reason_postop", "Using_Programmer_postop", "CTscan_postop",
+                       "Battery_Replacement_postop",
+                       "Planned_Visit_postop", "Qualipa_Visit_postop", "Surgery_Date_postop", "UPDRSIII_On_postop",
+                       "UPDRSIII_Off_postop",
                        "UPDRSII_postop", "H&Y_postop", "EQ5D_postop", "MoCa_postop", "DemTect_postop",
-                       "TSS_postop", "CGIG_clinician_cargiver_postop", "CGIG_patient_postop", "MMST_postop", "PDQ8_postop",
+                       "TSS_postop", "CGIG_clinician_cargiver_postop", "CGIG_patient_postop", "MMST_postop",
+                       "PDQ8_postop",
                        "BDI2_postop", "PDQ39_postop", "NMSQ_postop", "S&E_postop", "LEDD_postop",
-                       "Levodopa/Carbidopa_postop", "Levodopa/Carbidopa_CR_postop", "Entacapone_postop", "Tolcapone_postop", "Pramipexole_postop",
-                       "Ropinirole_postop", "Rotigotine_postop", "Selegiline_oral_postop", "Selegiline_sublingual_postop", "Rasagiline_postop",
-                       "Amantadine_postop", "Apomorphine_postop", "Piribedil_postop", "Safinamid_postop", "Ongentys_postop",
+                       "Levodopa/Carbidopa_postop", "Levodopa/Carbidopa_CR_postop", "Entacapone_postop",
+                       "Tolcapone_postop", "Pramipexole_postop",
+                       "Ropinirole_postop", "Rotigotine_postop", "Selegiline_oral_postop",
+                       "Selegiline_sublingual_postop", "Rasagiline_postop",
+                       "Amantadine_postop", "Apomorphine_postop", "Piribedil_postop", "Safinamid_postop",
+                       "Ongentys_postop",
                        "Other_postop", "Perc1_postop", "Perc2_postop", "Perc3_postop", "Perc4_postop",
                        "Perc5_postop", "Perc6_postop", "Perc7_postop", "Perc8_postop", "Perc9_postop",
                        "Perc10_postop", "Perc11_postop", "Perc12_postop", "Perc13_postop", "Perc14_postop",
                        "Perc15_postop", "Perc16_postop", "AmplL_postop", "AmplR_postop", "PWL_postop",
-                       "PWR_postop", "FreqL_postop","FreqR_postop", "UPDRS1_postop", "UPDRS4_postop",
+                       "PWR_postop", "FreqL_postop", "FreqR_postop", "UPDRS1_postop", "UPDRS4_postop",
                        "UPDRSon_postop", "UDDRSoff_postop", "TRSon_postop", "TRSoff_postop", "AE_postop",
                        "Comments_postop", "DBS_postop"
 
-                    ]
-
+                       ]
         return df_subj
 
 
@@ -250,7 +275,7 @@ class Clean:
         pre-/intra-/postoperative.csv in the ./data folder"""
 
         file_general = General.import_dataframe('general_data.csv', separator_csv=',')
-        #if file_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
+        # if file_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
         #    file_general = General.import_dataframe('general_data.csv', separator_csv=';')
 
         for index, row in file_general.iterrows():

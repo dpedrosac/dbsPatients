@@ -115,7 +115,9 @@ class CheckForGeneralData(QDialog):
                                          'Tremordominant parkinson-syndrome(PD2)',
                                          'Mixed-type parkinson-syndrome (PD3)',
                                          'Dystonia (DT)',
-                                         'Essential tremor (ET)',
+                                         'Essential tremor (ET)', 'Equivalence type parkinson-syndrome',
+                                         'Hypokinetic-rigid type parkinson-syndrome',
+                                         'Akinetic-rigid type parkinson-syndrome',
                                          'Other'])
 
         self.lineEditDiagnosis.setFixedWidth(textfield_width)

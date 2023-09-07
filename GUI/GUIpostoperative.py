@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGr
 from GUI.GUImedication import MedicationDialog
 from utils.helper_functions import General, Content, Clean, Output
 from dependencies import FILEDIR
+from utils.logger import logger
 
 
 class PostoperativeDialog(QDialog):
@@ -18,16 +19,17 @@ class PostoperativeDialog(QDialog):
         super(PostoperativeDialog, self).__init__(parent)
         self.date = 'postoperative'  # next two lines define the postoperative date data stem from/are saved at
         self.postoperative_date = ''
+        logger.debug("call General.read_current_subj()")
 
         subj_details = General.read_current_subj()
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)
-        #Todo: can't run the code with these two lines:
+        # Todo: can't run the code with these two lines:
         self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog (preop)
         self.dialog_medication.hide()
 
-        #self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # create medication dialog
-        #self.dialog_medication.hide()
+        # self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # create medication dialog
+        # self.dialog_medication.hide()
 
         # ====================    Create General Layout      ====================
         self.setWindowTitle('Postoperative Information (PID: {})'.format(str(int(subj_details.pid))))  # not necessary
@@ -380,6 +382,7 @@ class PostoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
+        logger.debug("last read_content_csv()")
         self.read_content_csv()
 
         # ====================   Actions when buttons are pressed      ====================
@@ -415,7 +418,6 @@ class PostoperativeDialog(QDialog):
 
     # ====================   Defines what happens when ComboBox is modified      ====================
 
-
     def read_content_csv(self):
         """dummy part of update text that served only to make it run; all parts of [update_text_notworking] should be
         moved here"""
@@ -443,10 +445,10 @@ class PostoperativeDialog(QDialog):
                 if str(row["Dismissal_NR_postop"]) != 'nan' else self.lineEditDismission_NR.setText('')
             self.lineEditSurgery.setText(str(row["Surgery_Date_postop"])) \
                 if str(row["Surgery_Date_postop"]) != 'nan' else self.lineEditSurgery.setText('')
-            #self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
-                #if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
-            #self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
-                #if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
+            # self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
+            # if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
+            # self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
+            # if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
 
             # upper right
 
@@ -503,7 +505,6 @@ class PostoperativeDialog(QDialog):
 
             # Edit CheckBoxes with content
             # middle left
-
 
             if row["Report_File_NCh_postop"] != 0:
                 self.ReportNeurCheck.setChecked(True)
@@ -593,8 +594,9 @@ class PostoperativeDialog(QDialog):
             subj_details = General.read_current_subj()
 
             match = re.search(r'^(pre|intra|post)op', self.date)
-            data_frame.loc[len(data_frame), ['ID', 'PID', 'Reason_{}'.format(match.group())]] = [subj_details.id[0], subj_details.pid[0],
-                                                                               self.postoperative_date]
+            data_frame.loc[len(data_frame), ['ID', 'PID', 'Reason_{}'.format(match.group())]] = [subj_details.id[0],
+                                                                                                 subj_details.pid[0],
+                                                                                                 self.postoperative_date]
             data_frame = data_frame.replace(['nan', ''], [np.nan, np.nan])
             data_frame = data_frame.applymap(lambda x: str(x).replace(';', ' -'))
             data_frame.to_csv(os.path.join(FILEDIR, f"{self.date}.csv"), index=False)
@@ -615,14 +617,25 @@ class PostoperativeDialog(QDialog):
         show/hide GUI which is initiated at beginning"""
         self.dialog_medication.show()
 
-    def onClickedSaveReturn(self):
+    @QtCore.pyqtSlot()
+    def onClickedSaveReturn(self, pds=None):
+        """
+        Saves the data passed into the GUI form and returns to previous Window.
+
+        Args:
+            pds: dataframe to safe??
+
+        Returns: None
+
+        """
 
         current_subj = General.read_current_subj()
         subject_id = current_subj['id'][0]
         df_general = Clean.extract_subject_data(subject_id)
         match = re.search(r'^(pre|intra|post)op', self.date)
 
-        # First of all, read general data so that pre-/intra- and postoperative share these
+        logger.debug("enter try/catch")
+        # read general data so that pre-/intra- and postoperative share these
         try:
             subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
             df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
@@ -693,14 +706,25 @@ class PostoperativeDialog(QDialog):
                 df_subj[col_name] = 1
             else:
                 df_subj[col_name] = 0
+            # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
+            try:
+                idx2replace = df.index[df['ID'] == subj_id][0]
+                df.loc[idx2replace, :] = df_subj
+                df = df.replace(['nan', ''], [np.nan, np.nan])
+            except IndexError:
+                df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
+                df = pds.concat([df, df_subj], ignore_index=True)
+                # df = df.append(df_subj, ignore_index=True)
+                df = df.replace('nan', np.nan)
 
-        try:
-            idx2replace = df[df['ID'] == subj_id].index[0]
-        except IndexError:
-            idx2replace = 0
-        df.loc[idx2replace, :] = df_subj
-        df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "{}.csv".format(self.date)), index=False)
+        df.to_csv(os.path.join(FILEDIR, "postoperative.csv"), index=False)
+        #   try:
+        #     idx2replace = df[df['ID'] == subj_id].index[0]
+        #  except IndexError:
+        #  idx2replace = 0
+        #  df.loc[idx2replace, :] = df_subj
+        # df = df.replace(['nan', ''], [np.nan, np.nan])
+        # df.to_csv(os.path.join(FILEDIR, "{}.csv".format(self.date)), index=False)
 
         self.close()
 
@@ -722,8 +746,13 @@ class PostoperativeDialog(QDialog):
 
 
 if __name__ == '__main__':
+    logger.debug(f"start app with {sys.argv}")
     app = QApplication(sys.argv)
+    logger.debug("set widget")
     widget = QWidget
+    logger.debug("start dialog")
     dlg = PostoperativeDialog()
+    logger.debug("show dialog")
     dlg.show()
+    logger.debug(f"app exited with {app.exec_()}")
     sys.exit(app.exec_())

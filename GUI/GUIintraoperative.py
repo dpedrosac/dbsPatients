@@ -1,22 +1,48 @@
 #!/usr/bin/env python3
+import math
 import os, sys
+from pathlib import Path
+
 import pandas as pds
 from PyQt5 import QtCore
 import numpy as np
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, QSpacerItem, QSizePolicy, \
     QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QListWidget, QCheckBox
 from GUI.GUImedication import MedicationDialog
 from utils.helper_functions import General, Content, Clean
 from dependencies import ROOTDIR, FILEDIR
+from utils.logger import logger     # Added logger to find issues more easily
 
 pds.options.mode.chained_assignment = None  # default='warn' cf.
+
+
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
+
+
+# Added lines for loading selected list items
+def setitemactive(itemname: str, listwidget: QListWidget):
+    """
+    check for itemname in list, if it exists set the item active
+    Args:
+        itemname: name of searched item
+        listwidget: QListWidget to be searched
+
+    Returns: none
+
+    """
+    list_items = [n.text() for n in listwidget.findItems(".*", Qt.MatchRegExp)]
+    if itemname in list_items:
+        listwidget.setCurrentItem(
+            listwidget.findItems(itemname, Qt.MatchExactly)[0]
+        )
 
 
 class IntraoperativeDialog(QDialog):
     """Dialog to introduce all important information of intraoperative visit. """
 
     def __init__(self, parent=None):
+        logger.debug("__init__ created new instance")
         """Initializer."""
         super().__init__(parent)
 
@@ -35,7 +61,7 @@ class IntraoperativeDialog(QDialog):
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
 
-        # ====================    Optionbox (1) left upper corner      ====================
+        # ====================    Optionbox (1) left upper corner   Admisson and Dismission   ====================
         self.optionbox1 = QGroupBox('Admission and Dimission dates')
         self.optionbox1Content = QVBoxLayout(self.optionbox1)
         layout_general.addWidget(self.optionbox1, 0, 0)
@@ -75,11 +101,11 @@ class IntraoperativeDialog(QDialog):
         self.optionbox1Content.addLayout(box1line4)
         self.optionbox1.setLayout(self.optionbox1Content)
 
-        # ====================    Optionbox (2) right upper corner      ====================
+        # ====================    Optionbox (2) right upper corner    Surgery  ====================
         self.optionbox2 = QGroupBox('Surgery')
         self.optionbox2Content = QVBoxLayout(self.optionbox2)
         layout_general.addWidget(self.optionbox2, 0, 1)
-
+    # Surgery Date
         self.SurgeryDate = QLabel('Surgery Date \n(dd/mm/yyyy):\t')
         self.lineEditSurgeryDate = QLineEdit()
 
@@ -87,7 +113,7 @@ class IntraoperativeDialog(QDialog):
         box2line1.addWidget(self.SurgeryDate)
         box2line1.addWidget(self.lineEditSurgeryDate)
         # box2line1.addStretch()
-
+    # Target List
         self.targetLabel = QLabel('Target:\t\t')
         self.targetLabel.setAlignment(QtCore.Qt.AlignTop)
         self.targetList = QListWidget()
@@ -105,11 +131,11 @@ class IntraoperativeDialog(QDialog):
         self.optionbox2Content.addLayout(box2line2)
         self.optionbox2.setLayout(self.optionbox2Content)
 
-        # ====================    Optionbox (3) upper middle left      ====================
+        # ====================    Optionbox (3) upper middle left     Intraoperative ====================
         self.optionbox3 = QGroupBox('Intraoperative')
         self.optionbox3Content = QVBoxLayout(self.optionbox3)
         layout_general.addWidget(self.optionbox3, 1, 0)
-
+    # Checkboxes Reports
         self.ReportNeurCheck = QCheckBox()
         self.ReportNeurLabel = QLabel('Report Neurology')
         self.ReportNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
@@ -139,7 +165,7 @@ class IntraoperativeDialog(QDialog):
         box3line2.addWidget(self.ProtocolNeurCheck)
         box3line2.addWidget(self.ProtocolNeurLabel)
         box3line2.addStretch()
-
+    # Duration and Trajectories enter field
         self.DurationSurgery = QLabel('Duration \nsurgery (min):\t')
         self.lineEditDurationSurgery = QLineEdit()
         self.Trajectories = QLabel('Trajectories:')
@@ -151,7 +177,7 @@ class IntraoperativeDialog(QDialog):
         box3line3.addWidget(self.Trajectories)
         box3line3.addWidget(self.lineEditTrajectories)
         box3line3.addStretch()
-
+    # List selection neurologist
         self.testingNeurLabel = QLabel('Testing Neurologist(s):')
         self.testingNeurList = QListWidget()
         self.testingNeurList.show()
@@ -171,23 +197,23 @@ class IntraoperativeDialog(QDialog):
 
         self.optionbox3.setLayout(self.optionbox3Content)
 
-        # ====================    Optionbox (4) upper middle right      ====================
+        # ====================    Optionbox (4) upper middle right     System Information ====================
         self.optionbox4 = QGroupBox('System Information')
         self.optionbox4Content = QVBoxLayout(self.optionbox4)
         layout_general.addWidget(self.optionbox4, 1, 1)
-
+    # List selection Lead implant
         self.LeadImplantedLabel = QLabel('Lead:\t\t')
         self.LeadImplantedList = QListWidget()
         self.LeadImplantedLabel.setAlignment(QtCore.Qt.AlignTop)
         self.LeadImplantedList.show()
-        ls = ['Medtronic 3389', 'Medtronic 3389', 'Boston Scientific 2202-30/-45',
+        ls = ['Medtronic 3389', 'Boston Scientific 2202-30/-45',
               'St. Jude 6146/6147/6148/6149', 'Other']
         [self.LeadImplantedList.addItem(k) for k in ls]
 
         box4line1 = QHBoxLayout()
         box4line1.addWidget(self.LeadImplantedLabel)
         box4line1.addWidget(self.LeadImplantedList)
-
+    # List selection IPG implant
         self.IPGImplantedLabel = QLabel('IPG:\t\t')
         self.IPGImplantedLabel.setAlignment(QtCore.Qt.AlignTop)
         self.IPGImplantedList = QListWidget()
@@ -204,7 +230,7 @@ class IntraoperativeDialog(QDialog):
         self.optionbox4Content.addLayout(box4line2)
         self.optionbox4.setLayout(self.optionbox4Content)
 
-        # ====================    Optionbox (5) lower middle left      ====================
+        # ====================    Optionbox (5) lower middle left     Coordinates DBS leads ====================
         self.optionbox5 = QGroupBox('Coordinates DBS leads')
         self.optionbox5Content = QHBoxLayout(self.optionbox5)
         layout_general.addWidget(self.optionbox5, 2, 0)
@@ -239,11 +265,11 @@ class IntraoperativeDialog(QDialog):
         self.optionbox5Content.addLayout(self.GridCoordinatesRight)
         self.optionbox5Content.addStretch()
 
-        # ====================    Optionbox (6) lower middle right      ====================
+        # ====================    Optionbox (6) lower middle right     Activation ====================
         self.optionbox6 = QGroupBox('Activation')
         self.optionbox6Content = QVBoxLayout(self.optionbox6)
         layout_general.addWidget(self.optionbox6, 2, 1)
-
+    # Postop activation Checkboxes
         self.PostopCTScanCheck = QCheckBox()
         self.PostopCTScanLabel = QLabel('Postoperative CT Scan')
         self.ImplVerciseDBSCheck = QCheckBox()
@@ -278,7 +304,7 @@ class IntraoperativeDialog(QDialog):
         self.optionbox6Content.addLayout(box6line3)
         self.optionbox6Content.addLayout(box6line4)
 
-        # ====================    Optionbox (7) lower left      ====================
+        # ====================    Optionbox (7) lower left     DBS settings after dismissal ====================
         self.optionbox7 = QGroupBox('DBS settings after dismissal')
         self.optionbox7Content = QVBoxLayout(self.optionbox7)
         layout_general.addWidget(self.optionbox7, 3, 0)
@@ -301,7 +327,7 @@ class IntraoperativeDialog(QDialog):
         self.optionbox7Content.addLayout(self.DBSpercentageLeft)
         self.optionbox7Content.addLayout(self.DBSpercentageRight)
 
-        # ====================    Optionbox (8) lower right      ====================
+        # ====================    Optionbox (8) lower right     Amplitude and Frequency ====================
         self.optionbox8 = QGroupBox('Amplitude, Pulse and Frequency')
         self.optionbox8Content = QVBoxLayout(self.optionbox8)
         layout_general.addWidget(self.optionbox8, 3, 1)
@@ -345,30 +371,28 @@ class IntraoperativeDialog(QDialog):
         if not df_subj["ID"]:
             return
 
-        # upper left
+        ###################
+        # Admission dates #
+        ###################
         self.lineEditAdmNCh.setText(str(df_subj["admission_Nch_intraop"][0])) \
-            if str(df_subj["admission_Nch_intraop"][0]) != 'nan' else self.lineEditAdmNCh.setText('')
+            if df_subj["admission_Nch_intraop"][0] != 0 else self.lineEditAdmNCh.setText('')
         self.lineEditAdmNeur.setText(str(df_subj["Admission_intraop"][0])) \
-            if str(df_subj["Admission_intraop"][0]) != 'nan' else self.lineEditAdmNeur.setText('')
+            if df_subj["Admission_intraop"][0] != 0 else self.lineEditAdmNeur.setText('')
         self.lineEditDismNeur.setText(str(df_subj["Dismissal_intraop"][0])) \
-            if str(df_subj["Dismissal_intraop"][0]) != 'nan' else self.lineEditDismNeur.setText('')
+            if df_subj["Dismissal_intraop"][0] != 0 else self.lineEditDismNeur.setText('')
         self.lineEditDismNCh.setText(str(df_subj["dismissal_NCh_intraop"][0])) \
-            if str(df_subj["dismissal_NCh_intraop"][0]) != 'nan' else self.lineEditDismNCh.setText('')
+            if df_subj["dismissal_NCh_intraop"][0] != 0 else self.lineEditDismNCh.setText('')
 
-        # middle left
+        #############################################
+        #               Intraoperative              #
+        #############################################
+        # Duration and Trajectories
         self.lineEditDurationSurgery.setText(str(df_subj["op_duration_intraop"][0])) \
             if str(df_subj["op_duration_intraop"][0]) != 'nan' else self.lineEditDurationSurgery.setText('')
         self.lineEditTrajectories.setText(str(df_subj["no_traj_intraop"][0])) \
             if str(df_subj["no_traj_intraop"][0]) != 'nan' else self.lineEditTrajectories.setText('')
 
-        # upper right
-        self.lineEditSurgeryDate.setText(str(df_subj["surgery_date_intraop"][0])) \
-            if str(df_subj["surgery_date_intraop"][0]) != 'nan' else self.lineEditSurgeryDate.setText('')
-
-        # lower left
-
-        # Edit Checkboxes with content
-        # Middle left Checkboxes
+        # Intraoperative Checkboxes
         if df_subj["report_file_NR_intraop"][0] != 0:
             self.ReportNeurCheck.setChecked(True)
         if df_subj["awake_intraop"][0] != 0:
@@ -378,7 +402,29 @@ class IntraoperativeDialog(QDialog):
         if df_subj["protocol_intraop"][0] != 0:
             self.ProtocolNeurCheck.setChecked(True)
 
-        # Middle right Checkboxes
+
+        # Added lines for loading selected list items
+        setitemactive(df_subj['neur_test_intraop'][0], self.testingNeurList)
+
+        ########################
+        # System information #          # Added lines for loading selected list items
+        ######################
+        setitemactive(df_subj['Lead_intraop'][0], self.LeadImplantedList)
+
+        setitemactive(df_subj['IPG_intraop'][0], self.IPGImplantedList)
+
+        ###########
+        # surgery #
+        ###########
+        self.lineEditSurgeryDate.setText(str(df_subj["surgery_date_intraop"][0])) \
+            if str(df_subj["surgery_date_intraop"][0]) != 'nan' else self.lineEditSurgeryDate.setText('')
+        # Added line for loading selected list items
+        setitemactive(df_subj['target_intraop'][0], self.targetList)
+
+
+        ###############################
+        # Activation Checkboxes right #
+        ###############################
         if df_subj["CTscan_intraop"][0] != 0:
             self.PostopCTScanCheck.setChecked(True)
         if df_subj["implantation_visit_intraop"][0] != 0:
@@ -388,22 +434,23 @@ class IntraoperativeDialog(QDialog):
         if df_subj["incl_qualiPA_intraop"][0] != 0:
             self.InclusionQualiPaCheck.setChecked(True)
 
-        #bottom left
-        #DBS Coordinates left
+        ##########################
+        # DBS Coordinates leads #
+        #########################
         for i in range(8):
             DBSleft = self.GridCoordinatesLeft.itemAtPosition(i, 1).widget()
             DBSleft.setText(str(df_subj["targetL{}_intraop".format(i + 1)][0]))
 
-        #DBS Coordinates left
-        #TODO: doesnt work yet
-        #for i in range(8):
+        # DBS Coordinates leads
+        # TODO: doesnt work yet
+        # for i in range(8):
         #    DBSright = self.GridCoordinatesRight.itemAtPosition(i, 1).widget()
         #    DBSright.setText(str(df_subj["targetR{}_intraop".format(i + 1)][0]))
 
-        #Activation Checkboxes
 
-
-        #DBS Settings after dismissal
+        ################################
+        # DBS Settings after dismissal #
+        ################################
         for j in range(8):
             DBSright = self.DBSpercentageRight.itemAtPosition(0, j + 1).widget()
             DBSright.setText(str(df_subj["Perc{}_intraop".format(j + 8)][0]))
@@ -411,8 +458,9 @@ class IntraoperativeDialog(QDialog):
                 DBSleft = self.DBSpercentageLeft.itemAtPosition(0, j + 1).widget()
                 DBSleft.setText(str(df_subj["Perc{}_intraop".format(j)][0]))
 
-
-        #Amplitude, Pulse, Frequency
+        ###############################
+        # Amplitude, Pulse, Frequency #
+        ###############################
         for i in range(1, 3):
             for j in range(1, 4):
                 DBSsettings = self.gridDBSsettings.itemAtPosition(i, j).widget()
@@ -432,14 +480,38 @@ class IntraoperativeDialog(QDialog):
         return
 
     # ====================   Defines actions when buttons are pressed      ====================
+
+    # Added line damit nicht alle Fenster bei 'return' von MedicationGUI geschlossen werden
+    def openMedicationDialog(self):
+        self.hide()
+        dialog = MedicationDialog(visit=self.date, parent=self)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            self.show()
+
+    # Ändere den onClickedMedication-Handler wie folgt
     @QtCore.pyqtSlot()
     def onClickedMedication(self):
-        """shows the medication dialog when button is pressed"""
-        dialog = MedicationDialog(visit=self.date, parent=self)
-        self.hide()
-        if dialog.exec():
-            pass
-        self.show()
+        """Öffnet das MedicationDialog-Fenster und wartet auf dessen Schließen."""
+        self.openMedicationDialog()
+
+    # Ändere den onClickedSaveReturn-Handler wie folgt
+    def onClickedSaveReturn(self):
+        """Schließt dieses GUI und kehrt zum aufrufenden (Haupt-) GUI zurück."""
+        subj_id = General.read_current_subj().id[0]  # liest Daten aus current_subj (in ./tmp) ein
+
+        # ...
+
+        self.close()
+
+    #   @QtCore.pyqtSlot()
+    #   def onClickedMedication(self):
+    #       """shows the medication dialog when button is pressed"""
+    #       dialog = MedicationDialog(visit=self.date, parent=self)
+    #       self.hide()
+    #       if dialog.exec():
+    #          pass
+    #     self.show()
 
     def onClickedSaveReturn(self):
         """closes this GUI and returns to calling (main) GUI"""
@@ -463,49 +535,77 @@ class IntraoperativeDialog(QDialog):
         df_subj['Gender'] = df_general['Gender'][0]
         df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
 
-        # Now extract teh changed data from the GUI
-        # upper left
+        # Now extract the changed data from the GUI, save data
+
+        # Admission dates #
+        ###################
         df_subj["admission_Nch_intraop"] = self.lineEditAdmNCh.text()
         df_subj['Admission_intraop'] = self.lineEditAdmNeur.text()
         df_subj['Dismissal_intraop'] = self.lineEditDismNeur.text()
         df_subj['dismissal_NCh_intraop'] = self.lineEditDismNCh.text()
 
-        # middle left
+        #   Intraoperative  #
+        ##############################
+        # surgery duration
         df_subj['op_duration_intraop'] = self.lineEditDurationSurgery.text()
         df_subj['no_traj_intraop'] = self.lineEditTrajectories.text()
-
-        # upper right
-        df_subj["surgery_date_intraop"] = self.lineEditSurgeryDate.text()
-
-        # Middle left checkboxes
+        # report after surgery
         df_subj["report_file_NR_intraop"] = self.ReportNeurCheck.isChecked()
         df_subj["awake_intraop"] = self.AwakePatientCheck.isChecked()
         df_subj["report_file_NCh_intraop"] = self.ReportNChCheck.isChecked()
         df_subj["protocol_intraop"] = self.ProtocolNeurCheck.isChecked()
+        # neurologist (added lines to save selected list items)
+        selected_neurologist_items = [self.testingNeurList.item(i).text() for i in range(self.testingNeurList.count()) if
+                               self.testingNeurList.item(i).isSelected()]
+        df_subj["neur_test_intraop"] = ', '.join(selected_neurologist_items)
 
-        # bottom right checkboxes
+        # surgery #
+        ###########
+        # date of surgery
+        df_subj["surgery_date_intraop"] = self.lineEditSurgeryDate.text()
+        # target of surgery (added lines to save selected list items)
+        selected_target_items = [self.targetList.item(i).text() for i in range(self.targetList.count()) if
+                                      self.targetList.item(i).isSelected()]
+        df_subj["target_intraop"] = ', '.join(selected_target_items)
+
+        # Activation #
+        ##############
+         # checkboxes
         df_subj["CTscan_intraop"] = self.PostopCTScanCheck.isChecked()
         df_subj["implantation_visit_intraop"] = self.ImplVerciseDBSCheck.isChecked()
         df_subj["activation_visit_intraop"] = self.ActivateVerciseDBSCheck.isChecked()
         df_subj["incl_qualiPA_intraop"] = self.InclusionQualiPaCheck.isChecked()
 
-        #DBS Coordinates left
+        # Sytsem information #
+        ######################
+        # 'Lead' Auswahl speichern (added lines to save selected list items)
+        selected_lead_items = [self.LeadImplantedList.item(i).text() for i in range(self.LeadImplantedList.count()) if
+                               self.LeadImplantedList.item(i).isSelected()]
+        df_subj["Lead_intraop"] = ', '.join(selected_lead_items)
+
+        # 'IPG' Auswahl speichern (added lines to save selected list items)
+        selected_ipg_items = [self.IPGImplantedList.item(i).text() for i in range(self.IPGImplantedList.count()) if
+                              self.IPGImplantedList.item(i).isSelected()]
+        df_subj["IPG_intraop"] = ', '.join(selected_ipg_items)
+
+        logger.debug("Lead Selection:", df_subj["Lead_intraop"])
+        logger.debug("IPG Selection:", df_subj["IPG_intraop"])
+        # DBS Coordinates left
         for i in range(8):
             for j in range(4):
                 if j != 0:
                     df_subj['targetL{}_intraop'.format(i + 1)] = self.GridCoordinatesLeft.itemAtPosition(i,
-                                                                                                            1).widget().text()
+                                                                                                         1).widget().text()
 
-        #DBS Coordinates Right
-        #TODO: doesnt work yet
-        #for i in range(8):
+        # DBS Coordinates Right
+        # TODO: doesnt work yet
+        # for i in range(8):
         #    for j in range(4):
         #        if j != 3:
         #            DBSright = self.GridCoordinatesRight.itemAtPosition(i, j).widget()
         #            df_subj['targetR{}_intraop'.format(i + 1)] = DBSright.text()
 
-
-        #DBS settings after dismissal
+        # DBS settings after dismissal
         for j in range(8):
             DBSright = self.DBSpercentageRight.itemAtPosition(0, j + 1).widget()
             df_subj["Perc{}_intraop".format(j + 8)] = DBSright.text()
@@ -513,7 +613,7 @@ class IntraoperativeDialog(QDialog):
             DBSleft = self.DBSpercentageLeft.itemAtPosition(0, j + 1).widget()
             df_subj["Perc{}_intraop".format(j)] = DBSleft.text()
 
-        #Amplitude, Pulse, Frequency
+        # Amplitude, Pulse, Frequency
         for i in range(1, 3):
             for j in range(1, 4):
                 DBSsettings = self.gridDBSsettings.itemAtPosition(i, j).widget()
@@ -530,13 +630,20 @@ class IntraoperativeDialog(QDialog):
                 elif i == 2 and j == 3:
                     df_subj["FreqR_intraop"] = DBSsettings.text()
 
+        # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
+        try:
+            idx2replace = df.index[df['ID'] == subj_id][0]
+            df.loc[idx2replace, :] = df_subj
+            df = df.replace(['nan', ''], [np.nan, np.nan])
+        except IndexError:
+            df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
+            df = pds.concat([df, df_subj], ignore_index=True)
+            # df = df.append(df_subj, ignore_index=True)
+            df = df.replace('nan', np.nan)
 
-
-        idx2replace = df.index[df['ID'] == subj_id][0]
-        df.iloc[idx2replace, :] = df_subj
-        df = df.replace(['nan', ''], [np.nan, np.nan])
-        df.to_csv(os.path.join(FILEDIR, "intraoperative_test.csv"), index=False)
-
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+        logger.debug('\n' + df.__str__())
+        logger.debug(df.get(['IPG_intraop', 'target_intraop', 'Lead_intraop', 'neur_test_intraop']))
         self.close()
 
 

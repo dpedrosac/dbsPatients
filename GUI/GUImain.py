@@ -10,13 +10,24 @@ from GUI.GUIpostoperative import PostoperativeDialog
 from GUI.GUIpreoperative import PreoperativeDialog
 
 
+@staticmethod  # Versuch Speicherproblem?
+def fill_missing_demographics(flag):
+    """very unique function without much versatility intended to fill missing data from general_data.csv to
+    pre-/intra-/postoperative.csv in the ./data folder"""
+
+    file_general = General.import_dataframe('general_data.csv', separator_csv=',')
+    # if file_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
+    #    file_general = General.import_dataframe('general_data.csv', separator_csv=';')
+
+    for index, row in file_general.iterrows():
+        General.synchronize_data_with_general(flag, row['ID'], messagebox=False)
 class ChooseGUI(QDialog):
     """GUI responsible to offer further GUI's: 1. Preoperative 2. Intraoperative 3. Postoperative"""
 
     def __init__(self, parent=None):
         """Initialize GUImain, a window in which all other "sub-GUIs" may be called from."""
         super(ChooseGUI, self).__init__(parent)
-
+# 'parent' welches Elternelement (parent) dieses GUI-Element hat
         subj_details = General.read_current_subj()
         self.date = ''  # to be defined by selection in this GUI
 
