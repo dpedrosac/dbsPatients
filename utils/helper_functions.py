@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import math
 
 import rstr
 import csv
@@ -12,7 +13,7 @@ from dependencies import ROOTDIR, FILEDIR
 from PyQt5.QtWidgets import QMessageBox, QInputDialog
 from utils.logger import logger
 
-
+# LE: changes work with python 3.11
 class General:
     def __init__(self, _debug=False):
         pass
@@ -297,3 +298,12 @@ class Clean:
         df = General.import_dataframe(os.path.join(FILEDIR, 'general_data.csv'))
         df = df.loc[df['ID'] == subject_id]
         return df
+
+
+def check_nan(x):
+    if isinstance(x, str):
+        return False
+    elif isinstance(x, int) or isinstance(x, float):
+        return math.isnan(x)
+    else:
+        raise Exception("Neither string nor number")

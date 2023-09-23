@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import logging
-logging.basicConfig(filename='error.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='../test/error.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 import csv
 import sys
 import pandas as pds
@@ -15,8 +15,11 @@ from dependencies import FILEDIR
 
 pds.options.mode.chained_assignment = None  # default='warn' cf.
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
+# LE: changes work with python 3.11
+# TODO's: needs fix: go on 'save and return' after entering data before entering medicationGUI,
+#  or else on 'return' all windows close and data will be deleted
 
-@staticmethod  # Versuch Speicherproblem?
+@staticmethod
 def fill_missing_demographics(flag):
     """very unique function without much versatility intended to fill missing data from general_data.csv to
     pre-/intra-/postoperative.csv in the ./data folder"""
@@ -40,7 +43,8 @@ class PreoperativeDialog(QDialog):
         self.date = 'preoperative'  # defines the date at which data are taken from/saved at
 
         General.synchronize_data_with_general(self.date, subj_details.id[0],
-                                              messagebox=False)  # ensures identical first columns in preoperative.csv
+                                            messagebox=False)  # ensures identical first columns in preoperative.csv
+        # opens medication dialog
         self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog (preop)
         self.dialog_medication.hide()
 

@@ -27,3 +27,22 @@ console_handler.setFormatter(ColoredFormatter('%(message)s'))
 if logger.hasHandlers():
     logger.handlers.clear()
 logger.addHandler(console_handler)
+
+import logging
+
+# Configure the logger
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+def recursive_function(n):
+    if n <= 0:
+        logger.debug("Base case reached.")
+        return 0
+    else:
+        logger.debug(f"Recursive call with n = {n}")
+        result = n + recursive_function(n - 1)
+        return result
+
+if __name__ == "__main__":
+    result = recursive_function(5)
+    print("Result:", result)
