@@ -14,7 +14,6 @@ from GUI.GUImedication import MedicationDialog
 from utils.helper_functions import General, Content, Clean
 from dependencies import FILEDIR
 from utils.logger import logger  # Added logger to find issues more easily
-from test.LoadDatafromCSV import Intraoperative_data
 
 pds.options.mode.chained_assignment = None  # default='warn' cf.
 
@@ -476,35 +475,35 @@ class IntraoperativeDialog(QDialog):
         # DBS Coordinates leads #        # TODO: doesnt work yet
         #########################
 
-    def load_data(self, data: Intraoperative_data):
-        # left side
-        for i in range(1, 9):
-            DBSleft = self.GridCoordinatesLeft.itemAtPosition(0, i).widget()
-            column_name = "targetL{}_intraop".format(i)
-
-            if column_name in data.d.columns:
-                value = data.d.loc[data.d.index[0], column_name]
-                if not pd.isna(value):  # Überprüfen, ob der Wert nicht NaN ist
-                    DBSleft.setText(str(value))
-                else:
-                    DBSleft.clear()
-            else:
-                DBSleft.clear()
-        # right side
-        for i in range(1, 9):
-            DBSright = self.GridCoordinatesRight.itemAtPosition(0, i).widget()
-            column_name = "targetR{}_intraop".format(i)
-
-            if column_name in data.d.columns:
-                value = data.d.loc[data.d.index[0], column_name]
-                if not pd.isna(value):  # Überprüfen, ob der Wert nicht NaN ist
-                    DBSright.setText(str(value))
-                else:
-                    DBSright.clear()
-            else:
-                DBSright.clear()  # Leerfeld, wenn der Wert NaN ist oder leer
-
-                #   for i in range(8):
+    # def load_data(self, data: Intraoperative_data):
+    #     # left side
+    #     for i in range(1, 9):
+    #         DBSleft = self.GridCoordinatesLeft.itemAtPosition(0, i).widget()
+    #         column_name = "targetL{}_intraop".format(i)
+    #
+    #         if column_name in data.d.columns:
+    #             value = data.d.loc[data.d.index[0], column_name]
+    #             if not pd.isna(value):  # Überprüfen, ob der Wert nicht NaN ist
+    #                 DBSleft.setText(str(value))
+    #             else:
+    #                 DBSleft.clear()
+    #         else:
+    #             DBSleft.clear()
+    #     # right side
+    #     for i in range(1, 9):
+    #         DBSright = self.GridCoordinatesRight.itemAtPosition(0, i).widget()
+    #         column_name = "targetR{}_intraop".format(i)
+    #
+    #         if column_name in data.d.columns:
+    #             value = data.d.loc[data.d.index[0], column_name]
+    #             if not pd.isna(value):  # Überprüfen, ob der Wert nicht NaN ist
+    #                 DBSright.setText(str(value))
+    #             else:
+    #                 DBSright.clear()
+    #         else:
+    #             DBSright.clear()  # Leerfeld, wenn der Wert NaN ist oder leer
+    #
+    #             #   for i in range(8):
 
     #      DBSleft = self.GridCoordinatesLeft.itemAtPosition(i, 1).widget()
     #     DBSleft.setText(str(df_subj["targetL{}_intraop".format(i + 1)][0]))

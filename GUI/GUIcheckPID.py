@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 import sys
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, QHBoxLayout, \
-    QWidget, QLabel
+from PyQt5 import QtCore, QtWidgets
 from utils.helper_functions import General, Output
 from GUI.GUIgeneral_data import CheckForGeneralData
 from GUI.GUImain import ChooseGUI
 
 
-class CheckPID(QDialog):
-    """Very first GUI only providing a means to enter a PID (according to the ORBIS system at the
-    Department of Neurology at the University Hospital of Gießen and Marburg). Several options are possible
-    after entering a PID: 1. if existent -> GUI_Start -> Gui_Main, 2. if nonexistent enter data in general table"""
+class CheckPID(QtWidgets.QDialog):
+    """Initial GUI for entering a PID and checking for existence. Possible options after entering a PID:
+    1. if existent -> GUI_Start -> Gui_Main, 2. if nonexistent enter data in general table"""
 
     def __init__(self, parent=None):
         """Initializer."""
@@ -24,20 +21,23 @@ class CheckPID(QDialog):
         self.setGeometry(400, 100, 500, 300)  # left, right, width, height
         self.move(750, 300)
 
-        self.content_box = QVBoxLayout()  # content of the box
-        self.layout = QVBoxLayout(self)  # entire layout for GUI
+        self.init_ui()
+
+    def init_ui(self):
+        self.content_box = QtWidgets.QVBoxLayout()  # content of the box
+        self.layout = QtWidgets.QVBoxLayout(self)  # entire layout for GUI
 
         # ====================    Create Content for First Option box on Top left      ====================
-        self.optionbox_guistart = QGroupBox('Please enter the PID_Orbis')
-        self.settings_optionbox1 = QVBoxLayout(self.optionbox_guistart)
+        self.optionbox_guistart = QtWidgets.QGroupBox('Please enter the PID_Orbis')
+        self.settings_optionbox1 = QtWidgets.QVBoxLayout(self.optionbox_guistart)
 
-        self.subj_PID = QLabel('PID-ORBIS (without zeros):\t\t')
-        self.lineEditPID = QLineEdit()
+        self.subj_PID = QtWidgets.QLabel('PID-ORBIS (without zeros):\t\t')
+        self.lineEditPID = QtWidgets.QLineEdit()
 
         self.lineEditPID.setFixedWidth(200)
         # self.lineEditPID.setFixedHeight(40)
 
-        lay1 = QHBoxLayout()
+        lay1 = QtWidgets.QHBoxLayout()
         lay1.addWidget(self.subj_PID)
         lay1.addWidget(self.lineEditPID)
         lay1.addStretch()
@@ -46,10 +46,10 @@ class CheckPID(QDialog):
         self.content_box.addWidget(self.optionbox_guistart)
 
         # ====================    Create Content for Buttons at the Bottom      ====================
-        layout_buttons = QHBoxLayout()
-        self.button_checkPID = QPushButton('Check for \nexistence')
+        layout_buttons = QtWidgets.QHBoxLayout()
+        self.button_checkPID = QtWidgets.QPushButton('Check for \nexistence')
         self.button_checkPID.clicked.connect(self.onClickedCheckPID)
-        self.button_close = QPushButton('Close GUI')
+        self.button_close = QtWidgets.QPushButton('Close GUI')
         self.button_close.clicked.connect(self.close)
 
         layout_buttons.addStretch(1)
@@ -93,8 +93,7 @@ class CheckPID(QDialog):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    widget = QWidget
+    app = QtWidgets.QApplication(sys.argv)
     dlg = CheckPID()
     dlg.show()
     sys.exit(app.exec_())

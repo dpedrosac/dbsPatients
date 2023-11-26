@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import logging
-logging.basicConfig(filename='../test/error.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 import csv
 import sys
 import pandas as pds
@@ -18,18 +16,6 @@ pds.options.mode.chained_assignment = None  # default='warn' cf.
 # LE: changes work with python 3.11
 # TODO's: needs fix: go on 'save and return' after entering data before entering medicationGUI,
 #  or else on 'return' all windows close and data will be deleted
-
-@staticmethod
-def fill_missing_demographics(flag):
-    """very unique function without much versatility intended to fill missing data from general_data.csv to
-    pre-/intra-/postoperative.csv in the ./data folder"""
-
-    file_general = General.import_dataframe('general_data.csv', separator_csv=',')
-    # if file_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
-    #    file_general = General.import_dataframe('general_data.csv', separator_csv=';')
-
-    for index, row in file_general.iterrows():
-        General.synchronize_data_with_general(flag, row['ID'], messagebox=False)
 
 
 class PreoperativeDialog(QDialog):
