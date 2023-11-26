@@ -16,7 +16,6 @@ class ChooseGUI(QDialog):
     def __init__(self, parent=None):
         """Initialize GUImain, a window in which all other "sub-GUIs" may be called from."""
         super(ChooseGUI, self).__init__(parent)
-        # 'parent' welches Elternelement (parent) dieses GUI-Element hat
         subj_details = General.read_current_subj()
         self.date = ''  # to be defined by selection in this GUI
 
