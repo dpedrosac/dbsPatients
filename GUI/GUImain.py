@@ -62,19 +62,18 @@ class ChooseGUI(QDialog):
         """Calls the respective GUI to enter data"""
         subj_details = General.read_current_subj()
         flag_mapping = {
-            self.button_openGUI_Preoperative: 'preoperative',
-            self.button_openGUI_Intraoperative: 'intraoperative',
-            self.button_openGUI_Postoperative: 'postoperative'
+            self.button_openGUI_Preoperative: 'Preoperative',
+            self.button_openGUI_Intraoperative: 'Intraoperative',
+            self.button_openGUI_Postoperative: 'Postoperative'
         }
 
-        selected_button = self.sender()
-        if selected_button in flag_mapping:
-            flag = flag_mapping[selected_button]
-            General.get_data_subject(flag=flag, pid2lookfor=int(subj_details.pid))
+        selected_button = self.sender().checkedButton().text()
+        if selected_button in flag_mapping.values():
+            General.get_data_subject(flag=selected_button.lower(), pid2lookfor=int(subj_details.pid))
 
-            if flag == 'preoperative':
+            if selected_button.lower() == 'preoperative':
                 dialog_date = PreoperativeDialog(parent=self)
-            elif flag == 'intraoperative':
+            elif selected_button.lower() == 'intraoperative':
                 dialog_date = IntraoperativeDialog(parent=self)
             else:
                 dialog_date = PostoperativeDialog(parent=self)
@@ -83,24 +82,6 @@ class ChooseGUI(QDialog):
             if dialog_date.exec():
                 pass  # Your logic after the dialog is executed
             self.show()
-
-
-        # Version of the code before big changes in Nov. 2023
-        # subj_details = General.read_current_subj()
-        # if self.button_openGUI_Preoperative.isChecked():
-        #     General.get_data_subject(flag='preoperative', pid2lookfor=int(subj_details.pid))
-        #     dialog_date = PreoperativeDialog(parent=self)
-        # elif self.button_openGUI_Intraoperative.isChecked():
-        #     General.get_data_subject(flag='intraoperative', pid2lookfor=int(subj_details.pid))
-        #     dialog_date = IntraoperativeDialog(parent=self)
-        # else:
-        #     General.get_data_subject(flag='postoperative', pid2lookfor=int(subj_details.pid))
-        #     dialog_date = PostoperativeDialog(parent=self)
-        #
-        # self.hide()
-        # if dialog_date.exec():
-        #     pass
-        # self.show()
 
 
 if __name__ == '__main__':

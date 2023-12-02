@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGr
 from GUI.GUImedication import MedicationDialog
 from utils.helper_functions import General, Content, Clean, Output
 from dependencies import FILEDIR
-from utils.logger import logger
 
 
 class PostoperativeDialog(QDialog):
@@ -17,21 +16,20 @@ class PostoperativeDialog(QDialog):
     def __init__(self, parent=None):
         """Initializer."""
         super(PostoperativeDialog, self).__init__(parent)
-        self.date = 'postoperative'  # next two lines define the postoperative date data stem from/are saved at
+        self.dialog_medication = None
+        self.setup_ui()
+
+    def setup_ui(self):
+        self.date = 'postoperative'  # defines the general layout for the GUI
         self.postoperative_date = ''
-        logger.debug("call General.read_current_subj()")
+        self.setup_general_layout()
 
+    def setup_general_layout(self):
         subj_details = General.read_current_subj()
-        General.synchronize_data_with_general(self.date, subj_details.id[0],
-                                              messagebox=False)
-        # Todo: can't run the code with these two lines:
-        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog (preop)
-        self.dialog_medication.hide()
+        General.synchronize_data_with_general(self.date, subj_details.id[0], messagebox=False)
 
-        # self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # create medication dialog
-        # self.dialog_medication.hide()
+        self.create_medication_dialog()
 
-        # ====================    Create General Layout      ====================
         self.setWindowTitle('Postoperative Information (PID: {})'.format(str(int(subj_details.pid))))  # not necessary
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 200)
@@ -39,98 +37,103 @@ class PostoperativeDialog(QDialog):
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
 
-        # Create one optionbox for the time being left
+        # Create option boxes for dates
+        self.optionbox_dates(layout_general)
+
+        # Create option boxes for reason for postoperative visit
+        self.optionbox_reason_for_visit(layout_general)
+
+        # Create option boxes for reports during postoperative visits
+        self.create_reports_optionbox(layout_general)
+
+        # Create option boxes for tests performed during postoperative visits
+        self.create_tests_optionbox(layout_general)
+
+        # Create option boxes for DBS settings after visit
+        self.create_dbs_settings_optionbox(layout_general)
+
+        # Create option boxes for amplitude, pulse, and frequency
+        self.create_amp_pulse_freq_optionbox(layout_general)
+
+        # Create buttons at the bottom of the GUI
+        self.create_bottom_buttons(layout_general)
+
+        # Connect button actions that are needed so that everything works
+        self.connect_button_actions()
+
+    def create_medication_dialog(self):
+        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog
+        self.dialog_medication.hide()
+
+    def optionbox_dates(self, layout_general):
+        """creates the upper left optionbox in which important dates are added"""
+
+        # Define the line edits as class attributes
+        self.lineEditAdmission_Nch = QLineEdit()
+        self.lineEditAdmission_NR = QLineEdit()
+        self.lineEditDismission_Nch = QLineEdit()
+        self.lineEditDismission_NR = QLineEdit()
+        self.lineEditSurgery = QLineEdit()
+        self.lineEditLast_Revision = QLineEdit()
+        self.lineEditOutpatient_Contact = QLineEdit()
+
         self.optionbox1 = QGroupBox('Important Dates')
         self.optionbox1Content = QVBoxLayout(self.optionbox1)
         layout_general.addWidget(self.optionbox1, 0, 0)
 
-        self.subj_Admission_Nch = QLabel('Admission Neurosurgery (dd/mm/yyyy):\t')
-        self.lineEditAdmission_Nch = QLineEdit()
-        lay1 = QHBoxLayout()
-        lay1.addWidget(self.subj_Admission_Nch)
-        lay1.addWidget(self.lineEditAdmission_Nch)
-        lay1.addStretch()
+        date_labels_and_edits = [
+            ("Admission Neurosurgery", self.lineEditAdmission_Nch),
+            ("Admission Neurology", self.lineEditAdmission_NR),
+            ("Dismission Neurosurgery", self.lineEditDismission_Nch),
+            ("Dismission Neurology", self.lineEditDismission_NR),
+            ("Surgery Date", self.lineEditSurgery),
+            ("Last Revision", self.lineEditLast_Revision),
+            ("Outpatient Contact", self.lineEditOutpatient_Contact),
+        ]
 
-        self.subj_Admission_NR = QLabel('Admission Neurology (dd/mm/yyyy):\t')
-        self.lineEditAdmission_NR = QLineEdit()
-        lay2 = QHBoxLayout()
-        lay2.addWidget(self.subj_Admission_NR)
-        lay2.addWidget(self.lineEditAdmission_NR)
-        lay2.addStretch()
+        for label_text, line_edit in date_labels_and_edits:
+            label = QLabel(f'{label_text} (dd/mm/yyyy):\t')
+            line_edit = QLineEdit()
+            layout = QHBoxLayout()
+            layout.addWidget(label)
+            layout.addWidget(line_edit)
+            layout.addStretch()
+            self.optionbox1Content.addLayout(layout)
 
-        self.subj_Dismission_Nch = QLabel('Dismission Neurosurgery (dd/mm/yyyy):')
-        self.lineEditDismission_Nch = QLineEdit()
-        lay3 = QHBoxLayout()
-        lay3.addWidget(self.subj_Dismission_Nch)
-        lay3.addWidget(self.lineEditDismission_Nch)
-        lay3.addStretch()
-
-        self.subj_Dismission_NR = QLabel('Dismission Neurology (dd/mm/yyyy):\t')
-        self.lineEditDismission_NR = QLineEdit()
-        lay4 = QHBoxLayout()
-        lay4.addWidget(self.subj_Dismission_NR)
-        lay4.addWidget(self.lineEditDismission_NR)
-        lay4.addStretch()
-
-        self.subj_Surgery = QLabel('Surgery Date (dd/mm/yyyy):\t\t')
-        self.lineEditSurgery = QLineEdit()
-        lay5 = QHBoxLayout()
-        lay5.addWidget(self.subj_Surgery)
-        lay5.addWidget(self.lineEditSurgery)
-        lay5.addStretch()
-
-        self.subj_Last_Revision = QLabel('Last Revision (dd/mm/yyyy):\t\t')
-        self.lineEditLast_Revision = QLineEdit()
-        lay6 = QHBoxLayout()
-        lay6.addWidget(self.subj_Last_Revision)
-        lay6.addWidget(self.lineEditLast_Revision)
-        lay6.addStretch()
-
-        self.subj_Outpatient_Contact = QLabel('Outpatient Contact (dd/mm/yyyy):\t')
-        self.lineEditOutpatient_Contact = QLineEdit()
-        lay7 = QHBoxLayout()
-        lay7.addWidget(self.subj_Outpatient_Contact)
-        lay7.addWidget(self.lineEditOutpatient_Contact)
-        lay7.addStretch()
-
-        self.optionbox1Content.addLayout(lay1)
-        self.optionbox1Content.addLayout(lay2)
-        self.optionbox1Content.addLayout(lay3)
-        self.optionbox1Content.addLayout(lay4)
-        self.optionbox1Content.addLayout(lay5)
-        self.optionbox1Content.addLayout(lay6)
-        self.optionbox1Content.addLayout(lay7)
         self.optionbox1.setLayout(self.optionbox1Content)
 
-        # Create second optionbox top right
+    def optionbox_reason_for_visit(self, layout_general):
+        """creates upper right optionbox in which reasons for visit is added"""
+
+        self.subj_reason = QLabel('Reason:\t\t')
         self.optionbox2 = QGroupBox('Reason')
         self.optionbox2Content = QVBoxLayout(self.optionbox2)
         layout_general.addWidget(self.optionbox2, 0, 1)
 
-        self.subj_reason = QLabel('Reason:\t\t')
         self.lineEditreason = QComboBox()
-        self.fill_combobox()
         self.lineEditreason.currentIndexChanged.connect(self.update_context)
         self.lineEditreason.setFixedHeight(20)
+        self.fill_combobox()
 
-        lay8 = QHBoxLayout()
-        lay8.addWidget(self.subj_reason)
-        lay8.addWidget(self.lineEditreason)
-        lay8.addStretch()
+        reason_layout = QHBoxLayout()
+        reason_layout.addWidget(self.subj_reason)
+        reason_layout.addWidget(self.lineEditreason)
+        reason_layout.addStretch()
 
         self.subj_Adverse_Event = QLabel('Adverse Events:\t')
         self.lineEditAdverse_Event = QLineEdit()
         self.lineEditAdverse_Event.setFixedWidth(300)
         self.lineEditAdverse_Event.setFixedHeight(50)
-        lay9 = QHBoxLayout()
-        lay9.addWidget(self.subj_Adverse_Event)
-        lay9.addWidget(self.lineEditAdverse_Event)
-        lay9.addStretch()
+        adverse_event_layout = QHBoxLayout()
+        adverse_event_layout.addWidget(self.subj_Adverse_Event)
+        adverse_event_layout.addWidget(self.lineEditAdverse_Event)
+        adverse_event_layout.addStretch()
 
-        self.optionbox2Content.addLayout(lay8)
-        self.optionbox2Content.addLayout(lay9)
+        self.optionbox2Content.addLayout(reason_layout)
+        self.optionbox2Content.addLayout(adverse_event_layout)
         self.optionbox2.setLayout(self.optionbox2Content)
 
+    def create_reports_optionbox(self, layout_general):
         # Create third optionbox on the second row left
         self.optionbox3 = QGroupBox('Reports')
         self.optionbox3Content = QVBoxLayout(self.optionbox3)
@@ -181,6 +184,7 @@ class PostoperativeDialog(QDialog):
         self.optionbox3Content.addLayout(box2line3)
         self.optionbox3.setLayout(self.optionbox3Content)
 
+    def create_tests_optionbox(self, layout_general):
         # optionbox 4: 2th row, right
 
         self.optionbox4 = QGroupBox('Tests')
@@ -199,7 +203,7 @@ class PostoperativeDialog(QDialog):
         self.CGICPat = QLabel('CGIC patient:')
         self.lineEditCGICPat = QLineEdit()
         self.lineEditCGICPat.setFixedWidth(50)
-        self.CGICClinician = QLabel('CGIC clinician and cargiver:')
+        self.CGICClinician = QLabel('CGIC clinician and caregiver:')
         self.lineEditCGICClinician = QLineEdit()
         self.lineEditCGICClinician.setFixedWidth(50)
 
@@ -329,6 +333,7 @@ class PostoperativeDialog(QDialog):
         self.optionbox4Content.addLayout(box4line5)
         self.optionbox4.setLayout(self.optionbox4Content)
 
+    def create_dbs_settings_optionbox(self, layout_general):
         # ====================    Optionbox (5) lower left      ====================
         self.optionbox5 = QGroupBox('DBS settings after dismissal')
         self.optionbox5Content = QVBoxLayout(self.optionbox5)
@@ -352,6 +357,7 @@ class PostoperativeDialog(QDialog):
         self.optionbox5Content.addLayout(self.DBSpercentageLeft)
         self.optionbox5Content.addLayout(self.DBSpercentageRight)
 
+    def create_amp_pulse_freq_optionbox(self, layout_general):
         # ====================    Optionbox (8) lower right      ====================
         self.optionbox6 = QGroupBox('Amplitude, Pulse and Frequency')
         self.optionbox6Content = QVBoxLayout(self.optionbox6)
@@ -371,6 +377,8 @@ class PostoperativeDialog(QDialog):
 
         self.optionbox6.setLayout(self.optionbox6Content)
 
+    def create_bottom_buttons(self, layout_general):
+
         # ====================   Adds buttons at the bottom of the GUI      ====================
         self.ButtonEnterMedication = QPushButton('Open GUI \nMedication')
         self.button_save = QPushButton('Save and \nReturn')
@@ -382,9 +390,9 @@ class PostoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
-        logger.debug("last read_content_csv()")
         self.read_content_csv()
 
+    def connect_button_actions(self):
         # ====================   Actions when buttons are pressed      ====================
         self.ButtonEnterMedication.clicked.connect(self.on_clickedMedication)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
@@ -395,18 +403,14 @@ class PostoperativeDialog(QDialog):
         items_available = Content.extract_postoperative_dates()
         items_available = ['Please select', 'Enter data'] if not items_available else items_available + ['Enter data']
 
-        #        result = [''.join(map(str, element)) if isinstance(element, list) else element for element in
-        #                           items_available]
+        items_available = list(set(items_available))         # Remove duplicates using a set
 
-        # Remove duplicates using a set
-        items_available = list(set(items_available))
-
-        # Convert items to strings and remove "nan" values
+        # Convert items to strings and remove empty values
         items_available = [str(item) for item in items_available]
-        items_available = [item for item in items_available if item != "nan"]
+        # items_available = [item for item in items_available if item != '']
 
         # Remove empty items
-        items_available = list(filter(None, items_available))
+        #items_available = list(filter(None, items_available))
 
         # Add items to ComboBox
         self.lineEditreason.addItems(items_available)
@@ -435,20 +439,19 @@ class PostoperativeDialog(QDialog):
             # do something if no rows are found
         else:
             row = df_subj_filtered.iloc[0]
-            self.lineEditAdmission_Nch.setText(str(row["Admission_NCh_postop"])) \
-                if str(row["Admission_NCh_postop"]) != 'nan' else self.lineEditAdmission_Nch.setText('')
-            self.lineEditAdmission_NR.setText(str(row["Admission_NR_postop"])) \
-                if str(row["Admission_NR_postop"]) != 'nan' else self.lineEditAdmission_NR.setText('')
-            self.lineEditDismission_Nch.setText(str(row["Dismissal_NCh_postop"])) \
-                if str(row["Dismissal_NCh_postop"]) != 'nan' else self.lineEditDismission_Nch.setText('')
-            self.lineEditDismission_NR.setText(str(row["Dismissal_NR_postop"])) \
-                if str(row["Dismissal_NR_postop"]) != 'nan' else self.lineEditDismission_NR.setText('')
-            self.lineEditSurgery.setText(str(row["Surgery_Date_postop"])) \
-                if str(row["Surgery_Date_postop"]) != 'nan' else self.lineEditSurgery.setText('')
-            # self.lineEditLast_Revision.setText(str(df_subj[""][0]))\
-            # if str(df_subj[""][0]) != 'nan' else self.lineEditLast_Revision.setText('')
-            # self.lineEditOutpatient_Contact.setText(str(df_subj[""][0]))\
-            # if str(df_subj[""][0]) != 'nan' else self.lineEditOutpatient_Contact.setText('')
+            # Define a list of tuples with QLineEdit objects and corresponding column names -- Upper right part
+            line_edits = [
+                (self.lineEditAdmission_Nch, "Admission_NCh_postop"),
+                (self.lineEditAdmission_NR, "Admission_NR_postop"),
+                (self.lineEditDismission_Nch, "Dismissal_NCh_postop"),
+                (self.lineEditDismission_NR, "Dismissal_NR_postop"),
+                (self.lineEditSurgery, "Surgery_Date_postop"),
+            ]
+
+            # Iterate over the list and update each QLineEdit
+            for line_edit, column_name in line_edits:
+                value = str(df_subj_filtered[column_name].iloc[0])
+                line_edit.setText(value) if value != 'nan' else line_edit.setText('')
 
             # upper right
 
@@ -464,10 +467,12 @@ class PostoperativeDialog(QDialog):
                 if str(row["TSS_postop"]) != 'nan' else self.lineEditTSS.setText('')
             self.lineEditCGICPat.setText(str(row["CGIG_patient_postop"])) \
                 if str(row["CGIG_patient_postop"]) != 'nan' else self.lineEditCGICPat.setText('')
-            self.lineEditCGICClinician.setText(str(row["CGIG_clinician_cargiver_postop"])) \
-                if str(row["CGIG_clinician_cargiver_postop"]) != 'nan' else self.lineEditCGICClinician.setText('')
+            self.lineEditCGICClinician.setText(str(row["CGIG_clinician_caregiver_postop"])) \
+                if str(row["CGIG_clinician_caregiver_postop"]) != 'nan' else self.lineEditCGICClinician.setText('')
             self.lineEditUPDRSON.setText(str(row["UPDRSon_postop"])) \
                 if str(row["UPDRSon_postop"]) != 'nan' else self.lineEditUPDRSON.setText('')
+            self.lineEditUPDRSOFF.setText(str(row["UPDRSoff_postop"])) \
+                if str(row["UPDRSoff_postop"]) != 'nan' else self.lineEditUPDRSOFF.setText('')
             self.lineEditUPDRSII.setText(str(row["UPDRSII_postop"])) \
                 if str(row["UPDRSII_postop"]) != 'nan' else self.lineEditUPDRSII.setText('')
             # self.lineEditHRUQ.setText(str(row[""]))
@@ -480,8 +485,6 @@ class PostoperativeDialog(QDialog):
                 if str(row["BDI2_postop"]) != 'nan' else self.lineEditBDIII.setText('')
             self.lineEditNMSQ.setText(str(row["NMSQ_postop"])) \
                 if str(row["NMSQ_postop"]) != 'nan' else self.lineEditNMSQ.setText('')
-            # self.lineEditUPDRSOff.setText(str(row[""])) \
-            # if str(row[""]) != 'nan' else self.lineEditUPDRSOff.setText('')
             self.lineEditHY.setText(str(row["H&Y_postop"])) \
                 if str(row["H&Y_postop"]) != 'nan' else self.lineEditHY.setText('')
             self.lineEditEQ5D.setText(str(row["EQ5D_postop"])) \
@@ -494,8 +497,8 @@ class PostoperativeDialog(QDialog):
                 if str(row["PDQ39_postop"]) != 'nan' else self.lineEditPDQ39.setText('')
             self.lineEditSE.setText(str(row["S&E_postop"])) \
                 if str(row["S&E_postop"]) != 'nan' else self.lineEditSE.setText('')
-            # self.lineEditUDDRSOn.setText(str(row[""])) \
-            # if str(row[""]) != 'nan' else self.lineEditUDDRSOn.setText('')
+            self.lineEditUDDRSOn.setText(str(row[""])) \
+                if str(row[""]) != 'nan' else self.lineEditUDDRSOn.setText('')
             self.lineEditTRSOn.setText(str(row["TRSon_postop"])) \
                 if str(row["TRSon_postop"]) != 'nan' else self.lineEditTRSOn.setText('')
             self.lineEditUDDRSOff.setText(str(row["UDDRSoff_postop"])) \
@@ -585,7 +588,8 @@ class PostoperativeDialog(QDialog):
             frequencyRightWidget.setText(str(row["FreqR_postop"]))
 
     def update_context(self):
-        """updates the context according to what was elected in the ComboBox"""
+        """updates the context according to what was selected in the ComboBox"""
+
         if self.lineEditreason.currentText() == 'Please select':
             pass
         elif self.lineEditreason.currentText() == 'Enter data':
@@ -618,7 +622,7 @@ class PostoperativeDialog(QDialog):
         self.dialog_medication.show()
 
     @QtCore.pyqtSlot()
-    def onClickedSaveReturn(self, pds=None):
+    def onClickedSaveReturn(self, pds=None, DEBUG=False):
         """
         Saves the data passed into the GUI form and returns to previous Window.
 
@@ -634,7 +638,6 @@ class PostoperativeDialog(QDialog):
         df_general = Clean.extract_subject_data(subject_id)
         match = re.search(r'^(pre|intra|post)op', self.date)
 
-        logger.debug("enter try/catch")
         # read general data so that pre-/intra- and postoperative share these
         try:
             subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
@@ -646,25 +649,29 @@ class PostoperativeDialog(QDialog):
             df_subj = {k: '' for k in Content.extract_saved_data(self.date).keys()}  # create empty dictionary
 
         # Drop rows with empty values in columns 3 through 9
-        df.drop(df[df.iloc[:, 2:9].isnull().any(axis=1)].index, inplace=True)
+        # df.drop(df[df.iloc[:, 2:9].isnull().any(axis=1)].index, inplace=True)
 
         df_general.reset_index(inplace=True, drop=True)
-
         df_subj['ID'] = General.read_current_subj().id[0]
         df_subj['PID'] = df_general.iloc[0, :]['PID_ORBIS']
         df_subj['Gender'] = df_general['Gender'][0]
         df_subj['Diagnosis_{}'.format(match.group())] = df_general['diagnosis'][0]
 
-        # Now extract teh changed data from the GUI
+        # Extract text for the upper left optionbox
+        line_edits = [
+            (self.lineEditAdmission_Nch, 'Admission_NCh'),
+            (self.lineEditAdmission_NR, 'Admission_NR'),
+            (self.lineEditDismission_Nch, 'Dismissal_NCh'),
+            (self.lineEditDismission_NR, 'Dismissal_NR'),
+            (self.lineEditSurgery, 'Surgery_Date'),
+            (self.lineEditLast_Revision, 'Last_revision'),
+            (self.lineEditOutpatient_Contact, 'Outpatient_Contact'),
+        ]
 
-        # upper left
-        df_subj['Admission_NCh_{}'.format(match.group())] = self.lineEditAdmission_Nch.text()
-        df_subj['Admission_NR_{}'.format(match.group())] = self.lineEditAdmission_NR.text()
-        df_subj['Dismissal_NCh_{}'.format(match.group())] = self.lineEditDismission_Nch.text()
-        df_subj['Dismissal_NR_{}'.format(match.group())] = self.lineEditDismission_NR.text()
-        df_subj['Surgery_Date_{}'.format(match.group())] = self.lineEditSurgery.text()
-        # df_subj[''] = self.lineEditLast_Revision.text()
-        # df_subj[''] = self.lineEditOutpatient_Contact.text()
+        # Iterate over the list and update the DataFrame
+        for line_edit, column_name in line_edits:
+            column_key = f'{column_name}_{match.group()}'
+            df_subj[column_key] = line_edit.text()
 
         # upper right
         df_subj['AE_{}'.format(match.group())] = self.lineEditAdverse_Event.text()
@@ -674,22 +681,22 @@ class PostoperativeDialog(QDialog):
         df_subj['UPDRS4_{}'.format(match.group())] = self.lineEditUPDRSIV.text()
         df_subj['TSS_postop'] = self.lineEditTSS.text()
         df_subj['CGIG_patient_postop'] = self.lineEditCGICPat.text()
-        df_subj['CGIG_clinician_cargiver_postop'] = self.lineEditCGICClinician.text()
+        df_subj['CGIG_clinician_caregiver_postop'] = self.lineEditCGICClinician.text()
         df_subj["UPDRSon_postop"] = self.lineEditUPDRSON.text()
         df_subj["UPDRSII_postop"] = self.lineEditUPDRSII.text()
-        # df_subj[""] = self.lineEditHRUQ.text()
+        df_subj["UPDRSoff_postop"] = self.lineEditUPDRSOff.text()
+        df_subj["H&Y_postop"] = self.lineEditHY.text()
+        df_subj["HRUQ_post"] = self.lineEditHRUQ.text()
         df_subj["MoCa_postop"] = self.lineEditMoCa.text()
         df_subj["MMST_postop"] = self.lineEditMMST.text()
         df_subj["BDI2_postop"] = self.lineEditBDIII.text()
         df_subj["NMSQ_postop"] = self.lineEditNMSQ.text()
-        # df_subj[""] = self.lineEditUPDRSOff.text()
-        df_subj["H&Y_postop"] = self.lineEditHY.text()
         df_subj["EQ5D_postop"] = self.lineEditEQ5D.text()
         df_subj["DemTect_postop"] = self.lineEditDemTect.text()
         df_subj["PDQ8_postop"] = self.lineEditPDQ8.text()
         df_subj["PDQ39_postop"] = self.lineEditPDQ39.text()
         df_subj["S&E_postop"] = self.lineEditSE.text()
-        # df_subj[""] = self.lineEditUDDRSOn.text()
+        df_subj["UDDRSon_postop"] = self.lineEditUDDRSOn.text()
         df_subj["TRSon_postop"] = self.lineEditTRSOn.text()
         df_subj["UDDRSoff_postop"] = self.lineEditUDDRSOff.text()
         df_subj["TRSoff_postop"] = self.lineEditTRSOff.text()
@@ -738,21 +745,14 @@ class PostoperativeDialog(QDialog):
     # for opening
     def open_dialog_box(self):
         option = QFileDialog.Options()
-        # first parameter is self; second is the Window Title, third title is Default File Name, fourth is FileType,
-        # fifth is options
         file = QFileDialog.getOpenFileName(self, "Save File Window Title", "default.txt",
                                            "All Files (*)", options=option)
         print(file)
 
 
 if __name__ == '__main__':
-    logger.debug(f"start app with {sys.argv}")
     app = QApplication(sys.argv)
-    logger.debug("set widget")
     widget = QWidget
-    logger.debug("start dialog")
     dlg = PostoperativeDialog()
-    logger.debug("show dialog")
     dlg.show()
-    logger.debug(f"app exited with {app.exec_()}")
     sys.exit(app.exec_())

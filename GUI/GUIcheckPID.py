@@ -11,7 +11,6 @@ class CheckPID(QtWidgets.QDialog):
     1. if existent -> GUI_Start -> Gui_Main, 2. if nonexistent enter data in general table"""
 
     def __init__(self, parent=None):
-        """Initializer."""
         super().__init__(parent)
 
         self.EnterNewPID = CheckForGeneralData()

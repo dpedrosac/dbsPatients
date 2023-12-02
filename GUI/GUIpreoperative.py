@@ -19,7 +19,7 @@ pds.options.mode.chained_assignment = None  # default='warn' cf.
 
 
 class PreoperativeDialog(QDialog):
-    """Dialog to introduce all important information of preoperative data ('indication check')"""
+    """Dialog to introduce all important information of preoperative data ('Indikationsprüfung')"""
 
     def __init__(self, parent=None, textwidth=300):
         """Initializer."""
@@ -28,8 +28,7 @@ class PreoperativeDialog(QDialog):
         subj_details = General.read_current_subj()
         self.date = 'preoperative'  # defines the date at which data are taken from/saved at
 
-        General.synchronize_data_with_general(self.date, subj_details.id[0],
-                                            messagebox=False)  # ensures identical first columns in preoperative.csv
+        General.synchronize_data_with_general(self.date, subj_details.id[0], messagebox=False)  # ensures identical first columns in preoperative.csv
         # opens medication dialog
         self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog (preop)
         self.dialog_medication.hide()
@@ -273,7 +272,6 @@ class PreoperativeDialog(QDialog):
         """Shows medication dialog ; former implementation with creating GUI was replaced with show/hide GUI which is
         initiated at beginning at the disadvantage of not being saved until GUIpreoperative is closed"""
         self.dialog_medication.show()
-
 
     def onClickedSaveReturn(self):
         """closes GUI and returns to calling (main) GUI"""

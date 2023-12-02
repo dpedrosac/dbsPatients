@@ -13,6 +13,7 @@ from dependencies import ROOTDIR, FILEDIR
 from PyQt5.QtWidgets import QMessageBox, QInputDialog
 from utils.logger import logger
 
+
 # LE: changes work with python 3.11
 class General:
     def __init__(self, _debug=False):
@@ -20,15 +21,13 @@ class General:
 
     @staticmethod
     def create_pseudonym(size_array: int) -> str:
-        """generates pseudonym of letters, numbers and special characters; ';' and ','
-        are omitted to avoid confusion in 'csv-files' """
+        """generates pseudonym -- ';' and ',' are omitted to avoid confusion in 'csv-files' """
         re_expression = f'[a-zA-Z0-9_!#%$§]{{{size_array}}}'
         return rstr.xeger(re_expression)
 
     @staticmethod
     def available_PDmedication():
-        """Generates a list with all available medications to treat PD_patients; the parenthesis works as a possible
-        mean to introduce the condition pre|intra|postoperative"""
+        """List w/ available medication against PD; parenthesis intended to introduce pre|intra|postoperative"""
 
         medication = ['Levodopa Carbidopa{}', 'Levodopa Carbidopa CR{}', 'Entacapone{}', 'Tolcapone{}',
                       'Pramipexole{}', 'Ropinirole{}', 'Rotigotin{}', 'Selegilin oral{}', 'Other{}',
@@ -37,20 +36,23 @@ class General:
         return medication
 
     @staticmethod
-    def import_dataframe(filename: str, separator_csv: str = ',', missing_values: str = '') -> pds.DataFrame:
+    def import_dataframe(filename: str, separator_csv: str = ',', missing_values: str = '', DEBUG=False) -> pds.DataFrame:
         """returns pandas dataframe from csv"""
 
         filename_total = os.path.join(FILEDIR, filename)
-        logger.debug(f"opening file: {filename_total}")
+        if DEBUG:
+            logger.debug(f"opening file: {filename_total}")
+
         if not os.path.isfile(filename_total):
             print(f'\t Filename: {filename_total} not found. Please double-check!')
         df = pds.read_csv(filename_total, sep=separator_csv, on_bad_lines='skip', na_values=missing_values)
 
         if df.shape[1] == 1:
             df = pds.read_csv(filename_total, sep=';', on_bad_lines='skip', na_values=missing_values)
-        caller1 = inspect.getouterframes(inspect.currentframe(), 2)[1][0]
-        caller2 = inspect.getouterframes(inspect.currentframe(), 3)[2][0]
-        logger.debug(f"{inspect.currentframe()}\n called from {caller1}\ncalled from {caller2}\n returns dataframe \n{df}")
+        if DEBUG:
+            caller1 = inspect.getouterframes(inspect.currentframe(), 2)[1][0]
+            caller2 = inspect.getouterframes(inspect.currentframe(), 3)[2][0]
+            logger.debug(f"{inspect.currentframe()}\n called from {caller1}\ncalled from {caller2}\n returns dataframe \n{df}")
         return df
 
     @staticmethod
@@ -99,7 +101,7 @@ class General:
         return data_subj
 
     @staticmethod
-    def synchronize_data_with_general(flag, id2lookfor, messagebox=True):
+    def synchronize_data_with_general(flag, id2lookfor, messagebox=True, DEBUG=False):
         """adds gender and ID to where no entries were made in the csv-files"""
 
         df_general = General.import_dataframe('general_data.csv', separator_csv=',')
@@ -113,7 +115,7 @@ class General:
             file2change = General.import_dataframe('{}.csv'.format(flag), separator_csv=';')
 
         indices2change = file2change.index[file2change['ID'] == id2lookfor].to_list()
-        for k in indices2change:  # TODO: is this necessary
+        for k in indices2change:
             # file2change['Gender'].loc[int(k)] = int(df_general['Gender'].iloc[idx1])
             file2change['PID_ORBIS'].loc[int(k)] = int(df_general['PID_ORBIS'].iloc[idx1])
 
@@ -123,7 +125,8 @@ class General:
                                                              int(df_general['PID_ORBIS'].iloc[idx1])),
                            title='Changed data in {}.csv'.format(flag), flag='Warning')
         file2change.to_csv(os.path.join(FILEDIR, '{}.csv'.format(flag)), index=False)
-        logger.debug(f"file2change.csv: \n{file2change}")
+        if DEBUG:
+            logger.debug(f"file2change.csv: \n{file2change}")
 
         return
 
@@ -134,13 +137,18 @@ class Content:
 
     @staticmethod
     def extract_postoperative_dates(condition='postoperative'):
-        """ extracts a list with all available postoperative dates for a subject"""
+        """ Extracts a list with all available postoperative dates for a subject"""
 
         subject_pid = General.read_current_subj().pid[0]
         data_frame = General.import_dataframe('{}.csv'.format(condition), separator_csv=',')
 
         data_frame = data_frame.loc[data_frame['PID_ORBIS'] == subject_pid]
         list_of_dates = data_frame['Reason_postop'].tolist()
+
+        # Check if NaN is present in the list_of_dates
+        if any(pds.isna(date) for date in list_of_dates):
+            # Replace NaN with an empty string
+            list_of_dates = ['' if pds.isna(date) else date for date in list_of_dates]
 
         return list_of_dates
 
@@ -262,39 +270,38 @@ class Output:
     def open_input_dialog_postoperative(self):
         """Open a message box asking for user input to determine the date after surgery"""
 
-        text, ok = QInputDialog.getText(self, 'Input Dialog', 'Please enter the date after surgery or the event:')
-        self.postoperative_date = text
+        result, ok = QInputDialog.getText(self, 'Input Dialog', 'Please enter the date after surgery or the event:')
+        self.postoperative_date = result
+
+        return self
 
 
 class Clean:
     def __init__(self, _debug=False):
         pass
 
-    @staticmethod
-    def fill_missing_demographics(flag):
-        """very unique function without much versatility intended to fill missing data from general_data.csv to
-        pre-/intra-/postoperative.csv in the ./data folder"""
-
-        file_general = General.import_dataframe('general_data.csv', separator_csv=',')
-        # if file_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
-        #    file_general = General.import_dataframe('general_data.csv', separator_csv=';')
-
-        for index, row in file_general.iterrows():
-            General.synchronize_data_with_general(flag, row['ID'], messagebox=False)
+    # @staticmethod
+    # def fill_missing_demographics(flag):  # TODO: this function is not used and should be removed!
+    #     """very unique function without much versatility intended to fill missing data from general_data.csv to
+    #     pre-/intra-/postoperative.csv in the ./data folder"""
+    #
+    #     file_general = General.import_dataframe('general_data.csv', separator_csv=',')
+    #
+    #     for index, row in file_general.iterrows():
+    #         General.synchronize_data_with_general(flag, row['ID'], messagebox=False)
 
     @staticmethod
-    def extract_subject_data(subject_id, columns=['PID_ORBIS', 'Gender', 'diagnosis']):
+    def extract_subject_data(subject_id):
         """
         Extract data for a subject from a CSV file.
 
         Parameters:
-        - subject_id (str): The ID of the subject to extract data for.
-        - columns (list): The names of the columns to extract data from.
+        - subject_id (str): The ID of the subject.
 
         Returns:
-        - df (pd.DataFrame): A dataframe containing the extracted data.
+        - df (pd.DataFrame): Extracted dataframe with the data.
         """
-        missing_values = ['n/a', 'na', '--']
+        # missing_values = ['n/a', 'na', '--'] # has been used in previous versions
         df = General.import_dataframe(os.path.join(FILEDIR, 'general_data.csv'))
         df = df.loc[df['ID'] == subject_id]
         return df
