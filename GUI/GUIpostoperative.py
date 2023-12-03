@@ -437,7 +437,6 @@ class PostoperativeDialog(QDialog):
 
     def read_content_csv(self):
         """After selecting the reason for visit, data is read from the csv-file [preoperative] if available"""
-        print('updating content for the selected visit date...')
         df_subj = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
 
         if df_subj.empty:
@@ -708,6 +707,14 @@ class PostoperativeDialog(QDialog):
             data_frame.loc[len(data_frame), ['ID', 'PID_ORBIS', 'Reason_{}'.format(match.group())]] = [subj_details.id[0],
                                                                                                        subj_details.pid[0],
                                                                                                        self.reason_visit]
+            filtered_df = data_frame[data_frame['PID_ORBIS'] == subj_details.pid[0]]
+            if any(filtered_df['Reason_{}'.format(match.group())].isin([self.reason_visit])):
+                Output.msg_box(
+                    'There is already an identical entry for this subject. Please enter a different reason',
+                    title=f'Warning, double entry for subj {subj_details.id[0]}')
+                self.fill_combobox()
+                return
+
             data_frame = data_frame.replace(['nan', ''], [np.nan, np.nan])
             data_frame = data_frame.applymap(lambda x: str(x).replace(';', ' -'))
             data_frame.to_csv(os.path.join(FILEDIR, f"{self.date}.csv"), index=False)
