@@ -6,12 +6,12 @@ import rstr
 import csv
 import os
 import shutil
-import inspect
 import pandas as pds
 from pathlib import Path
 from dependencies import ROOTDIR, FILEDIR
-from PyQt5.QtWidgets import QMessageBox, QInputDialog
-from utils.logger import logger
+from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, QInputDialog, \
+    QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox, QMessageBox
+from PyQt5 import QtCore
 
 
 # LE: changes work with python 3.11
@@ -36,12 +36,10 @@ class General:
         return medication
 
     @staticmethod
-    def import_dataframe(filename: str, separator_csv: str = ',', missing_values: str = '', DEBUG=False) -> pds.DataFrame:
+    def import_dataframe(filename: str, separator_csv: str = ',', missing_values: str = '') -> pds.DataFrame:
         """returns pandas dataframe from csv"""
 
         filename_total = os.path.join(FILEDIR, filename)
-        if DEBUG:
-            logger.debug(f"opening file: {filename_total}")
 
         if not os.path.isfile(filename_total):
             print(f'\t Filename: {filename_total} not found. Please double-check!')
@@ -49,10 +47,6 @@ class General:
 
         if df.shape[1] == 1:
             df = pds.read_csv(filename_total, sep=';', on_bad_lines='skip', na_values=missing_values)
-        if DEBUG:
-            caller1 = inspect.getouterframes(inspect.currentframe(), 2)[1][0]
-            caller2 = inspect.getouterframes(inspect.currentframe(), 3)[2][0]
-            logger.debug(f"{inspect.currentframe()}\n called from {caller1}\ncalled from {caller2}\n returns dataframe \n{df}")
         return df
 
     @staticmethod
@@ -75,7 +69,6 @@ class General:
         try:
             subj_details = pds.read_csv(file_path)
         except FileNotFoundError:
-            logger.error(f'Error: File "{file_path}" not found')
             subj_details = pds.DataFrame()
 
         return subj_details
@@ -125,8 +118,6 @@ class General:
                                                              int(df_general['PID_ORBIS'].iloc[idx1])),
                            title='Changed data in {}.csv'.format(flag), flag='Warning')
         file2change.to_csv(os.path.join(FILEDIR, '{}.csv'.format(flag)), index=False)
-        if DEBUG:
-            logger.debug(f"file2change.csv: \n{file2change}")
 
         return
 
@@ -146,8 +137,7 @@ class Content:
         list_of_dates = data_frame['Reason_postop'].tolist()
 
         # Check if NaN is present in the list_of_dates
-        if any(pds.isna(date) for date in list_of_dates):
-            # Replace NaN with an empty string
+        if any(pds.isna(date) for date in list_of_dates): # Replace NaN with an empty string
             list_of_dates = ['' if pds.isna(date) else date for date in list_of_dates]
 
         return list_of_dates
@@ -246,6 +236,42 @@ class Content:
                        ]
         return df_subj
 
+    @staticmethod
+    def create_title(num_columns, string2use):
+        """Creates a title for a grid with a number of n = num_columns+1 columns"""
+        titleRow_layout = QGridLayout()
+
+        for j in range(num_columns + 1):
+            label = QLabel('') if j == 0 else QLabel(str(string2use[j-1]))
+            label.setAlignment(QtCore.Qt.AlignCenter)
+            titleRow_layout.addWidget(label, 0, j)
+
+        return titleRow_layout
+
+    @staticmethod
+    def create_contents_grid_with_rows(side_label, side_no, num_columns):
+        dbs_percentage_layout = QGridLayout()
+
+        for i in range(1):  # Only one row
+            dbs_percentage_layout.addWidget(QLabel(f'{side_label}: {side_no}:\t'), i, 0)
+            for j in range(num_columns):
+                line_edit = QLineEdit()
+                line_edit.setEnabled(False)
+                dbs_percentage_layout.addWidget(line_edit, i, j + 1)
+
+        return dbs_percentage_layout
+
+    @staticmethod
+    def get_lineedits_in_optionbox(optionboxes):
+        """Function needed for finding all QLineEdit to be enabled/disabled until the reason of visit is entered"""
+        line_edits = []
+
+        for optionbox in optionboxes:
+            line_edits_in_optionbox = optionbox.findChildren(QLineEdit)
+            line_edits.extend(line_edits_in_optionbox)
+
+        return line_edits
+
 
 class Output:
     def __init__(self, _debug=False):
@@ -271,24 +297,12 @@ class Output:
         """Open a message box asking for user input to determine the date after surgery"""
 
         result, ok = QInputDialog.getText(self, 'Input Dialog', 'Please enter the date after surgery or the event:')
-        self.postoperative_date = result
-
-        return self
+        return result
 
 
 class Clean:
     def __init__(self, _debug=False):
         pass
-
-    # @staticmethod
-    # def fill_missing_demographics(flag):  # TODO: this function is not used and should be removed!
-    #     """very unique function without much versatility intended to fill missing data from general_data.csv to
-    #     pre-/intra-/postoperative.csv in the ./data folder"""
-    #
-    #     file_general = General.import_dataframe('general_data.csv', separator_csv=',')
-    #
-    #     for index, row in file_general.iterrows():
-    #         General.synchronize_data_with_general(flag, row['ID'], messagebox=False)
 
     @staticmethod
     def extract_subject_data(subject_id):
