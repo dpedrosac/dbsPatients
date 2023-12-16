@@ -1,0 +1,316 @@
+#!/usr/bin/env python3
+import sys, re
+import pandas as pd
+import numpy as np
+from PyQt5 import QtCore
+from pathlib import Path
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
+    QHBoxLayout, QLabel, QGridLayout, QSpacerItem, QSizePolicy, QComboBox
+from utils.helper_functions import General, Content
+from dependencies import FILEDIR
+
+pd.options.mode.chained_assignment = None
+
+
+class DBSsettingsDialog(QWidget):
+    """Dialog to introduce the medication at a specific date."""
+
+    def __init__(self, rows, visit='postoperative', parent=None):
+        super(DBSsettingsDialog, self).__init__(parent)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.rows = rows
+        self.date = visit  # ensures the right date is entered
+
+        self.init_ui()
+
+    def init_ui(self):
+
+        layout_general = QGridLayout(self)
+        self.setLayout(layout_general)
+
+        # start creating the option boxes that will appear in the postoperative GUI
+        # Create optionbox for dates
+        self.settings_BSc(side='left', layout_general=layout_general)
+        self.settings_BSc(side='right', layout_general=layout_general)
+
+        self.choiceIPG(layout_general)
+
+        # Show the GUI
+        self.show()
+
+    def choiceIPG(self, layout_general):
+
+        self.optionbox_IPGchoice = QGroupBox(f'Information about the implanted system')
+        self.optionbox_IPGchoiceContent = QHBoxLayout(self.optionbox_IPGchoice)
+        layout_general.addWidget(self.optionbox_IPGchoice, 0, 3)
+        ipg_layout = QHBoxLayout()
+        self.LabelIPG = QLabel('Implanted IPG?')
+        self.lineEditIPG = QComboBox()
+        items = ['Medtronic', 'BSc']
+        [self.lineEditIPG.addItem(k) for k in items]
+        ipg_layout.addWidget(self.LabelIPG)
+        ipg_layout.addWidget(self.lineEditIPG)
+        ipg_layout.addStretch()
+
+        self.optionbox_IPGchoiceContent.addLayout(ipg_layout)
+        self.optionbox_IPGchoice.setLayout(self.optionbox_IPGchoiceContent)
+
+    def settings_BSc(self, side, layout_general, num_contacts=8):
+        """Creates option box with a grid according to the number of contacts available, specifically for BSc systems"""
+
+        self.optionbox_dbs_contactsLeft = QGroupBox(f'Preferred DBS settings - {side} target')
+        self.optionbox_dbs_contactsContent = QHBoxLayout(self.optionbox_dbs_contactsLeft)
+        idx=0 if side=='left' else 1
+        layout_general.addWidget(self.optionbox_dbs_contactsLeft, 0, idx)
+
+        for group_number in range(1, 3):
+            group_layout = QVBoxLayout()
+
+            label_dbs_percentage = QLabel(f"Group {group_number}")
+            group_layout.addWidget(label_dbs_percentage)
+
+            anode_grid = Content.create_contents_grid_with_columns(side_label='Left', name_title="Anode",
+                                                                   num_rows=num_contacts+1)
+            cathode_grid = Content.create_contents_grid_with_columns(side_label='Left', name_title="Cathode",
+                                                                     num_rows=num_contacts+1)
+
+            dbs_percentage_layout = QHBoxLayout()
+            if group_number == 1:
+                FirstColumnNames = Content.create_first_column(num_rows=num_contacts + 1,
+                                                                    string2use=['IPG', 1, 2, 3, 4, 5, 6, 7, 8])
+                dbs_percentage_layout.addLayout(FirstColumnNames)
+
+            dbs_percentage_layout.addLayout(anode_grid)
+            dbs_percentage_layout.addLayout(cathode_grid)
+
+            group_layout.addLayout(dbs_percentage_layout)
+
+            if group_number == 2:
+                toggleButton = QPushButton('+', self)
+                toggleButton.setFixedSize(20, 20)  # Set a fixed size
+                self.optionbox_dbs_contactsContent.addWidget(toggleButton)
+            self.optionbox_dbs_contactsContent.addLayout(group_layout)
+
+        # toggleButton.clicked.connect(self.toggle_content_visibilityPercentage)
+        # self.set_initial_content_statePercentage()
+
+        self.optionbox_dbs_contactsContent.addStretch(2)
+        # self.optionbox_dbs_contactsContent.addLayout(self.titleSettings)
+
+    def set_initial_content_statePercentage(self):
+        [item.widget().setEnabled(False) for widget in [self.DBSpercentageLeft2Anode, self.DBSpercentageLeft2Cathode]
+         for i in range(widget.count()) if (item := widget.itemAt(i)) is not None and item.widget() is not None]
+
+    def toggle_content_visibilityPercentage(self):
+        [item.widget().setEnabled(not item.widget().isEnabled())
+         for widget in [self.DBSpercentageLeft2Anode, self.DBSpercentageLeft2Cathode]
+         for i in range(widget.count()) if (item := widget.itemAt(i)) is not None and item.widget() is not None]
+
+    def optionbox_settings(self, layout_general):
+
+        self.optionbox_settings = QGroupBox('DBS settings for XY lead:')
+        self.optionbox_settingsContent = QVBoxLayout(self.optionbox_settings)
+
+        # Create a QVBoxLayout to arrange widgets vertically
+        layout_settings = QVBoxLayout(self)
+
+        # Create a QHBoxLayout for title labels
+        title_layout = QHBoxLayout()
+
+        # Add a spacer item to align title labels with QLineEdit objects
+        spacer_item = QSpacerItem(30, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        title_layout.addSpacerItem(spacer_item)
+
+        title_label1 = QLabel("Cathode:")
+        title_label2 = QLabel("Anode:")
+
+        title_layout.addWidget(title_label1)
+        title_layout.addWidget(title_label2)
+
+        # Add the title layout to the main layout
+        layout_settings.addLayout(title_layout)
+
+        # Create and add QLineEdit objects to the layout
+        for row in range(self.rows):
+            # Create an QHBoxLayout for each row
+            row_layout = QHBoxLayout()
+
+            label = QLabel(f"Row {row + 1}:")  # Label for each row
+            line_edit1 = QLineEdit()
+            line_edit2 = QLineEdit()
+
+            # Add widgets to the row layout
+            row_layout.addWidget(label)
+            row_layout.addWidget(line_edit1)
+            row_layout.addWidget(line_edit2)
+
+            # Add the row layout to the main layout
+            layout_settings.addLayout(row_layout)
+
+        # Set the main layout for the QWidget
+        self.setLayout(layout_settings)
+
+        # Set window properties
+        self.setWindowTitle('PyQt5 GUI')
+        self.setGeometry(100, 100, 400, 300)  # Adjust the size as needed
+
+        self.optionbox_settingsContent.addLayout(layout_settings)
+        self.optionbox_settings.setLayout(self.optionbox_settingsContent)
+
+        # # ====================    Create General Layout      ====================
+        # df_subj = Content.extract_saved_data(self.date)
+        # self.setWindowTitle('DBS settings of PID: {} '.format(int(General.read_current_subj().pid)))
+        # self.setGeometry(200, 100, 280, 170)
+        # self.move(700, 250)
+        #
+        # layout_general = QGridLayout(self)
+        # self.setLayout(layout_general)
+        #
+        # # ====================    (Only) Optionbox      ====================
+        # self.optionbox1 = QGroupBox('Patient Medication')
+        # self.grid_medication = QGridLayout()
+        # self.medication_names = General.available_PDmedication()
+        #
+        # no_rows, iter_row = 9, 0  # creates nine rows of
+        # for idx, med in enumerate(self.medication_names):
+        #     col = 2 if idx >= no_rows else 0
+        #     if idx == no_rows:
+        #         iter_row = 0
+        #     self.grid_medication.addWidget(QLabel(med.format('')), iter_row, col)
+        #     iter_row += 1
+
+        # # Start adding lineEdits to the created rows
+        # self.lineEditLevodopa_Carbidopa = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditLevodopa_Carbidopa, 0, 1)
+        #
+        # self.lineEditLevodopa_Carbidopa_CR = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditLevodopa_Carbidopa_CR, 1, 1)
+        #
+        # self.lineEditEntacapone = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditEntacapone, 2, 1)
+        #
+        # self.lineEditTolcapone = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditTolcapone, 3, 1)
+        #
+        # self.lineEditPramipexole = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditPramipexole, 4, 1)
+        #
+        # self.lineEditRopinirole = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditRopinirole, 5, 1)
+        #
+        # self.lineEditRotigotin = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditRotigotin, 6, 1)
+        #
+        # self.lineEditSelegilin_oral = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditSelegilin_oral, 7, 1)
+        #
+        # self.lineEditOther = QPlainTextEdit()
+        # self.grid_medication.addWidget(self.lineEditOther, 8, 1, 3, 4)
+        #
+        # self.lineEditSelegilin_sublingual = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditSelegilin_sublingual, 0, 3)
+        #
+        # self.lineEditRasagilin = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditRasagilin, 1, 3)
+        #
+        # self.lineEditAmantadine = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditAmantadine, 2, 3)
+        #
+        # self.lineEditApomorphine = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditApomorphine, 3, 3)
+        #
+        # self.lineEditPiribedil = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditPiribedil, 4, 3)
+        #
+        # self.lineEditSafinamid = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditSafinamid, 5, 3)
+        #
+        # self.lineEditOpicapone = QLineEdit()
+        # self.grid_medication.addWidget(self.lineEditOpicapone, 6, 3)
+        #
+        # self.optionbox1Content = QVBoxLayout(self.optionbox1)
+        # layout_general.addWidget(self.optionbox1, 0, 0)
+        #
+        # self.optionbox1Content.addLayout(self.grid_medication)
+        # self.optionbox1.setLayout(self.optionbox1Content)
+        #
+        # # ====================    Create Content for Buttons at the Bottom      ====================
+        # layout_bottom = QHBoxLayout()
+        # self.button_save_return = QPushButton('Return')
+        # self.button_save_return.clicked.connect(self.onClickedSaveReturn)
+        #
+        # layout_bottom.addStretch(1)
+        # layout_bottom.addWidget(self.button_save_return)
+        #
+        # hlay_bottom = QHBoxLayout()
+        # hlay_bottom.addStretch(2)
+        # hlay_bottom.addWidget(self.button_save_return)
+        #
+        # layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
+        #
+        # self.updateDisplayedMedication()  # Updates text from csv after creating the content!
+
+    @QtCore.pyqtSlot()
+    def onClickedSaveReturn(self):
+        """Saves the entered information in a csv-file according to the self.date information"""
+
+        subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
+        df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+
+        match = re.search(r'^(pre|intra|post)op', self.date)  # gets the condition, to ensure correct saving.
+        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
+                    for v in self.medication_names}
+
+        try:
+            idx2replace = df.index[df['ID'] == subj_id][0]  # looks for index at dataframe in which data shall be stored
+            df_subj = df.iloc[idx2replace, :]
+            df.iloc[idx2replace, :] = df_subj
+            first_index = False
+        except IndexError:
+            df_subj = df
+            df_subj.loc[0, 'ID'] = General.read_current_subj().id[0]
+            df_subj.loc[0, 'PID_ORBIS'] = General.read_current_subj().pid[0]
+            first_index = True
+
+        for k, v in df_items.items():
+            df_subj[k] = eval('self.lineEdit{}.text()'.format(v)) if v != 'Other' \
+                else eval('self.lineEdit{}.toPlainText()'.format(v))
+        if first_index:
+            df = df.append(df_subj, ignore_index=True)
+        else:
+            df.iloc[idx2replace, :] = df_subj
+
+        df = df.replace(['nan', ''], [np.nan, np.nan])
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+
+        self.hide()
+
+    def updateDisplayedMedication(self):
+        """Displays the information extracted from the database; so everything already stored is shown"""
+
+        df_subj = Content.extract_saved_data(self.date)
+        match = re.search(r'^(pre|intra|post)op', self.date)
+        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
+                    for v in self.medication_names}
+
+        if not df_subj["ID"]:
+            return
+
+        for k, v in df_items.items():
+            if v != 'Other':
+                eval('self.lineEdit{}.setText(str(df_subj["{}_{}"][0]))'.format(v, v, match.group())) \
+                    if str(df_subj['{}_{}'.format(v, match.group())][0]) != 'nan' \
+                    else eval('self.lineEdit{}.setText("")'.format(v))
+            else:  # 'Other' needs a slightly different approach
+                self.lineEditOther.insertPlainText(str(df_subj["{}_{}".format(v, match.group())][0])) \
+                    if str(
+                    df_subj["{}_{}".format(v, match.group())][0]) != 'nan' else self.lineEditOther.insertPlainText('')
+
+        return
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    dlg = DBSsettingsDialog(rows=8)
+    dlg.show()
+    sys.exit(app.exec_())

@@ -237,6 +237,18 @@ class Content:
         return df_subj
 
     @staticmethod
+    def create_first_column(num_rows, string2use):
+        """IN a grid, creates the first column which indicated what content is on the right"""
+        titleRow_layout = QGridLayout()
+
+        for j in range(num_rows + 1):
+            label = QLabel('') if j == 0 else QLabel(str(string2use[j-1]))
+            label.setAlignment(QtCore.Qt.AlignCenter)
+            titleRow_layout.addWidget(label, j, 0)
+
+        return titleRow_layout
+
+    @staticmethod
     def create_title(num_columns, string2use):
         """Creates a title for a grid with a number of n = num_columns+1 columns"""
         titleRow_layout = QGridLayout()
@@ -260,6 +272,20 @@ class Content:
                 dbs_percentage_layout.addWidget(line_edit, i, j + 1)
 
         return dbs_percentage_layout
+
+    @staticmethod
+    def create_contents_grid_with_columns(side_label, name_title, num_rows):
+        dbs_percentage_layout = QGridLayout()
+
+        for i in range(1):  # Only one column
+            dbs_percentage_layout.addWidget(QLabel(f'{side_label}: {name_title}:\t'), i, 0)
+            for j in range(num_rows):
+                line_edit = QLineEdit()
+                line_edit.setEnabled(False)
+                dbs_percentage_layout.addWidget(line_edit, j + 1, i)
+
+        return dbs_percentage_layout
+
 
     @staticmethod
     def get_lineedits_in_optionbox(optionboxes):
