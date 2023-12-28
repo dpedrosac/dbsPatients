@@ -8,7 +8,7 @@ import os
 import shutil
 import pandas as pds
 from pathlib import Path
-from dependencies import ROOTDIR, FILEDIR
+from dependencies import ROOTDIR, FILEDIR, LEADS
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, QInputDialog, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox, QMessageBox
 from PyQt5 import QtCore
@@ -127,6 +127,31 @@ class Content:
         pass
 
     @staticmethod
+    def details_of_IPG(detail_to_extract='Manufacturer'):
+        """Here a list of all available details of DBS systems is created see [dependencies.py] for details """
+
+        detail = set()  # Using a set to store unique manufacturers
+
+        for lead, details in LEADS.items():
+            x = details.get(detail_to_extract)
+            if detail_to_extract:
+                detail.add(x)
+
+        return list(detail)
+
+    @staticmethod
+    def list_of_IPG(manufacturer_to_extract=None):
+        """Creates a list of available IPG models according to the list provided in [dependencies.py]"""
+
+        if not manufacturer_to_extract:
+            models = list(LEADS.keys())
+        else:
+            models = [key for key, details in LEADS.items() if
+                                       details.get('Manufacturer') == manufacturer_to_extract]
+
+        return models
+
+    @staticmethod
     def extract_postoperative_dates(condition='postoperative'):
         """ Extracts a list with all available postoperative dates for a subject"""
 
@@ -237,8 +262,8 @@ class Content:
         return df_subj
 
     @staticmethod
-    def create_first_column(num_rows, string2use):
-        """IN a grid, creates the first column which indicated what content is on the right"""
+    def create_first_column(num_rows, string2use: list):
+        """In a grid, creates the first column which indicated what content is on the right"""
         titleRow_layout = QGridLayout()
 
         for j in range(num_rows + 1):
@@ -265,7 +290,7 @@ class Content:
         dbs_percentage_layout = QGridLayout()
 
         for i in range(1):  # Only one row
-            dbs_percentage_layout.addWidget(QLabel(f'{side_label}: {side_no}:\t'), i, 0)
+            dbs_percentage_layout.addWidget(QLabel(f'{side_no}:\t'), i, 0)
             for j in range(num_columns):
                 line_edit = QLineEdit()
                 line_edit.setEnabled(False)
@@ -274,11 +299,11 @@ class Content:
         return dbs_percentage_layout
 
     @staticmethod
-    def create_contents_grid_with_columns(side_label, name_title, num_rows):
+    def create_grid_columntitle(side_label, name_title, num_rows: int):
         dbs_percentage_layout = QGridLayout()
 
         for i in range(1):  # Only one column
-            dbs_percentage_layout.addWidget(QLabel(f'{side_label}: {name_title}:\t'), i, 0)
+            dbs_percentage_layout.addWidget(QLabel(f'{name_title}:\t'), i, 0)
             for j in range(num_rows):
                 line_edit = QLineEdit()
                 line_edit.setEnabled(False)
@@ -297,6 +322,19 @@ class Content:
             line_edits.extend(line_edits_in_optionbox)
 
         return line_edits
+
+    @staticmethod
+    def object_visibility(obj, action):
+        """ Modifies the visibility of an object; here it makes sure selection occurs sequentially"""
+
+        for i in range(obj.count()):
+            item = obj.itemAt(i)
+
+            if isinstance(item.widget(), QLabel) or isinstance(item.widget(), QComboBox):
+                if action == 'show':
+                    item.widget().show()
+                elif action == 'hide':
+                    item.widget().hide()
 
 
 class Output:
