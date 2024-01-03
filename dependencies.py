@@ -7,6 +7,29 @@ import os
 ROOTDIR = os.path.dirname(os.path.realpath(__file__))
 FILEDIR = os.path.join(ROOTDIR, 'data')
 GITHUB_URL = 'https://github.com/dpedrosac/dbsPatients'
+
+# ==================== Parkinson disease specific medication ====================
+
+MEDICATION = ['Levodopa Carbidopa{}',
+              'Levodopa Carbidopa CR{}',
+              'Entacapone{}',
+              'Tolcapone{}',
+              'Opicapone{}',
+              'Apomorphine{}',
+              'Piribedil{}',
+              'Pramipexole{}',
+              'Ropinirole{}',
+              'Rotigotin{}',
+              'Rasagilin{}',
+              'Safinamid{}',
+              'Selegilin oral{}',
+              'Selegilin sublingual{}',
+              'Amantadine{}',
+              'Other{}'
+              ]
+
+# ==================== Information on DBS systems ====================
+
 SYSTEMS = [
     'Medtronic PLC. - Activa PC',
     'Medtronic PLC. - Activa RC',

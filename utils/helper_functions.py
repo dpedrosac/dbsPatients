@@ -14,7 +14,6 @@ from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGr
 from PyQt5 import QtCore
 
 
-# LE: changes work with python 3.11
 class General:
     def __init__(self, _debug=False):
         pass
@@ -27,7 +26,7 @@ class General:
 
     @staticmethod
     def available_PDmedication():
-        """List w/ available medication against PD; parenthesis intended to introduce pre|intra|postoperative"""
+        """TODO: should be reoplaced as defined in dependnciesList w/ available medication against PD; parenthesis intended to introduce pre|intra|postoperative"""
 
         medication = ['Levodopa Carbidopa{}', 'Levodopa Carbidopa CR{}', 'Entacapone{}', 'Tolcapone{}',
                       'Pramipexole{}', 'Ropinirole{}', 'Rotigotin{}', 'Selegilin oral{}', 'Other{}',
@@ -77,7 +76,7 @@ class General:
     def get_data_subject(flag, pid2lookfor):
         """gets data from available dataframes for a single subject or creates empty file if not present"""
 
-        file_to_read = os.path.join('{}.csv'.format(flag))
+        file_to_read = os.path.join(f'{flag}.csv')
         try:
             data_all = General.import_dataframe(file_to_read, separator_csv=',')
             if data_all.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
@@ -316,14 +315,19 @@ class Content:
         return dbs_percentage_layout, content
 
     @staticmethod
-    def extract_grid_columntitle(num_rows: int, lead_model):
+    def extract_grid_columntitle(obj, lead_info, side='left', group: int = 1, leads=LEADS):
         """extracts the information entered in the QLineEdit objects above"""
-        from dependencies import LEADS
-        print('To be written')
+
+        idx = 0 if side == 'left' else 1
+        contacts_name = [f'{c}_{group}' for c in leads[lead_info]['Contacts_name'][idx]]
+        val_object = [line.text() if line.text() != '' else 0 for line in obj]
+        content_dict = {name: value for name, value in zip(contacts_name, val_object)}
+
+        return content_dict
 
     @staticmethod
     def find_lineedit_objects(optionboxes):
-        """Function needed for finding all QLineEdit to be enabled/disabled until the reason of visit is entered"""
+        """Finding all QLineEdit elements to be enabled/disabled until reason for visit is entered"""
         line_edits = []
 
         for optionbox in optionboxes:
