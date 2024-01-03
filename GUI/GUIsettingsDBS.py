@@ -24,6 +24,9 @@ class DBSsettingsDialog(QWidget):
         self.date = visit  # ensures the right date is entered
         self.group_layouts_contacts = []  # this ensures that group 2 may be made visible or not
         self.group_layouts_settings = []  # this ensures that group 2 may be made visible or not
+        self.group_anode = []
+        self.group_cathode = []
+        self.group_settings = []
 
         self.adjustSize()
         self.setup_ui()
@@ -77,7 +80,8 @@ class DBSsettingsDialog(QWidget):
         try:
             num_contacts = int(LEADS[self.lineEditLeads.currentText()]['Contacts_per_side'])
             contact_name = LEADS[self.lineEditLeads.currentText()]['Contacts_name'][idx]
-            contact_name.insert(0, 'IPG')
+            contact_name.insert(0, 'IPG') if not contact_name[0] == 'IPG' else contact_name  # necessary for some reason
+
         except KeyError:
             return obj, obj_content
 
@@ -85,10 +89,9 @@ class DBSsettingsDialog(QWidget):
             layout, dbs_percentage_layout = QVBoxLayout(), QHBoxLayout()
             layout.addWidget(QLabel(f"Group {group_number}"))
 
-            anode_grid = Content.create_grid_columntitle(side_label=side.capitalize(), name_title="Anode",
-                                                         num_rows=num_contacts + 1)
-            cathode_grid = Content.create_grid_columntitle(side_label=side.capitalize(), name_title="Cathode",
-                                                           num_rows=num_contacts + 1)
+            anode_grid, anode_content = Content.create_grid_columntitle(name_title="Anode", num_rows=num_contacts + 1)
+            cathode_grid, cathode_content = Content.create_grid_columntitle(name_title="Cathode",
+                                                                            num_rows=num_contacts + 1)
 
             if group_number == 1:
                 FirstColumnNames = Content.create_first_column(num_rows=num_contacts + 1,
@@ -113,6 +116,8 @@ class DBSsettingsDialog(QWidget):
                 obj_content.addLayout(toggle_layout)
             obj_content.addLayout(layout)
             self.group_layouts_contacts.append(dbs_percentage_layout)  # needed to toggle visibility of 2nd group later
+            self.group_anode.append(anode_content)  # needed to extract values for saving
+            self.group_cathode.append(cathode_content)  # needed to extract values for saving
 
         # Define what to do when button is pressed
         toggleButton1.clicked.connect(self.enable_SecondGroup)
@@ -197,8 +202,8 @@ class DBSsettingsDialog(QWidget):
 
         for group_number in range(1, 3):
             group_layout = QVBoxLayout()
-            settings_grid = Content.create_grid_columntitle(side_label='Group', name_title=f'Group{str(group_number)}',
-                                                            num_rows=num_rows)
+            settings_grid, settings_content = Content.create_grid_columntitle(name_title=f'Group{str(group_number)}',
+                                                                              num_rows=num_rows)
 
             dbs_settings_layout = QHBoxLayout()
             if group_number == 1:
@@ -212,6 +217,7 @@ class DBSsettingsDialog(QWidget):
 
             group_layout.addLayout(dbs_settings_layout)
             self.group_layouts_settings.append(dbs_settings_layout)
+            self.group_settings.append(settings_content)
             self.optionbox_dbs_settingsContent.addLayout(group_layout)
 
         return self.optionbox_dbs_settings
@@ -336,6 +342,8 @@ class DBSsettingsDialog(QWidget):
     def changed_index_comboboxLeads(self):
         self.clear_layout(self.settings_leftContent)
         self.clear_layout(self.settings_rightContent)
+        self.group_anode = []
+        self.group_cathode = []
         self.group_layouts_contacts = []  # this ensures that group 2 may be made visible or not
         self.actions_for_selected()
         self.adjustSize()

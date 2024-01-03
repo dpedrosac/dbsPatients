@@ -66,9 +66,9 @@ class General:
         """Reads data from temporary information"""
 
         file_path = Path(ROOTDIR) / 'temp' / default_filename
-        try:
+        if file_path.exists():
             subj_details = pds.read_csv(file_path)
-        except FileNotFoundError:
+        else:
             subj_details = pds.DataFrame()
 
         return subj_details
@@ -77,18 +77,18 @@ class General:
     def get_data_subject(flag, pid2lookfor):
         """gets data from available dataframes for a single subject or creates empty file if not present"""
 
-        file2read = os.path.join('{}.csv'.format(flag))
+        file_to_read = os.path.join('{}.csv'.format(flag))
         try:
-            data_all = General.import_dataframe(file2read, separator_csv=',')
+            data_all = General.import_dataframe(file_to_read, separator_csv=',')
             if data_all.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
-                data_all = General.import_dataframe(file2read, separator_csv=';')
+                data_all = General.import_dataframe(file_to_read, separator_csv=';')
             pid2lookfor = str(pid2lookfor).lstrip('0')  # string that is searched for in metadata file
             idxPID = data_all.index[data_all['PID_ORBIS'] == int(pid2lookfor)].to_list()
             data_subj = data_all.iloc[idxPID]
         except FileNotFoundError:  # creates empty file from template (/.install) in case of first use
-            print('No file names {} found, creating new file from template in {}/.install '.format(file2read, ROOTDIR))
+            print('No file names {} found, creating new file from template in {}/.install '.format(file_to_read, ROOTDIR))
             file2copy = os.path.join(ROOTDIR, '.install', '{}_template.csv'.format(flag))
-            shutil.copyfile(file2copy, os.path.join(FILEDIR, file2read))
+            shutil.copyfile(file2copy, os.path.join(FILEDIR, file_to_read))
             data_subj = []
 
         return data_subj
@@ -263,7 +263,7 @@ class Content:
 
     @staticmethod
     def create_first_column(num_rows, string2use: list):
-        """In a grid, creates the first column which indicated what content is on the right"""
+        """Creates first column in a grid, which indicates what content at easch column"""
         titleRow_layout = QGridLayout()
 
         for j in range(num_rows + 1):
@@ -275,7 +275,7 @@ class Content:
 
     @staticmethod
     def create_title(num_columns, string2use):
-        """Creates a title for a grid with a number of n = num_columns+1 columns"""
+        """TODO: to be deleted once GUIpostoperative has no DBS settings anymore!"""
         titleRow_layout = QGridLayout()
 
         for j in range(num_columns + 1):
@@ -287,6 +287,7 @@ class Content:
 
     @staticmethod
     def create_contents_grid_with_rows(side_label, side_no, num_columns):
+        """TODO: to be deleted once GUIpostoperative has no DBS settings anymore!"""
         dbs_percentage_layout = QGridLayout()
 
         for i in range(1):  # Only one row
@@ -299,7 +300,9 @@ class Content:
         return dbs_percentage_layout
 
     @staticmethod
-    def create_grid_columntitle(side_label, name_title, num_rows: int):
+    def create_grid_columntitle(name_title, num_rows: int):
+        """creates a grid with a title and a number of rows to be defined and returns two objects"""
+        content = []
         dbs_percentage_layout = QGridLayout()
 
         for i in range(1):  # Only one column
@@ -307,13 +310,19 @@ class Content:
             for j in range(num_rows):
                 line_edit = QLineEdit()
                 line_edit.setEnabled(False)
+                content.append(line_edit)
                 dbs_percentage_layout.addWidget(line_edit, j + 1, i)
 
-        return dbs_percentage_layout
-
+        return dbs_percentage_layout, content
 
     @staticmethod
-    def get_lineedits_in_optionbox(optionboxes):
+    def extract_grid_columntitle(num_rows: int, lead_model):
+        """extracts the information entered in the QLineEdit objects above"""
+        from dependencies import LEADS
+        print('To be written')
+
+    @staticmethod
+    def find_lineedit_objects(optionboxes):
         """Function needed for finding all QLineEdit to be enabled/disabled until the reason of visit is entered"""
         line_edits = []
 

@@ -684,7 +684,7 @@ class PostoperativeDialog(QDialog):
 
         selected_item1 = self.lineEditreason.currentText()
         selected_item2 = self.lineEditsubjIPG.currentText()
-        optionboxes = Content.get_lineedits_in_optionbox(
+        optionboxes = Content.find_lineedit_objects(
             [self.optionbox_tests,
              self.optionbox_dates,
              self.optionbox_dbs_contacts,
@@ -732,7 +732,7 @@ class PostoperativeDialog(QDialog):
         selected_item1 = self.lineEditreason.currentText()
         selected_item2 = self.lineEditsubjIPG.currentText()
 
-        optionboxes = Content.get_lineedits_in_optionbox(
+        optionboxes = Content.find_lineedit_objects(
             [self.optionbox_tests,
              self.optionbox_dates,
              self.optionbox_dbs_contacts,
