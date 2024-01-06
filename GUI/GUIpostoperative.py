@@ -3,6 +3,7 @@ import os, sys, re
 import numpy as np
 import pandas as pds
 from PyQt5 import QtCore
+from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox
 from GUI.GUImedication import MedicationDialog
@@ -25,8 +26,9 @@ class PostoperativeDialog(QDialog):
 
     def setup_general_layout(self):
         """Defines the general layout for the GUI"""
-        subj_details = General.read_current_subj() # reads information for the subject last bein processed
-        General.synchronize_data_with_general(self.date, subj_details.id[0], messagebox=False)
+        subj_details = General.read_current_subj()  # reads information for the subject last bein processed
+        General.synchronize_data_with_general(self.date, subj_details.id[0],
+                                              messagebox=False)  # for identical general columns in 'postoperative.csv'
 
         self.create_medication_dialog()
 
@@ -37,27 +39,21 @@ class PostoperativeDialog(QDialog):
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
 
-        # start creating the option boxes that will appear in the postoperative GUI
+        # Option boxes appearing in the postoperative GUI
         # Create optionbox for dates
-        self.optionbox_dates(layout_general)
+        self.optionbox_dates_postoperative(layout_general)
 
         # Create optionbox for general information
-        self.optionbox_reason_for_visit(layout_general)
+        self.optionbox_reason_for_visit_postoperative(layout_general)
 
         # Create optionbox for reports during postoperative visit
-        self.create_reports_optionbox(layout_general)
+        self.optionbox_reports_postoperative(layout_general)
 
         # Create optionbox for tests performed during postoperative visits
-        self.optionbox_postoperative_tests(layout_general)
-
-        # Create option boxes for DBS settings after visit
-        self.dbs_settings_optionbox(layout_general)
-
-        # Create option boxes for amplitude, pulse, and frequency
-        self.amp_pulse_freq_optionbox(layout_general)
+        self.optionbox_questionnaires_postoperative(layout_general)
 
         # Create buttons at the bottom of the GUI
-        self.create_bottom_buttons(layout_general)
+        self.create_bottom_buttons_postoperative(layout_general)
 
         # Connect button actions that are needed so that everything works
         self.connect_button_actions()
@@ -66,7 +62,7 @@ class PostoperativeDialog(QDialog):
         self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog
         self.dialog_medication.hide()
 
-    def optionbox_dates(self, layout_general):
+    def optionbox_dates_postoperative(self, layout_general):
         """creates upper left optionbox in which important dates are added"""
 
         def create_line_edit_for_dates(label_text, line_edit_width=500, label_width=800):
@@ -84,9 +80,9 @@ class PostoperativeDialog(QDialog):
             layout.addStretch(1)
             return layout
 
-        self.optionbox_dates = QGroupBox('Important Dates')
-        self.optionbox_datesContent = QVBoxLayout(self.optionbox_dates)
-        layout_general.addWidget(self.optionbox_dates, 0, 0)
+        self.optionbox_dates_postoperative = QGroupBox('Important dates')
+        self.optionbox_datesContent = QVBoxLayout(self.optionbox_dates_postoperative)
+        layout_general.addWidget(self.optionbox_dates_postoperative, 0, 0)
 
         admission_Nch, self.lineEditAdmission_Nch = create_line_edit_for_dates('Admission Neurosurgery')
         admission_NR, self.lineEditAdmission_NR = create_line_edit_for_dates('Admission Neurology')
@@ -114,9 +110,9 @@ class PostoperativeDialog(QDialog):
         self.optionbox_datesContent.addLayout(testbox_line6)
         self.optionbox_datesContent.addLayout(testbox_line7)
 
-        self.optionbox_dates.setLayout(self.optionbox_datesContent)
+        self.optionbox_dates_postoperative.setLayout(self.optionbox_datesContent)
 
-    def optionbox_reason_for_visit(self, layout_general):
+    def optionbox_reason_for_visit_postoperative(self, layout_general):
         """creates upper right optionbox in which reasons for visit is added"""
 
         self.optionbox_visit_information = QGroupBox('Information on visit')
@@ -155,7 +151,7 @@ class PostoperativeDialog(QDialog):
         self.optionbox_visit_informationContent.addLayout(adverse_event_layout)
         self.optionbox_visit_information.setLayout(self.optionbox_visit_informationContent)
 
-    def create_reports_optionbox(self, layout_general):
+    def optionbox_reports_postoperative(self, layout_general):
         # Create third optionbox on the second row left
         self.optionbox3 = QGroupBox('Reports')
         self.optionbox3Content = QVBoxLayout(self.optionbox3)
@@ -193,7 +189,7 @@ class PostoperativeDialog(QDialog):
         self.optionbox3Content.addLayout(box2line2)
         self.optionbox3.setLayout(self.optionbox3Content)
 
-    def optionbox_postoperative_tests(self, layout_general):
+    def optionbox_questionnaires_postoperative(self, layout_general):
         """optionbox containing the postopreative tests that are being applied"""
 
         def create_label_and_line_edit_pair(label_text, line_edit_width=50):
@@ -287,87 +283,10 @@ class PostoperativeDialog(QDialog):
 
         self.optionbox_tests.setLayout(self.optionbox_tests_content)
 
-    def dbs_settings_optionbox(self, layout_general, num_contacts=8):
-        """Creates an option box with a grid according to the number of contacts available"""
-        self.optionbox_dbs_contacts = QGroupBox('DBS settings after dismissal')
-        self.optionbox_dbs_contactsContent = QVBoxLayout(self.optionbox_dbs_contacts)
-        layout_general.addWidget(self.optionbox_dbs_contacts, 3, 0)
-
-        self.titleRowContacts = Content.create_title(num_contacts, string2use=[1,2,3,4,5,6,7,8])
-        self.DBSpercentageLeft1 = Content.create_contents_grid_with_rows(side_label='Left', side_no=1,
-                                                                         num_columns=num_contacts)
-        self.DBSpercentageRight1 = Content.create_contents_grid_with_rows(side_label='Right', side_no=1,
-                                                                          num_columns=num_contacts)
-        self.DBSpercentageLeft2 = Content.create_contents_grid_with_rows(side_label='Left', side_no=2,
-                                                                         num_columns=num_contacts)
-        self.DBSpercentageRight2 = Content.create_contents_grid_with_rows(side_label='Right', side_no=2,
-                                                                          num_columns=num_contacts)
-
-        toggleButton = QPushButton('+', self)
-        toggleButton.setFixedSize(20, 20)  # Set a fixed size
-        toggleButton.clicked.connect(self.toggle_content_visibilityPercentage)
-        self.set_initial_content_statePercentage()
-
-        self.optionbox_dbs_contactsContent.addStretch(2)
-        self.optionbox_dbs_contactsContent.addLayout(self.titleRowContacts)
-        self.optionbox_dbs_contactsContent.addLayout(self.DBSpercentageLeft1)
-        self.optionbox_dbs_contactsContent.addLayout(self.DBSpercentageRight1)
-        self.optionbox_dbs_contactsContent.addWidget(toggleButton)
-        self.optionbox_dbs_contactsContent.addLayout(self.DBSpercentageLeft2)
-        self.optionbox_dbs_contactsContent.addLayout(self.DBSpercentageRight2)
-
-    def set_initial_content_statePercentage(self):
-        [item.widget().setEnabled(False) for widget in [self.DBSpercentageLeft2, self.DBSpercentageRight2]
-         for i in range(widget.count()) if (item := widget.itemAt(i)) is not None and item.widget() is not None]
-
-    def toggle_content_visibilityPercentage(self):
-        [item.widget().setEnabled(not item.widget().isEnabled())
-         for widget in [self.DBSpercentageLeft2, self.DBSpercentageRight2]
-         for i in range(widget.count()) if (item := widget.itemAt(i)) is not None and item.widget() is not None]
-
-    def amp_pulse_freq_optionbox(self, layout_general, num_columns=3):
-        """Optionbox for the DBS settings """
-        self.optionbox_dbs_settings = QGroupBox('Amplitude, Pulse, and Frequency')
-        self.optionbox_dbs_settingsContent = QVBoxLayout(self.optionbox_dbs_settings)
-        layout_general.addWidget(self.optionbox_dbs_settings, 3, 1)
-
-        self.titleRowSettings = Content.create_title(num_columns, string2use=['Amplitude [mA]',
-                                                                              'Pulse width [µs]',
-                                                                              'Frequency [Hz]'])
-        self.DBSsettingsLeft1 = Content.create_contents_grid_with_rows(side_label='Left', side_no=1,
-                                                                       num_columns=num_columns)
-        self.DBSsettingsRight1 = Content.create_contents_grid_with_rows(side_label='Right', side_no=1,
-                                                                        num_columns=num_columns)
-        self.DBSsettingsLeft2 = Content.create_contents_grid_with_rows(side_label='Left', side_no=2,
-                                                                       num_columns=num_columns)
-        self.DBSsettingsRight2 = Content.create_contents_grid_with_rows(side_label='Right', side_no=2,
-                                                                        num_columns=num_columns)
-
-        toggleButton = QPushButton('+', self)
-        toggleButton.setFixedSize(20, 20)  # Set a fixed size
-        toggleButton.clicked.connect(self.toggle_content_visibilitySettings)
-        self.set_initial_content_stateSettings()
-
-        self.optionbox_dbs_settingsContent.addStretch(2)
-        self.optionbox_dbs_settingsContent.addLayout(self.titleRowSettings)
-        self.optionbox_dbs_settingsContent.addLayout(self.DBSsettingsLeft1)
-        self.optionbox_dbs_settingsContent.addLayout(self.DBSsettingsRight1)
-        self.optionbox_dbs_settingsContent.addWidget(toggleButton)
-        self.optionbox_dbs_settingsContent.addLayout(self.DBSsettingsLeft2)
-        self.optionbox_dbs_settingsContent.addLayout(self.DBSsettingsRight2)
-
-    def set_initial_content_stateSettings(self):
-        [item.widget().setEnabled(False) for widget in [self.DBSsettingsLeft2, self.DBSsettingsRight2]
-         for i in range(widget.count()) if (item := widget.itemAt(i)) is not None and item.widget() is not None]
-
-    def toggle_content_visibilitySettings(self):
-        [item.widget().setEnabled(not item.widget().isEnabled())
-         for widget in [self.DBSsettingsLeft2, self.DBSsettingsRight2]
-         for i in range(widget.count()) if (item := widget.itemAt(i)) is not None and item.widget() is not None]
-
-    def create_bottom_buttons(self, layout_general):
+    def create_bottom_buttons_postoperative(self, layout_general):
         """Creates two buttons a) to read medication and b) to save settings and exit GUI """
         self.ButtonEnterMedication = QPushButton('Open GUI \nMedication')
+        self.ButtonEnterDBSsettings = QPushButton('Open GUI \nDBS settings')
         self.button_buffer = QPushButton('Save')
         self.button_save = QPushButton('Save and \nReturn')
 
@@ -382,6 +301,7 @@ class PostoperativeDialog(QDialog):
         hlay_bottom = QHBoxLayout()
         hlay_bottom.addStretch(5)
         hlay_bottom.addWidget(self.ButtonEnterMedication)
+        hlay_bottom.addWidget(self.ButtonEnterDBSsettings)
         hlay_bottom.addWidget(self.button_buffer)
         hlay_bottom.addWidget(self.button_save)
         hlay_bottom.addStretch(1)
@@ -393,7 +313,7 @@ class PostoperativeDialog(QDialog):
         """Defines the actions that are taken once a button is pressed or specific input is made"""
         self.lineEditreason.currentIndexChanged.connect(self.update_context)
         self.lineEditsubjIPG.currentIndexChanged.connect(self.update_IPG)
-        self.ButtonEnterMedication.clicked.connect(self.on_clickedMedication)
+        self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.button_buffer.clicked.connect(self.onClickedSave)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
 
@@ -498,8 +418,8 @@ class PostoperativeDialog(QDialog):
         self.update_line_edits(line_edits_middle_right, row)
 
         # DBS settings (bottom left and right)
-        self.update_dbs_settings(self.DBSsettingsLeft1, row, side='L')
-        self.update_dbs_settings(self.DBSsettingsRight1, row, side='R')
+        # self.update_dbs_settings(self.DBSsettingsLeft1, row, side='L')
+        # self.update_dbs_settings(self.DBSsettingsRight1, row, side='R')
 
         # TODO: percentage of DBS missing
 
@@ -686,9 +606,10 @@ class PostoperativeDialog(QDialog):
         selected_item2 = self.lineEditsubjIPG.currentText()
         optionboxes = Content.find_lineedit_objects(
             [self.optionbox_tests,
-             self.optionbox_dates,
-             self.optionbox_dbs_contacts,
-             self.optionbox_dbs_settings])
+             self.optionbox_dates_postoperative,
+             # self.optionbox_dbs_contacts,
+             # self.optionbox_dbs_settings
+            ])
 
         if ((selected_item1 != 'Enter new data' and selected_item1 != 'Please select date or enter new data') and
                 selected_item2 != ''):
@@ -734,9 +655,10 @@ class PostoperativeDialog(QDialog):
 
         optionboxes = Content.find_lineedit_objects(
             [self.optionbox_tests,
-             self.optionbox_dates,
-             self.optionbox_dbs_contacts,
-             self.optionbox_dbs_settings])
+             self.optionbox_dates_postoperative,
+             # self.optionbox_dbs_contacts,
+             # self.optionbox_dbs_settings
+            ])
 
         # Enable/disable LineEdits if no data was yet entered
         if ((selected_item1 != 'Enter new data' and selected_item1 != 'Please select date or enter new data') and
@@ -746,7 +668,7 @@ class PostoperativeDialog(QDialog):
             self.set_lineedit_state(False, *optionboxes)
 
     @QtCore.pyqtSlot()
-    def on_clickedMedication(self):
+    def onClickedMedication(self):
         """shows the medication dialog when button is pressed; former implementation with creating GUI was replaced with
         show/hide GUI which is initiated at beginning"""
         self.dialog_medication.show()
@@ -854,7 +776,7 @@ class PostoperativeDialog(QDialog):
             # Handle the case when the index is not found
             print(f"Index for Reason_postop '{self.reason_visit}' not found.")
 
-        df.to_csv(os.path.join(FILEDIR, "postoperative.csv"), index=False)
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 
     def saveFileDialog(self):
         options = QFileDialog.Options()

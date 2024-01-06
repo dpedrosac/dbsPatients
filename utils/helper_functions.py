@@ -26,7 +26,8 @@ class General:
 
     @staticmethod
     def available_PDmedication():
-        """TODO: should be reoplaced as defined in dependnciesList w/ available medication against PD; parenthesis intended to introduce pre|intra|postoperative"""
+        """TODO: should be reoplaced as defined in dependnciesList w/ available medication against PD;
+        parenthesis intended to introduce pre|intra|postoperative"""
 
         medication = ['Levodopa Carbidopa{}', 'Levodopa Carbidopa CR{}', 'Entacapone{}', 'Tolcapone{}',
                       'Pramipexole{}', 'Ropinirole{}', 'Rotigotin{}', 'Selegilin oral{}', 'Other{}',
@@ -315,15 +316,37 @@ class Content:
         return dbs_percentage_layout, content
 
     @staticmethod
-    def extract_grid_columntitle(obj, lead_info, side='left', group: int = 1, leads=LEADS):
+    def extract_grid_columntitle(obj, lead_model, polarity='anode', side='left', group: int = 1, leads=LEADS):
         """extracts the information entered in the QLineEdit objects above"""
 
         idx = 0 if side == 'left' else 1
-        contacts_name = [f'{c}_{group}' for c in leads[lead_info]['Contacts_name'][idx]]
+        pol = 'ano' if polarity == 'anode' else 'kat'
+        contacts_available = leads[lead_model]['Contacts_name'][idx]
+        contacts_name = [f'{c}_{side.capitalize()[0]}G{group}_{pol}' for c in [['IPG'] + contacts_available][0]]  # example: 3b_RG2_ano
+        # contacts_name = [f'{c}_{group}' for c in leads[lead_model]['Contacts_name'][idx]] #  old version
         val_object = [line.text() if line.text() != '' else 0 for line in obj]
         content_dict = {name: value for name, value in zip(contacts_name, val_object)}
 
         return content_dict
+
+    @staticmethod
+    def fill_grid_columntitle(obj, lead_model, polarity='anode', side='left', group: int = 1, leads=LEADS):
+        """After selecting the right design, data is read from csv-file and entered to QLineEdit objects"""
+
+        # TODO: should be called ideally within function [create_grid_columntitle] and needs the csv with the
+        #  corresponding data entry, the lead model, and the information on what is created (group, side). Data is
+        #  extracted into dataframe and entered accordingly. The code so far is only the copy of
+        #  the function: extract_grid_columntitle
+
+        # idx = 0 if side == 'left' else 1
+        # pol = 'ano' if polarity == 'anode' else 'kat'
+        # contacts_available = leads[lead_model]['Contacts_name'][idx]
+        # contacts_name = [f'{c}_{side.capitalize()[0]}G{group}_{pol}' for c in [['IPG'] + contacts_available][0]]  # example: 3b_RG2_ano
+        # val_object = [line.text() if line.text() != '' else 0 for line in obj]
+        # content_dict = {name: value for name, value in zip(contacts_name, val_object)}
+
+        # return content_dict
+
 
     @staticmethod
     def find_lineedit_objects(optionboxes):
