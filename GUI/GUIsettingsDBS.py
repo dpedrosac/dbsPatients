@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 from PyQt5 import QtCore
 from pathlib import Path
-from PyQt5.QtWidgets import QApplication, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
-    QHBoxLayout, QLabel, QGridLayout, QComboBox, QLayout, QDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
+    QHBoxLayout, QLabel, QGridLayout, QSpacerItem, QSizePolicy, QComboBox, QStackedWidget, QLayout
 
 import dependencies
 from utils.helper_functions import General, Content
@@ -14,12 +14,13 @@ from dependencies import FILEDIR
 pd.options.mode.chained_assignment = None
 
 
-class DBSsettingsDialog(QDialog):
+class DBSsettingsDialog(QWidget):
     """Dialog to introduce the medication at a specific date."""
 
-    def __init__(self, visit='postoperative', parent=None):
+    def __init__(self, rows, visit='postoperative', parent=None):
         super(DBSsettingsDialog, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.rows = rows
         self.date = visit  # ensures the right date is entered
         self.group_layouts_contacts = []  # this ensures that group 2 may be made visible or not
         self.group_layouts_settings = []  # this ensures that group 2 may be made visible or not
@@ -37,7 +38,7 @@ class DBSsettingsDialog(QDialog):
         """Defines the general layout for the GUI"""
 
         subj_details = General.read_current_subj() # reads information for the subject last bein processed
-        self.setWindowTitle(f'Postoperative DBS settings (PID: {int(subj_details.pid)})')
+        self.setWindowTitle('Postoperative DBS settings (PID: {})'.format(str(int(subj_details.pid))))  # not necessary
 
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
@@ -385,6 +386,6 @@ class DBSsettingsDialog(QDialog):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    dlg = DBSsettingsDialog()
+    dlg = DBSsettingsDialog(rows=8)
     dlg.show()
     sys.exit(app.exec_())

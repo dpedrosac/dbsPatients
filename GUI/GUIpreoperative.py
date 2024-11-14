@@ -22,7 +22,7 @@ class PreoperativeDialog(QDialog):
     def __init__(self, parent=None, textwidth=300):
         """Initializer."""
         super(PreoperativeDialog, self).__init__(parent)
-        self.dialog_medication, self.content_widgets = None, None
+        self.dialog_medication = None
         self.date = 'preoperative'  # defines the date at which data are taken from/saved at
         self.setup_ui()
 
@@ -38,7 +38,7 @@ class PreoperativeDialog(QDialog):
 
         self.create_medication_dialog()
 
-        self.setWindowTitle(f'Please insert the preoperative patient data (PID: {int(subj_details.pid)})')
+        self.setWindowTitle('Postoperative Information (PID: {})'.format(str(int(subj_details.pid))))  # not necessary
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 200)
 
@@ -70,7 +70,7 @@ class PreoperativeDialog(QDialog):
     def initialize_content(self):
         """Initializes the contant that may be needed later for reading or saving data from/to csv-files"""
 
-        self.content_widgets = {
+        self.column_widgets = {
             'First_Diagnosed_preop': 'lineEditFirstDiagnosed',
             'Admission_preop': 'lineEditAdmNeurIndCheck',
             'Dismissal_preop': 'lineEditDismNeurIndCheck',
@@ -305,7 +305,7 @@ class PreoperativeDialog(QDialog):
         if not df_subj["ID"]:  # this is only for when no information could be found
             return
 
-        for column, widget in self.content_widgets.items():
+        for column, widget in self.column_widgets.items():
             widget_object = getattr(self, widget)
             widget_object.setText(str(df_subj[column][0])) if str(
                 df_subj[column][0]) != 'nan' else widget_object.setText('')
@@ -371,7 +371,7 @@ class PreoperativeDialog(QDialog):
 
         # Now extract changed data from the GUI
 
-        for column, widget in self.content_widgets:
+        for column, widget in self.column_widgets:
             widget_object = getattr(self, widget)
             df_subj[column] = widget_object.text()
         checkboxes = ["Video_preop", "MRI_preop", "fpcit_spect_preop", "Report_preop",

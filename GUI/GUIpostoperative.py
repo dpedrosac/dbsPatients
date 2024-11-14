@@ -7,7 +7,6 @@ from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox
 from GUI.GUImedication import MedicationDialog
-from GUI.GUIsettingsDBS import DBSsettingsDialog
 from utils.helper_functions import General, Content, Clean, Output
 from dependencies import FILEDIR, SYSTEMS
 
@@ -17,7 +16,7 @@ class PostoperativeDialog(QDialog):
 
     def __init__(self, parent=None):
         super(PostoperativeDialog, self).__init__(parent)
-        self.dialog_medication, self.dialog_DBSsettings, self.content_widgets = None, None, None  # initialised  Dialogs
+        self.dialog_medication = None
         self.postoperative_date = ''
         self.date = 'postoperative'
         self.setup_ui()
@@ -32,9 +31,8 @@ class PostoperativeDialog(QDialog):
                                               messagebox=False)  # for identical general columns in 'postoperative.csv'
 
         self.create_medication_dialog()
-        self.create_DBSsettings_dialog()
 
-        self.setWindowTitle(f'Please insert the postoperative information (PID: {int(subj_details.pid)})')
+        self.setWindowTitle('Postoperative Information (PID: {})'.format(str(int(subj_details.pid))))  # not necessary
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 200)
 
@@ -63,10 +61,6 @@ class PostoperativeDialog(QDialog):
     def create_medication_dialog(self):
         self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog
         self.dialog_medication.hide()
-
-    def create_DBSsettings_dialog(self):
-        self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date)  # creates medication dialog
-        self.dialog_DBSsettings.hide()
 
     def optionbox_dates_postoperative(self, layout_general):
         """creates upper left optionbox in which important dates are added"""
@@ -320,7 +314,6 @@ class PostoperativeDialog(QDialog):
         self.lineEditreason.currentIndexChanged.connect(self.update_context)
         self.lineEditsubjIPG.currentIndexChanged.connect(self.update_IPG)
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
-        self.ButtonEnterDBSsettings.clicked.connect(self.onClickedDBSsettings)
         self.button_buffer.clicked.connect(self.onClickedSave)
         self.button_save.clicked.connect(self.onClickedSaveReturn)
 
@@ -542,8 +535,66 @@ class PostoperativeDialog(QDialog):
             if row["CTscan_postop"] != 0:
                 self.PostopCTCheck.setChecked(True)
 
-    @staticmethod
-    def set_lineedit_state(state, *line_edits):
+            # bottom, DBS percentage left and right
+            DBSleft = self.DBSpercentageLeft1.itemAtPosition(0, 1).widget()
+            DBSleft.setText(str(row["Perc1_postop"]))
+            DBSleft = self.DBSpercentageLeft1.itemAtPosition(0, 2).widget()
+            DBSleft.setText(str(row["Perc2_postop"]))
+            DBSleft = self.DBSpercentageLeft1.itemAtPosition(0, 3).widget()
+            DBSleft.setText(str(row["Perc3_postop"]))
+            DBSleft = self.DBSpercentageLeft1.itemAtPosition(0, 4).widget()
+            DBSleft.setText(str(row["Perc4_postop"]))
+            DBSleft = self.DBSpercentageLeft1.itemAtPosition(0, 5).widget()
+            DBSleft.setText(str(row["Perc5_postop"]))
+            DBSleft = self.DBSpercentageLeft1.itemAtPosition(0, 6).widget()
+            DBSleft.setText(str(row["Perc6_postop"]))
+            DBSleft = self.DBSpercentageLeft1.itemAtPosition(0, 7).widget()
+            DBSleft.setText(str(row["Perc7_postop"]))
+            DBSleft = self.DBSpercentageLeft1.itemAtPosition(0, 8).widget()
+            DBSleft.setText(str(row["Perc8_postop"]))
+
+            # DBS right
+
+            DBSright = self.DBSpercentageRight1.itemAtPosition(0, 1).widget()
+            DBSright.setText(str(row["Perc9_postop"]))
+            DBSright = self.DBSpercentageRight1.itemAtPosition(0, 2).widget()
+            DBSright.setText(str(row["Perc10_postop"]))
+            DBSright = self.DBSpercentageRight1.itemAtPosition(0, 3).widget()
+            DBSright.setText(str(row["Perc11_postop"]))
+            DBSright = self.DBSpercentageRight1.itemAtPosition(0, 4).widget()
+            DBSright.setText(str(row["Perc12_postop"]))
+            DBSright = self.DBSpercentageRight1.itemAtPosition(0, 5).widget()
+            DBSright.setText(str(row["Perc13_postop"]))
+            DBSright = self.DBSpercentageRight1.itemAtPosition(0, 6).widget()
+            DBSright.setText(str(row["Perc14_postop"]))
+            DBSright = self.DBSpercentageRight1.itemAtPosition(0, 7).widget()
+            DBSright.setText(str(row["Perc15_postop"]))
+            DBSright = self.DBSpercentageRight1.itemAtPosition(0, 8).widget()
+            DBSright.setText(str(row["Perc16_postop"]))
+
+            # Bottom right
+            # setting left
+
+            # Get a reference to the Amplitude widget for the left side
+            amplitudeLeftWidget = self.DBSsettingsLeft1.itemAtPosition(0, 1).widget()
+            amplitudeLeftWidget.setText(str(row["AmplL_postop"]))
+
+            pulseWidthLeftWidget = self.DBSsettingsLeft1.itemAtPosition(0, 2).widget()
+            pulseWidthLeftWidget.setText(str(row["PWL_postop"]))
+
+            frequencyLeftWidget = self.DBSsettingsLeft1.itemAtPosition(0, 3).widget()
+            frequencyLeftWidget.setText(str(row["FreqL_postop"]))
+
+            amplitudeRightWidget = self.DBSsettingsRight1.itemAtPosition(0, 1).widget()
+            amplitudeRightWidget.setText(str(row["AmplR_postop"]))
+
+            pulseWidthRightWidget = self.DBSsettingsRight1.itemAtPosition(0, 2).widget()
+            pulseWidthRightWidget.setText(str(row["PWR_postop"]))
+
+            frequencyRightWidget = self.DBSsettingsRight1.itemAtPosition(0, 3).widget()
+            frequencyRightWidget.setText(str(row["FreqR_postop"]))
+
+    def set_lineedit_state(self, state, *line_edits):
         """this function enables LineEdits, needed to avoid data entries without first selecting reason"""
         for line_edit in line_edits:
             line_edit.setEnabled(state)
@@ -556,6 +607,8 @@ class PostoperativeDialog(QDialog):
         optionboxes = Content.find_lineedit_objects(
             [self.optionbox_tests,
              self.optionbox_dates_postoperative,
+             # self.optionbox_dbs_contacts,
+             # self.optionbox_dbs_settings
             ])
 
         if ((selected_item1 != 'Enter new data' and selected_item1 != 'Please select date or enter new data') and
@@ -603,6 +656,8 @@ class PostoperativeDialog(QDialog):
         optionboxes = Content.find_lineedit_objects(
             [self.optionbox_tests,
              self.optionbox_dates_postoperative,
+             # self.optionbox_dbs_contacts,
+             # self.optionbox_dbs_settings
             ])
 
         # Enable/disable LineEdits if no data was yet entered
@@ -612,17 +667,11 @@ class PostoperativeDialog(QDialog):
         else:
             self.set_lineedit_state(False, *optionboxes)
 
-    # ====================   Defines actions when buttons are pressed      ====================
     @QtCore.pyqtSlot()
     def onClickedMedication(self):
         """shows the medication dialog when button is pressed; former implementation with creating GUI was replaced with
         show/hide GUI which is initiated at beginning"""
         self.dialog_medication.show()
-
-    @QtCore.pyqtSlot()
-    def onClickedDBSsettings(self):
-        """shows the DBSsettiongs dialog when button is pressed"""
-        self.dialog_DBSsettings.show()
 
     @QtCore.pyqtSlot()
     def onClickedSave(self):
