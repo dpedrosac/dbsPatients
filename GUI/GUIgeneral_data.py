@@ -216,6 +216,16 @@ class CheckForGeneralData(QDialog):
                         self.lineEditIPG.text()]
         df.loc[len(df)] = entered_data
         df.to_csv(filename2load, index=False, sep=',')
+
+        #GP: changes current_subj to the one just added to general_data
+
+        filename2load = 'general_data.csv'
+        General.get_data_subject(flag='general_data', pid2lookfor=self.lineEditPID.text())
+        df = General.import_dataframe(filename2load, separator_csv=',')
+        PID2lookfor = self.lineEditPID.text().lstrip('0')  # string that is searched for in metadata file
+        idx_PID = df.index[df['PID_ORBIS'] == int(PID2lookfor)].to_list()
+        General.write_csv_temp(df, idx_PID)  # creates a new temporary file called current_subj.csv in ./temp
+
         self.close()
         return
 
