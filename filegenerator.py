@@ -16,7 +16,7 @@ def create_csv_files_from_templates(template_dir, output_dir):
         os.makedirs(output_dir)
 
     for filename in os.listdir(template_dir):
-        if filename.endswith('_template.csv') or filename.endswith('_template_new.csv'):
+        if filename.endswith('_template.csv') or filename.endswith('_template_new2.csv'):
             if filename == 'postoperative_template.csv':
                 pass
             else:
