@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import math
-
+import re
 import rstr
 import csv
 import os
@@ -120,6 +120,30 @@ class General:
         file2change.to_csv(os.path.join(FILEDIR, '{}.csv'.format(flag)), index=False)
 
         return
+
+    @staticmethod
+    def validate_and_format_dates(date):
+        """
+        Validates and formats a date string to the format DD/MM/YYYY.
+
+        Parameters:
+        - date (str): Date string to validate and format.
+
+        Returns:
+        - str: Formatted date string or 'Invalid date format'.
+        """
+        date_pattern = re.compile(r'^\d{2}/\d{2}/\d{4}$')
+
+        if not date_pattern.match(date):
+            try:
+                # Attempt to reformat the date
+                parsed_date = pds.to_datetime(date, dayfirst=True)
+                formatted_date = parsed_date.strftime('%d/%m/%Y')
+                return formatted_date
+            except ValueError:
+                return 'Invalid date format'
+        else:
+            return date
 
 
 class Content:
@@ -256,7 +280,7 @@ class Content:
                        "Perc15_postop", "Perc16_postop", "AmplL_postop", "AmplR_postop", "PWL_postop",
                        "PWR_postop", "FreqL_postop", "FreqR_postop", "UPDRS1_postop", "UPDRS4_postop",
                        "UPDRSon_postop", "UDDRSoff_postop", "TRSon_postop", "TRSoff_postop", "AE_postop",
-                       "Comments_postop", "DBS_postop"
+                       "Comments_postop", "DBS_postop", "Last_revision_postop", "Outpatient_contact_postop"
 
                        ]
         return df_subj
