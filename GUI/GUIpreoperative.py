@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-import sys
+import os, sys, re
 import numpy as np
 import pandas as pds
 from PyQt5 import QtCore
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
-    QHBoxLayout, QGridLayout, QLineEdit, QLabel, QCheckBox
+    QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QCheckBox
 from GUI.GUImedication import MedicationDialog
 from utils.helper_functions import General, Content, Clean
 from dependencies import FILEDIR
@@ -19,10 +19,10 @@ pds.options.mode.chained_assignment = None  # default='warn' cf.
 class PreoperativeDialog(QDialog):
     """Dialog to introduce all important information of preoperative data ('Indikationsprüfung')"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, textwidth=300):
         """Initializer."""
         super(PreoperativeDialog, self).__init__(parent)
-        self.dialog_medication = None
+        self.dialog_medication, self.content_widgets = None, None
         self.date = 'preoperative'  # defines the date at which data are taken from/saved at
         self.setup_ui()
 
@@ -38,7 +38,7 @@ class PreoperativeDialog(QDialog):
 
         self.create_medication_dialog()
 
-        self.setWindowTitle('Preoperative Information (PID: {})'.format(subj_details.pid[0]))  # changed to "Preoperative"
+        self.setWindowTitle(f'Please insert the preoperative patient data (PID: {int(subj_details.pid)})')
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 200)
 
@@ -70,7 +70,7 @@ class PreoperativeDialog(QDialog):
     def initialize_content(self):
         """Initializes the contant that may be needed later for reading or saving data from/to csv-files"""
 
-        self.column_widgets = {
+        self.content_widgets = {
             'First_Diagnosed_preop': 'lineEditFirstDiagnosed',
             'Admission_preop': 'lineEditAdmNeurIndCheck',
             'Dismissal_preop': 'lineEditDismNeurIndCheck',
@@ -322,7 +322,7 @@ class PreoperativeDialog(QDialog):
             print("No ID for current_subject in preoperative.csv found")
             return
 
-        for column, widget in self.column_widgets.items():
+        for column, widget in self.content_widgets.items():
             widget_object = getattr(self, widget)
             widget_object.setText(str(df_subj[column][0])) if str(
                 df_subj[column][0]) != 'nan' else widget_object.setText('')
@@ -391,7 +391,7 @@ class PreoperativeDialog(QDialog):
 
         # Now extract changed data from the GUI
 
-        for column, widget in self.column_widgets.items():
+        for column, widget in self.content_widgets.items():
             if 'lineEdit' in widget:
                 widget_object = getattr(self, widget)
                 print(widget_object.text())
