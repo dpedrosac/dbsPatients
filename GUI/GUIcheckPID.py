@@ -64,6 +64,10 @@ class CheckPID(QtWidgets.QDialog):
     def onClickedCheckPID(self):
         """when button pressed, a series of checks are performed to retrieve data/to set the following GUI """
 
+        if '0' in self.lineEditPID.text():
+            Output.msg_box(title='"0" detected', text='Please enter the PID without zeros')
+            return
+
         if not self.lineEditPID.text():
             Output.msg_box(text='Missing input for the PID, please enter a number', title='Missing input')
             return
@@ -78,6 +82,7 @@ class CheckPID(QtWidgets.QDialog):
 
         if not idx_PID:
             Output.msg_box(text='No corresponding subject found, please create new entry', title='Missing PID')
+            self.EnterNewPID.lineEditPID.setText(self.lineEditPID.text())  # Populate lineEditPID in EnterNewPID
             self.EnterNewPID.show()
             self.hide()
 
@@ -87,6 +92,7 @@ class CheckPID(QtWidgets.QDialog):
             return
         else:
             General.write_csv_temp(df, idx_PID)  # creates a new temporary file called current_subj.csv in ./temp
+            self.GuiMain.setWindowTitle(f'Current Subject: {self.lineEditPID.text()}')  #GP: update GuiMain window title
             self.hide()
             self.GuiMain.show()
 
