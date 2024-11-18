@@ -3,7 +3,7 @@ import sys, os
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, QHBoxLayout, \
-    QWidget, QLabel, QComboBox, QCalendarWidget
+    QWidget, QLabel, QComboBox, QCalendarWidget, QMessageBox
 
 from utils.helper_functions import General
 from dependencies import FILEDIR
@@ -69,6 +69,7 @@ class CheckForGeneralData(QDialog):
         self.lineEditBirthdate.setFixedWidth(textfield_width)
         self.lineEditBirthdate.setFixedHeight(50)
         self.lineEditBirthdate.clicked.connect(self.open_calendar)
+        self.lineEditBirthdate.editingFinished.connect(self.validate_birthdate)
 
         lay4 = QHBoxLayout()
         lay4.addWidget(self.subj_birthdate)
@@ -196,6 +197,15 @@ class CheckForGeneralData(QDialog):
 
     def showDate(self, date):
         self.lineEditBirthdate.setText(str(date.toPyDate()))
+
+    def validate_birthdate(self):
+        date_text = self.lineEditBirthdate.text()
+        formatted_date = General.validate_and_format_dates(date_text)
+        if formatted_date == 'Invalid date format':
+            #GP: invalid date format
+            QMessageBox.warning(self, 'Invalid Date', 'The entered date is invalid. Please enter a date in the format DD/MM/YYYY.')
+        else:
+            self.lineEditBirthdate.setText(formatted_date)
 
     # In the next lines, actions are defined when Buttons are pressed
     @QtCore.pyqtSlot()
