@@ -419,9 +419,19 @@ class Output:
 
     def open_input_dialog_postoperative(self):
         """Open a message box asking for user input to determine the date after surgery"""
-
-        result, ok = QInputDialog.getText(self, 'Input Dialog', 'Please enter the date after surgery or the event:')
-        return result
+        while True:
+            result, ok = QInputDialog.getText(self, 'Input Dialog', 'Please enter the date after surgery or the event:')
+            if ok:
+                formatted_date = General.validate_and_format_dates(result)
+                if formatted_date == 'Invalid date format':
+                    QMessageBox.warning(self, 'Invalid Date',
+                                        'The entered date is invalid. Please enter a date in the format DD/MM/YYYY.')
+                else:
+                    # use and print formatted_date in console
+                    print(f'Validated and formatted date: {formatted_date}')
+                    return formatted_date
+            else:
+                return None
 
 
 class Clean:
