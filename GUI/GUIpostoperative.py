@@ -364,6 +364,7 @@ class PostoperativeDialog(QDialog):
         self.lineEditreason.clear()
         self.lineEditreason.addItems(sorted(unique_dates, key=custom_sort))
         # self.update_context() # Not sure if that is needed but so far it drops no error, so keep it!
+        print(unique_dates)
         #GP: Set the current index to the newly added date if it exists
         if new_date:
             self.lineEditreason.setCurrentText(new_date)
