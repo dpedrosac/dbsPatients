@@ -3,7 +3,7 @@ import sys, os
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, QHBoxLayout, \
-    QWidget, QLabel, QComboBox, QCalendarWidget
+    QWidget, QLabel, QComboBox, QCalendarWidget, QMessageBox
 
 from utils.helper_functions import General
 from dependencies import FILEDIR
@@ -69,6 +69,7 @@ class CheckForGeneralData(QDialog):
         self.lineEditBirthdate.setFixedWidth(textfield_width)
         self.lineEditBirthdate.setFixedHeight(50)
         self.lineEditBirthdate.clicked.connect(self.open_calendar)
+        self.lineEditBirthdate.editingFinished.connect(self.validate_birthdate)
 
         lay4 = QHBoxLayout()
         lay4.addWidget(self.subj_birthdate)
@@ -197,6 +198,15 @@ class CheckForGeneralData(QDialog):
     def showDate(self, date):
         self.lineEditBirthdate.setText(str(date.toPyDate()))
 
+    def validate_birthdate(self):
+        date_text = self.lineEditBirthdate.text()
+        formatted_date = General.validate_and_format_dates(date_text)
+        if formatted_date == 'Invalid date format':
+            #GP: invalid date format
+            QMessageBox.warning(self, 'Invalid Date', 'The entered date is invalid. Please enter a date in the format DD/MM/YYYY.')
+        else:
+            self.lineEditBirthdate.setText(formatted_date)
+
     # In the next lines, actions are defined when Buttons are pressed
     @QtCore.pyqtSlot()
     def onClickedSaveGeneralData(self):
@@ -216,6 +226,16 @@ class CheckForGeneralData(QDialog):
                         self.lineEditIPG.text()]
         df.loc[len(df)] = entered_data
         df.to_csv(filename2load, index=False, sep=',')
+
+        #GP: changes current_subj to the one just added to general_data
+
+        filename2load = 'general_data.csv'
+        General.get_data_subject(flag='general_data', pid2lookfor=self.lineEditPID.text())
+        df = General.import_dataframe(filename2load, separator_csv=',')
+        PID2lookfor = self.lineEditPID.text().lstrip('0')  # string that is searched for in metadata file
+        idx_PID = df.index[df['PID_ORBIS'] == int(PID2lookfor)].to_list()
+        General.write_csv_temp(df, idx_PID)  # creates a new temporary file called current_subj.csv in ./temp
+
         self.close()
         return
 

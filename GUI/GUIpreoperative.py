@@ -152,6 +152,22 @@ class PreoperativeDialog(QDialog):
 
         self.optionbox_dates_preoperative.setLayout(self.optionbox_dates_preoperative_Content)
 
+        # Add toggle button
+        self.toggle_button = QPushButton('Change dates')
+        self.toggle_button.setFixedSize(150, 50)
+        self.toggle_button.clicked.connect(self.toggle_line_edit)
+        self.optionbox_dates_preoperative_Content.addWidget(self.toggle_button)
+
+    def toggle_line_edit(self):
+        """Toggle the enabled state of the line edit"""
+        self.lineEditFirstDiagnosed.setEnabled(not self.lineEditFirstDiagnosed.isEnabled())
+        self.lineEditAdmNeurIndCheck.setEnabled(not self.lineEditAdmNeurIndCheck.isEnabled())
+        self.lineEditDismNeurIndCheck.setEnabled(not self.lineEditDismNeurIndCheck.isEnabled())
+        self.lineEditOutpatientContact.setEnabled(not self.lineEditOutpatientContact.isEnabled())
+        self.lineEditNsurgContact.setEnabled(not self.lineEditNsurgContact.isEnabled())
+        self.lineEditDBSconference.setEnabled(not self.lineEditDBSconference.isEnabled())
+
+
     def optionbox_reports_preoperative(self, layout_general):
 
         self.optionbox_reports_preoperative = QGroupBox('Reports and study participation:')
@@ -303,6 +319,7 @@ class PreoperativeDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
         if not df_subj["ID"]:  # this is only for when no information could be found
+            print("No ID for current_subject in preoperative.csv found")
             return
 
         for column, widget in self.content_widgets.items():
@@ -364,16 +381,25 @@ class PreoperativeDialog(QDialog):
         df_general.reset_index(inplace=True, drop=True)
 
         # Compare with general_data.csv
-        df_subj['ID'] = General.read_current_subj().id[0]
-        df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][0] # is this necessary?
-        df_subj['Gender'] = df_general['Gender'][0]
-        df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
+        try:
+            df_subj['ID'] = General.read_current_subj().id[0]
+            df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][0] # is this necessary? -> Error if subj has no data in general_data
+            df_subj['Gender'] = df_general['gender'][0]
+            df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
+        except KeyError:
+            print("No Data in general_data for this ID found")
 
         # Now extract changed data from the GUI
 
-        for column, widget in self.content_widgets:
-            widget_object = getattr(self, widget)
-            df_subj[column] = widget_object.text()
+        for column, widget in self.content_widgets.items():
+            if 'lineEdit' in widget:
+                widget_object = getattr(self, widget)
+                print(widget_object.text())
+                date = General.validate_and_format_dates(widget_object.text())
+                df_subj[column] = date
+            else:
+                widget_object = getattr(self, widget)
+                df_subj[column] = widget_object.text()
         checkboxes = ["Video_preop", "MRI_preop", "fpcit_spect_preop", "Report_preop",
                       "Decision_DBS_preop", "icVRCS_preop", "inexVRCS_preop"]
 
