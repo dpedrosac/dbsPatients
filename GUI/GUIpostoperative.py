@@ -120,6 +120,7 @@ class PostoperativeDialog(QDialog):
         self.optionbox_dates_postoperative.setLayout(self.optionbox_datesContent)
 
     def validate_date_input(self):
+        #GP: nutzt die staticmethod um das Format zu überprüfen (DD/MM/YYYY)
         """Validates the date input in the QLineEdit for optionbox_dates_postoperative"""
         sender = self.sender()
         date_text = sender.text()
@@ -308,23 +309,24 @@ class PostoperativeDialog(QDialog):
         """Creates two buttons a) to read medication and b) to save settings and exit GUI """
         self.ButtonEnterMedication = QPushButton('Open GUI \nMedication')
         self.ButtonEnterDBSsettings = QPushButton('Open GUI \nDBS settings')
-        self.button_buffer = QPushButton('Save')
-        self.button_save = QPushButton('Save and \nReturn')
+        self.button_save = QPushButton('Save')
+        self.button_save_return = QPushButton('Save and \nReturn')
 
         # Set fixed size for all buttons
         button_width = 200
         button_height = 75
 
         self.ButtonEnterMedication.setFixedSize(button_width, button_height)
-        self.button_buffer.setFixedSize(button_width, button_height)
         self.button_save.setFixedSize(button_width, button_height)
+        self.ButtonEnterDBSsettings.setFixedSize(button_width, button_height)
+        self.button_save_return.setFixedSize(button_width, button_height)
 
         hlay_bottom = QHBoxLayout()
         hlay_bottom.addStretch(5)
         hlay_bottom.addWidget(self.ButtonEnterMedication)
         hlay_bottom.addWidget(self.ButtonEnterDBSsettings)
-        hlay_bottom.addWidget(self.button_buffer)
         hlay_bottom.addWidget(self.button_save)
+        hlay_bottom.addWidget(self.button_save_return)
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
@@ -336,11 +338,11 @@ class PostoperativeDialog(QDialog):
         self.lineEditsubjIPG.currentIndexChanged.connect(self.update_IPG)
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.ButtonEnterDBSsettings.clicked.connect(self.onClickedDBSsettings)
-        self.button_buffer.clicked.connect(self.onClickedSave)
-        self.button_save.clicked.connect(self.onClickedSaveReturn)
+        self.button_save.clicked.connect(self.onClickedSave)
+        self.button_save_return.clicked.connect(self.onClickedSaveReturn)
 
     # From here on, you can find the function of the buttons, etc.
-    def fill_combobox(self, new_date = None):
+    def fill_combobox(self, new_date = None): #GP: new_date als neue Variable (s.u.)
         """fills ComboBox for postoperative visits"""
         items_available = Content.extract_postoperative_dates()
         default_options = ['Please select date or enter new data', 'Enter new data']
@@ -353,7 +355,7 @@ class PostoperativeDialog(QDialog):
             else:
                 return (len(default_options), item)
 
-        # GP: Makes sure date is string
+        # GP: Makes sure date is string, kann wahrscheinlich wieder weg... hatte vor der Formatierung Probleme gemacht
         for index in range(len(unique_dates)):
             if type(unique_dates[index]) == str:
                 pass
@@ -366,6 +368,8 @@ class PostoperativeDialog(QDialog):
         # self.update_context() # Not sure if that is needed but so far it drops no error, so keep it!
         print(unique_dates)
         #GP: Set the current index to the newly added date if it exists
+        #GP: stellt direkt nach Eingabe des Datums die optionbox auf das Datum ein
+        #GP: direkte Eingabe möglich, ohne nochmal manuell das Datum zu ändern
         if new_date:
             self.lineEditreason.setCurrentText(new_date)
 
@@ -532,7 +536,7 @@ class PostoperativeDialog(QDialog):
             self.lineEditUPDRSII.setText(str(row["UPDRSII_postop"])) \
                 if str(row["UPDRSII_postop"]) != 'nan' else self.lineEditUPDRSII.setText('')
             self.lineEditHRUQ.setText(str(row["HRUQ_postop"])) \
-                if str(row["HRUQ_postop"]) != 'nan' else self.lineEditHRUQ.setText('')
+                if str(row["HRUQ_postop"]) != 'nan' else self.lineEditHRUQ.setText('') #GP: typo
             self.lineEditMoCa.setText(str(row["MoCa_postop"])) \
                 if str(row["MoCa_postop"]) != 'nan' else self.lineEditMoCa.setText('')
             self.lineEditMMST.setText(str(row["MMST_postop"])) \
@@ -574,7 +578,7 @@ class PostoperativeDialog(QDialog):
             if row["CTscan_postop"] != 0:
                 self.PostopCTCheck.setChecked(True)
             if row["Planned_Visit_postop"] != 0:
-                self.PlannedVisitCheck.setChecked(True)
+                self.PlannedVisitCheck.setChecked(True) #GP: fehlte bisher, Checkbox war aber vorhanden
 
 
     @staticmethod
@@ -706,7 +710,7 @@ class PostoperativeDialog(QDialog):
         df_general.reset_index(inplace=True, drop=True)
         df_subj['ID'] = General.read_current_subj().id[0]
         df_subj['PID_ORBIS'] = df_general.iloc[0, :]['PID_ORBIS']
-        df_subj['Gender'] = df_general['gender'][0]
+        df_subj['Gender'] = df_general['gender'][0] #GP: typo
         df_subj['Diagnosis_{}'.format(match.group())] = df_general['diagnosis'][0]
 
         # Extract text for the upper left optionbox
@@ -726,6 +730,7 @@ class PostoperativeDialog(QDialog):
             df_subj[column_key] = line_edit.text()
 
         # upper right
+        #TODO IPG not saving yet
         df_subj['AE_{}'.format(match.group())] = self.lineEditAdverse_Event.text()
 
         # middle right
@@ -734,11 +739,11 @@ class PostoperativeDialog(QDialog):
         df_subj['TSS_postop'] = self.lineEditTSS.text()
         df_subj['CGIC_patient_postop'] = self.lineEditCGICPat.text()
         df_subj['CGIC_clinician_caregiver_postop'] = self.lineEditCGICClinician.text()
-        df_subj["UPDRS_On_postop"] = self.lineEditUPDRSON.text()
+        df_subj["UPDRS_On_postop"] = self.lineEditUPDRSON.text() #GP: typo
         df_subj["UPDRSII_postop"] = self.lineEditUPDRSII.text()
-        df_subj["UPDRS_Off_postop"] = self.lineEditUPDRSOFF.text()
+        df_subj["UPDRS_Off_postop"] = self.lineEditUPDRSOFF.text() #GP: typo
         df_subj["H&Y_postop"] = self.lineEditHY.text()
-        df_subj["HRUQ_postop"] = self.lineEditHRUQ.text()
+        df_subj["HRUQ_postop"] = self.lineEditHRUQ.text() #GP: typo
         df_subj["MoCa_postop"] = self.lineEditMoCa.text()
         df_subj["MMST_postop"] = self.lineEditMMST.text()
         df_subj["BDI2_postop"] = self.lineEditBDIII.text()

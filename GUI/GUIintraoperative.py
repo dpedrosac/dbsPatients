@@ -25,6 +25,7 @@ pds.options.mode.chained_assignment = None  # default='warn' cf.
 
 # Added lines for loading selected list items
 def setitemactive(itemname: str, listwidget: QListWidget):
+    #GP: soll das noch implementiert werden?
     """
     check for itemname in list, if it exists set the item active
     Args:
@@ -295,6 +296,7 @@ class IntraoperativeDialog(QDialog):
         button_height = 75
 
         self.ButtonEnterMedication.setFixedSize(button_width, button_height)
+        self.ButtonEnterDBSsettings.setFixedSize(button_width, button_height)
         self.button_buffer.setFixedSize(button_width, button_height)
         self.button_save.setFixedSize(button_width, button_height)
 
@@ -340,6 +342,7 @@ class IntraoperativeDialog(QDialog):
 
 
     def test(self):
+        #GP: soll aus test noch code genutzt werden, weil settingsDBS als GUI einiges davon übernimmt
         # logger.debug("__init__ created new instance")
         """Initializer."""
         # super().__init__(parent)

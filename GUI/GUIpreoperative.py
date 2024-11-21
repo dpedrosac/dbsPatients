@@ -158,6 +158,7 @@ class PreoperativeDialog(QDialog):
         self.toggle_button.clicked.connect(self.toggle_line_edit)
         self.optionbox_dates_preoperative_Content.addWidget(self.toggle_button)
 
+    #GP: Nutzer hat die Möglichkeit die LineEdit zu aktivieren, beim Start inaktiv
     def toggle_line_edit(self):
         """Toggle the enabled state of the line edit"""
         self.lineEditFirstDiagnosed.setEnabled(not self.lineEditFirstDiagnosed.isEnabled())
@@ -319,7 +320,7 @@ class PreoperativeDialog(QDialog):
 
         df_subj = Content.extract_saved_data(self.date)
         if not df_subj["ID"]:  # this is only for when no information could be found
-            print("No ID for current_subject in preoperative.csv found")
+            print("No ID for current_subject in preoperative.csv found") #GP: zum debugging
             return
 
         for column, widget in self.content_widgets.items():
@@ -383,14 +384,15 @@ class PreoperativeDialog(QDialog):
         # Compare with general_data.csv
         try:
             df_subj['ID'] = General.read_current_subj().id[0]
-            df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][0] # is this necessary? -> Error if subj has no data in general_data
+            df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][0] # is this necessary? -> GP: Error if subj has no data in general_data
             df_subj['Gender'] = df_general['gender'][0]
             df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
         except KeyError:
-            print("No Data in general_data for this ID found")
+            print("No Data in general_data for this ID found") #GP: zum debugging, kann später entfernt werden
 
         # Now extract changed data from the GUI
 
+        #GP: implementiert den Format-check für eingegebene Daten (DD/MM/YYYY)
         for column, widget in self.content_widgets.items():
             if 'lineEdit' in widget:
                 widget_object = getattr(self, widget)
