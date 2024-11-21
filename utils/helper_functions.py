@@ -171,7 +171,7 @@ class Content:
             models = list(LEADS.keys())
         else:
             models = [key for key, details in LEADS.items() if
-                                       details.get('Manufacturer') == manufacturer_to_extract]
+                      details.get('Manufacturer') == manufacturer_to_extract]
 
         return models
 
@@ -418,21 +418,29 @@ class Output:
         msgBox.exec()
 
     def open_input_dialog_postoperative(self):
-        """Open a message box asking for user input to determine the date after surgery"""
+        """
+        Open a message box asking for user input to determine the date after surgery.
+        """
         while True:
-            result, ok = QInputDialog.getText(self, 'Input Dialog', 'Please enter the date after surgery or the event:')
-            if ok:
-                formatted_date = General.validate_and_format_dates(result)
-                if formatted_date == 'Invalid date format':
-                    QMessageBox.warning(self, 'Invalid Date',
-                                        'The entered date is invalid. Please enter a date in the format DD/MM/YYYY.')
-                else:
-                    # use and print formatted_date in console
-                    print(f'Validated and formatted date: {formatted_date}')
-                    return formatted_date
-            else:
+            # Prompt the user for a date or event description
+            result, ok = QInputDialog.getText(
+                self, 'Input Dialog', 'Please enter the date after surgery or the event:'
+            )
+            if not ok:  # User canceled the dialog
                 return None
 
+            # Validate and format the entered date
+            formatted_date = General.validate_and_format_dates(result)
+            if formatted_date == 'Invalid date format':
+                # Show a warning message if the date format is invalid
+                QMessageBox.warning(
+                    self, 'Invalid Date',
+                    'The entered date is invalid. Please enter a date in the format DD/MM/YYYY.'
+                )
+            else:
+                # If the date is valid, print and return it
+                print(f'Validated and formatted date: {formatted_date}')
+                return formatted_date
 
 class Clean:
     def __init__(self, _debug=False):
