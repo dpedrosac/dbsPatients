@@ -18,7 +18,7 @@ pd.options.mode.chained_assignment = None
 class DBSsettingsDialog(QDialog):
     """Dialog to introduce the DBS-Settings at a specific date."""
 
-    def __init__(self, visit='postoperative', parent=None):
+    def __init__(self, visit='postoperative', reason = "DD/MM/YYY",  parent=None):
         super(DBSsettingsDialog, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.date = visit  # ensures the right date is entered
@@ -27,6 +27,7 @@ class DBSsettingsDialog(QDialog):
         self.group_anode = []
         self.group_cathode = []
         self.group_settings = []
+        self.reason = reason
 
         self.adjustSize()
         self.setup_ui()
@@ -38,7 +39,7 @@ class DBSsettingsDialog(QDialog):
         """Defines the general layout for the GUI"""
 
         subj_details = General.read_current_subj() # reads information for the subject last being processed
-        self.setWindowTitle(f'Postoperative DBS settings (PID: {int(subj_details.pid.iloc[0])})')
+        self.setWindowTitle(f'Postoperative DBS settings (PID: {int(subj_details.pid.iloc[0])}) on date: {self.reason}')
 
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
@@ -94,8 +95,8 @@ class DBSsettingsDialog(QDialog):
             #group_label.setFixedSize(100, 100)  # Set the desired width and height
             layout.addWidget(group_label)
             #GP: imported former staticmethod to GUI -> access to lineedit objectnames
-            anode_grid, anode_content = self.create_grid_columntitle(name_title="Anode", num_rows=num_contacts, group_num = f'G{group_number}', side = idx)
-            cathode_grid, cathode_content = self.create_grid_columntitle(name_title="Cathode",num_rows=num_contacts, group_num = f'G{group_number}', side = idx)
+            anode_grid, anode_content = self.create_grid_columntitle(name_title="Anode", num_rows=num_contacts, group_num = f'G{group_number}', side = idx, contact_names = contact_name)
+            cathode_grid, cathode_content = self.create_grid_columntitle(name_title="Cathode",num_rows=num_contacts, group_num = f'G{group_number}', side = idx, contact_names = contact_name)
             #GP: y-achsenbeschriftung
             if group_number == 1:
                 FirstColumnNames = Content.create_first_column(num_rows=num_contacts + 1,
@@ -319,7 +320,7 @@ class DBSsettingsDialog(QDialog):
                     if isinstance(item, QLayout):
                         self.set_lineedit_state(item, enabled)
 
-    def create_grid_columntitle(self, name_title, num_rows: int, group_num, side):
+    def create_grid_columntitle(self, name_title, num_rows: int, group_num, side, contact_names):
         """creates a grid with a title and a number of rows to be defined and returns two objects"""
         #GP: gives each lineedit a specific name corresponding to the ones in postoperative.csv
         content = []
@@ -337,9 +338,9 @@ class DBSsettingsDialog(QDialog):
         # number_sidegroup_pol
         for i in range(1):  # Only one column
             dbs_percentage_layout.addWidget(QLabel(f'{name_title}:\t'), i, 0)
-            for j in range(num_rows):
+            for j in range(num_rows + 1):
                 self.line_edit = QLineEdit()
-                self.line_edit.setObjectName(f'{str(j + 1)}_{side}{group_num}_{polarity}')
+                self.line_edit.setObjectName(f'{contact_names[j]}_{side}{group_num}_{polarity}')
                 # print(self.line_edit.objectName())
                 print(getattr(self.line_edit, 'objectName')())
 
@@ -422,7 +423,7 @@ class DBSsettingsDialog(QDialog):
     def onClickedSaveReturn(self):
         """Saves the entered information in a csv-file according to the self.date information"""
         self.save_data2csv()
-        self.hide()
+        #self.close()
 
     def save_data2csv(self):
         #GP: copied from GUI-postoperative, not working yet
@@ -434,7 +435,7 @@ class DBSsettingsDialog(QDialog):
 
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
         try:
-            df_subj = df.iloc[df.index[df['Reason_postop'] == self.reason_visit][0], :].to_dict()
+            df_subj = df.iloc[df.index[df['Reason_postop'] == self.reason][0], :].to_dict()
         except IndexError:
             df_subj = pd.Series(['nan' for _ in range(len(df.columns))], index=df.columns)
 
@@ -459,19 +460,25 @@ class DBSsettingsDialog(QDialog):
                 text = line_edit.text()
                 data[object_name] = text
 
-        # Load the CSV file
-        df = pd.read_csv(Path(f"{FILEDIR}/{self.date}.csv"))
-
-        # Get the current subject ID
-        subj_details = General.read_current_subj()
-        subject_id = int(subj_details.pid.iloc[0])
+        print(data)
 
         # Update the DataFrame with the collected data
         for key, value in data.items():
-            if key in df.columns:
-                df.loc[df['ID'] == subject_id, key] = value
+            df_subj[key] = value
+            if df_subj[key]:
+                print("key", key)
 
-        # Save the updated DataFrame back to the CSV file
+        indices_to_update = df.index[df['Reason_postop'] == self.reason]
+
+        # Check if any indices match the condition
+        if not indices_to_update.empty:
+            # Take the first index from the Int64Index object
+            index_to_update = indices_to_update[0]
+            df.loc[index_to_update] = df_subj
+        else:
+            # Handle the case when the index is not found
+            print(f"Index for Reason_postop '{self.reason}' not found.")
+
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 
 if __name__ == '__main__':
