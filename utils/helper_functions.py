@@ -301,7 +301,10 @@ class Content:
         else:
             for j in range(num_rows + 1):
                 if j == 0:
-                    pass
+                    label = QLabel('')
+                    label.setAlignment(QtCore.Qt.AlignCenter)
+                    label.setFixedHeight(35)
+                    titleRow_layout.addWidget(label, j, 0)
                 elif j ==1:
                     label = QLabel(str(string2use[j - 1]))
                     #QLabel(str(string2use[j - 1]))
