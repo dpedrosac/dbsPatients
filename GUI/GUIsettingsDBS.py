@@ -90,13 +90,8 @@ class DBSsettingsDialog(QDialog):
 
         for group_number in range(1, 3):
             layout, dbs_percentage_layout = QVBoxLayout(), QHBoxLayout()
-            layout.addWidget(QLabel(f"Group {group_number}"))
-
-            anode_grid, anode_content = Content.create_grid_columntitle(name_title="Anode", num_rows=num_contacts + 1)
-            cathode_grid, cathode_content = Content.create_grid_columntitle(name_title="Cathode",
-                                                                            num_rows=num_contacts + 1)
-
             group_label = QLabel(f"Group {group_number}")
+            #group_label.setFixedSize(100, 100)  # Set the desired width and height
             layout.addWidget(group_label)
             #GP: imported former staticmethod to GUI -> access to lineedit objectnames
             anode_grid, anode_content = self.create_grid_columntitle(name_title="Anode", num_rows=num_contacts, group_num = f'G{group_number}', side = idx)
