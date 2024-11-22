@@ -7,7 +7,7 @@ from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QCheckBox
 from GUI.GUImedication import MedicationDialog
-from utils.helper_functions import General, Content, Clean
+from utils.helper_functions import General, Content, Clean, Output
 from dependencies import FILEDIR
 
 pds.options.mode.chained_assignment = None  # default='warn' cf.
@@ -38,7 +38,7 @@ class PreoperativeDialog(QDialog):
 
         self.create_medication_dialog()
 
-        self.setWindowTitle(f'Please insert the preoperative patient data (PID: {int(subj_details.pid)})')
+        self.setWindowTitle(f'Please insert the preoperative patient data (PID: {int(subj_details.pid.iloc[0])})')
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 200)
 
@@ -284,13 +284,14 @@ class PreoperativeDialog(QDialog):
         self.button_medication = QPushButton('Open GUI \nMedication')
         self.button_save = QPushButton('Save')
         self.button_save_return = QPushButton('Save and \nReturn')
+        self.button_check_inputs = QPushButton('Check Inputs')
 
         # Set fixed size for all buttons
         button_width = 200
         button_height = 75
 
         # Apply fixed size using a loop for cleaner code
-        for button in [self.button_medication, self.button_save, self.button_save_return]:
+        for button in [self.button_medication, self.button_save, self.button_save_return, self.button_check_inputs]:
             button.setFixedSize(button_width, button_height)
 
         # Use QVBoxLayout for better vertical alignment
@@ -300,6 +301,7 @@ class PreoperativeDialog(QDialog):
         vlay_bottom.addWidget(self.button_medication)
         vlay_bottom.addWidget(self.button_save)
         vlay_bottom.addWidget(self.button_save_return)
+        vlay_bottom.addWidget(self.button_check_inputs)
 
         # Add stretch to push buttons to the sides
         vlay_bottom.addStretch()
@@ -349,8 +351,15 @@ class PreoperativeDialog(QDialog):
         self.button_medication.clicked.connect(self.onClickedMedication)
         self.button_save.clicked.connect(self.onClickedSave)
         self.button_save_return.clicked.connect(self.onClickedSaveReturn)
+        self.button_check_inputs.clicked.connect(self.onClickedCheckInputs)  # Connect new button
 
     # ====================   Defines actions when buttons are pressed      ====================
+    @QtCore.pyqtSlot()
+    def onClickedCheckInputs(self):
+        """Handles the Check Inputs button click event"""
+        self.check_inputs()
+
+
     @QtCore.pyqtSlot()
     def onClickedMedication(self):
         """Shows medication dialog ; former implementation with creating GUI was replaced with show/hide GUI which is
@@ -421,8 +430,42 @@ class PreoperativeDialog(QDialog):
 
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 
-        self.close()
+        #self.close()
 
+    def check_inputs(self):
+        """Checks if the input values for the questionnaires/scores are within the specified ranges"""
+        neurological_tests = {
+            "updrsON": (0, 199),
+            "updrsOFF": (0, 199),
+            "nmsq": (0, 30),
+            "moca": (0, 30),
+            "demtect": (0, 18),
+            "mmst": (0, 30),
+            "pdq8": (0, 100),
+            "bdi2": (0, 63),
+            "pdq39": (0, 156),
+            "updrsII": (0, 52),
+            "hy": (1, 5),
+            "self.hy": (1,5),
+            #"hruq": ("No numerical score"),
+            "eq5d": (-0.59, 1.0),
+            "se": (0, 100),
+            "self.se": (0, 100)
+        }
+        check_inputs_text = ""
+        for test_name, (min_val, max_val) in neurological_tests.items():
+            widget = getattr(self, test_name, None)
+            if widget:
+                try:
+                    value = float(widget.text())
+                    if value < min_val or value > max_val:
+                        check_inputs_text += f"Value for {test_name} is out of range: {value}\n"
+                except ValueError:
+                    if widget.text() == "":
+                        pass
+                    else:
+                        check_inputs_text += f"Invalid input for {test_name}: {widget.text()}\n"
+        Output.msg_box(check_inputs_text if check_inputs_text != "" else "Correct inputs", 'Check input')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
