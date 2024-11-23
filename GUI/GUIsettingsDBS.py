@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QApplication, QPushButton, QLineEdit, QVBoxLayout, Q
     QHBoxLayout, QLabel, QGridLayout, QComboBox, QLayout, QDialog
 
 import dependencies
-from utils.helper_functions import General, Content
+from utils.helper_functions import General, Content, Clean
 from dependencies import FILEDIR
 
 pd.options.mode.chained_assignment = None
@@ -18,7 +18,7 @@ pd.options.mode.chained_assignment = None
 class DBSsettingsDialog(QDialog):
     """Dialog to introduce the DBS-Settings at a specific date."""
 
-    def __init__(self, visit='postoperative', reason = "DD/MM/YYY",  parent=None):
+    def __init__(self, visit='postoperative', reason = "DD/MM/YYY", implanted_IPG = "implanted_IPG",  parent=None):
         super(DBSsettingsDialog, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.date = visit  # ensures the right date is entered
@@ -28,9 +28,11 @@ class DBSsettingsDialog(QDialog):
         self.group_cathode = []
         self.group_settings = []
         self.reason = reason
+        self.implanted_IPG = implanted_IPG
 
         self.adjustSize()
         self.setup_ui()
+        self.update_inputs_with_existing_data()
 
     def setup_ui(self):
         self.setup_general_layout()
@@ -139,6 +141,7 @@ class DBSsettingsDialog(QDialog):
         self.optionbox_IPGchoiceContent = QVBoxLayout(self.optionbox_IPGchoice)
         layout_general.addWidget(self.optionbox_IPGchoice, 0, 3)
 
+        #GP: necessary if IPG is imported from GUIpostoperative?
         manufacturer_layout = QHBoxLayout()
         self.LabelIPG = QLabel('IPG model?')
         self.lineEditIPG = QComboBox()
@@ -150,6 +153,9 @@ class DBSsettingsDialog(QDialog):
         manufacturer_layout.addWidget(self.LabelIPG)
         manufacturer_layout.addWidget(self.lineEditIPG)
         manufacturer_layout.addStretch()
+
+        self.lineEditIPG.setCurrentText(self.implanted_IPG)
+        #self.lineEditIPG.setEnabled(False)
 
         ipg_layout = QHBoxLayout()
         self.LeadManufacturer = QLabel('Lead manufacturer?')
@@ -340,7 +346,7 @@ class DBSsettingsDialog(QDialog):
             dbs_percentage_layout.addWidget(QLabel(f'{name_title}:\t'), i, 0)
             for j in range(num_rows + 1):
                 self.line_edit = QLineEdit()
-                self.line_edit.setObjectName(f'{contact_names[j]}_{side}{group_num}_{polarity}')
+                self.line_edit.setObjectName(f'{contact_names[j]}_{side}{group_num}_{polarity}') #GP: WHITESPACE as first char needed if template.csv not stripped!!!!!!!!!
                 # print(self.line_edit.objectName())
                 print(getattr(self.line_edit, 'objectName')())
 
@@ -425,6 +431,47 @@ class DBSsettingsDialog(QDialog):
         self.save_data2csv()
         #self.close()
 
+    def update_inputs_with_existing_data(self):
+        print("updating...")
+        current_subj = General.read_current_subj()
+        subject_id = current_subj['id'][0]
+        df_general = Clean.extract_subject_data(subject_id)
+        match = re.search(r'^(pre|intra|post)op', self.date)
+
+        df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+        try:
+            df_subj = df.iloc[df.index[df['Reason_postop'] == self.reason][0], :].to_dict()
+            print(df_subj.get('Lead_manufacturer'))
+            print(df_subj.get('implanted_leads'))
+            if pd.isna(df_subj.get('Lead_manufacturer')) and pd.isna(df_subj.get('implanted_leads')):
+                print("No data for Lead_manufacturer and implanted_leads")
+                return # No action needed if Lead_manufacturer or implanted_leads are empty
+            else: # Update the inputs with existing data
+                print(df_subj.items())
+                #first change comboboxes to update layout:
+                self.lineEditIPG.setCurrentText(self.implanted_IPG)
+                self.changed_index_comboboxIPG()
+
+                self.lineEditLeadManufacturer.setCurrentText(df_subj.get('Lead_manufacturer'))
+                self.changed_index_comboboxSystem()
+
+                self.lineEditLeads.setCurrentText(df_subj.get('implanted_leads'))
+                self.changed_index_comboboxLeads
+
+                #fill the rest, +/- is missing
+                for key, value in df_subj.items():
+                    widget = self.findChild((QLineEdit, QComboBox), key)
+                    if widget:
+                        if isinstance(widget, QLineEdit):
+                            widget.setText(value if value == str else str(value))
+                        elif isinstance(widget, QComboBox):
+                            pass
+        except IndexError:
+            print("IndexError")
+            return  # No existing data for this reason
+
+
+
     def save_data2csv(self):
         #GP: copied from GUI-postoperative, not working yet
         """Saves the entered information in a csv-file according to the self.date information"""
@@ -445,6 +492,11 @@ class DBSsettingsDialog(QDialog):
         df_subj['Gender'] = df_general['gender'][0]
         df_subj['Diagnosis_{}'.format(match.group())] = df_general['diagnosis'][0]
 
+        # Save lead Lead_manufacturer and implanted_leads
+        df_subj['Lead_manufacturer'] = self.lineEditLeadManufacturer.currentText()
+        df_subj['implanted_leads'] = self.lineEditLeads.currentText()
+
+        # DBS-Leads Data
         data = {}
         # Collect data from group_anode and group_cathode
         for group in self.group_anode + self.group_cathode:
