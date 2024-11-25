@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5 import QtCore
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
-    QHBoxLayout, QLabel, QGridLayout, QComboBox, QLayout, QDialog
+    QHBoxLayout, QLabel, QGridLayout, QComboBox, QLayout, QDialog, QMessageBox
 
 import dependencies
 from utils.helper_functions import General, Content, Clean
@@ -339,7 +339,7 @@ class DBSsettingsDialog(QDialog):
         if name_title == "Anode":
             polarity = "ano"
         else:
-            polarity = "kth"
+            polarity = "ktd"
 
         # number_sidegroup_pol
         for i in range(1):  # Only one column
