@@ -5,19 +5,20 @@ import numpy as np
 from PyQt5 import QtCore
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
-    QHBoxLayout, QLabel, QGridLayout, QComboBox, QLayout, QDialog
+    QHBoxLayout, QLabel, QGridLayout, QComboBox, QLayout, QDialog, QMessageBox
 
 import dependencies
-from utils.helper_functions import General, Content
+from utils.helper_functions import General, Content, Clean
 from dependencies import FILEDIR
 
 pd.options.mode.chained_assignment = None
 
+#TODO: Save and Return doesnt work yet
 
 class DBSsettingsDialog(QDialog):
-    """Dialog to introduce the medication at a specific date."""
+    """Dialog to introduce the DBS-Settings at a specific date."""
 
-    def __init__(self, visit='postoperative', parent=None):
+    def __init__(self, visit='postoperative', reason = "DD/MM/YYY", implanted_IPG = "implanted_IPG",  parent=None):
         super(DBSsettingsDialog, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.date = visit  # ensures the right date is entered
@@ -26,9 +27,12 @@ class DBSsettingsDialog(QDialog):
         self.group_anode = []
         self.group_cathode = []
         self.group_settings = []
+        self.reason = reason
+        self.implanted_IPG = implanted_IPG
 
         self.adjustSize()
         self.setup_ui()
+        self.update_inputs_with_existing_data()
 
     def setup_ui(self):
         self.setup_general_layout()
@@ -36,8 +40,8 @@ class DBSsettingsDialog(QDialog):
     def setup_general_layout(self):
         """Defines the general layout for the GUI"""
 
-        subj_details = General.read_current_subj() # reads information for the subject last bein processed
-        self.setWindowTitle(f'Postoperative DBS settings (PID: {int(subj_details.pid)})')
+        subj_details = General.read_current_subj() # reads information for the subject last being processed
+        self.setWindowTitle(f'Postoperative DBS settings (PID: {int(subj_details.pid.iloc[0])}) on date: {self.reason}')
 
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
@@ -64,6 +68,7 @@ class DBSsettingsDialog(QDialog):
         """Generic function to create the option box to be filled later with content"""
 
         contacts = QGroupBox(f'Selected contacts - {side.capitalize()} target')
+        contacts.setMaximumHeight(900)  #GP: Set the maximum width and height, helps with alignment while stetching the window vertically
         contactsContent = QHBoxLayout(contacts)
 
         idx = 0 if side == 'left' else 1
@@ -79,19 +84,22 @@ class DBSsettingsDialog(QDialog):
         try:
             num_contacts = int(LEADS[self.lineEditLeads.currentText()]['Contacts_per_side'])
             contact_name = LEADS[self.lineEditLeads.currentText()]['Contacts_name'][idx]
-            contact_name.insert(0, 'IPG') if not contact_name[0] == 'IPG' else contact_name  # necessary for some reason
+            contact_name.insert(0, 'IPG') if not contact_name[0] == 'IPG' else contact_name  # necessary for some reason, GP: makes list look like this: [['IPG', names1],[IPG, names2]]
+            print(contact_name)
+            #GP: IPG hat eigene Eingabeflächen!!!
 
         except KeyError:
             return obj, obj_content
 
         for group_number in range(1, 3):
             layout, dbs_percentage_layout = QVBoxLayout(), QHBoxLayout()
-            layout.addWidget(QLabel(f"Group {group_number}"))
-
-            anode_grid, anode_content = Content.create_grid_columntitle(name_title="Anode", num_rows=num_contacts + 1)
-            cathode_grid, cathode_content = Content.create_grid_columntitle(name_title="Cathode",
-                                                                            num_rows=num_contacts + 1)
-
+            group_label = QLabel(f"Group {group_number}")
+            #group_label.setFixedSize(100, 100)  # Set the desired width and height
+            layout.addWidget(group_label)
+            #GP: imported former staticmethod to GUI -> access to lineedit objectnames
+            anode_grid, anode_content = self.create_grid_columntitle(name_title="Anode", num_rows=num_contacts, group_num = f'G{group_number}', side = idx, contact_names = contact_name)
+            cathode_grid, cathode_content = self.create_grid_columntitle(name_title="Cathode",num_rows=num_contacts, group_num = f'G{group_number}', side = idx, contact_names = contact_name)
+            #GP: y-achsenbeschriftung
             if group_number == 1:
                 FirstColumnNames = Content.create_first_column(num_rows=num_contacts + 1,
                                                                string2use=contact_name)
@@ -103,13 +111,13 @@ class DBSsettingsDialog(QDialog):
             if group_number == 1:
                 self.set_lineedit_state(dbs_percentage_layout, enabled=True)
             layout.addLayout(dbs_percentage_layout)
-
+            #GP: mittige Buttons
             if group_number == 2:
                 toggle_layout = QVBoxLayout()
                 toggleButton1 = QPushButton('+', self)
-                toggleButton1.setFixedSize(20, 20)  # Set a fixed size
+                toggleButton1.setFixedSize(30, 30)  # Set a fixed size
                 toggleButton2 = QPushButton('-', self)
-                toggleButton2.setFixedSize(20, 20)  # Set a fixed size
+                toggleButton2.setFixedSize(30, 30)  # Set a fixed size
                 toggle_layout.addWidget(toggleButton1)
                 toggle_layout.addWidget(toggleButton2)
                 obj_content.addLayout(toggle_layout)
@@ -133,6 +141,7 @@ class DBSsettingsDialog(QDialog):
         self.optionbox_IPGchoiceContent = QVBoxLayout(self.optionbox_IPGchoice)
         layout_general.addWidget(self.optionbox_IPGchoice, 0, 3)
 
+        #GP: necessary if IPG is imported from GUIpostoperative?
         manufacturer_layout = QHBoxLayout()
         self.LabelIPG = QLabel('IPG model?')
         self.lineEditIPG = QComboBox()
@@ -144,6 +153,9 @@ class DBSsettingsDialog(QDialog):
         manufacturer_layout.addWidget(self.LabelIPG)
         manufacturer_layout.addWidget(self.lineEditIPG)
         manufacturer_layout.addStretch()
+
+        self.lineEditIPG.setCurrentText(self.implanted_IPG)
+        #self.lineEditIPG.setEnabled(False)
 
         ipg_layout = QHBoxLayout()
         self.LeadManufacturer = QLabel('Lead manufacturer?')
@@ -201,8 +213,12 @@ class DBSsettingsDialog(QDialog):
 
         for group_number in range(1, 3):
             group_layout = QVBoxLayout()
-            settings_grid, settings_content = Content.create_grid_columntitle(name_title=f'Group{str(group_number)}',
-                                                                              num_rows=num_rows)
+            settings_grid, settings_content = self.create_grid_bottom(
+                lineedit_title=f'Group {str(group_number)}',
+                num_rows=num_rows,
+                contact_names=['test', 'Amp', 'Freq', 'PW'],
+                side=idx
+            )
 
             dbs_settings_layout = QHBoxLayout()
             if group_number == 1:
@@ -235,7 +251,7 @@ class DBSsettingsDialog(QDialog):
         self.optionbox_actionbuttonContent.addLayout(layout_actionbuttons)
 
         # Connect signals to slots
-        # self.button_save_return.clicked.connect(self.onClickedSaveReturn)
+        self.button_save_return.clicked.connect(self.onClickedSaveReturn)
 
     def adapt_combobox(self, obj, action):
         """Update items in QComboBox; different actions are available, see below"""
@@ -310,6 +326,68 @@ class DBSsettingsDialog(QDialog):
                     if isinstance(item, QLayout):
                         self.set_lineedit_state(item, enabled)
 
+    def create_grid_columntitle(self, name_title, num_rows: int, group_num, side, contact_names):
+        """creates a grid with a title and a number of rows to be defined and returns two objects"""
+        #GP: gives each lineedit a specific name corresponding to the ones in postoperative.csv
+        content = []
+        dbs_percentage_layout = QGridLayout()
+
+        if side == 0:
+            side = "L"
+        else:
+            side = "R"
+        if name_title == "Anode":
+            polarity = "ano"
+        else:
+            polarity = "ktd"
+
+        # number_sidegroup_pol
+        for i in range(1):  # Only one column
+            dbs_percentage_layout.addWidget(QLabel(f'{name_title}:\t'), i, 0)
+            for j in range(num_rows + 1):
+                self.line_edit = QLineEdit()
+                self.line_edit.setObjectName(f'{contact_names[j]}_{side}{group_num}_{polarity}') #GP: WHITESPACE as first char needed if template.csv not stripped!!!!!!!!!
+                # print(self.line_edit.objectName())
+                print(getattr(self.line_edit, 'objectName')())
+
+                self.line_edit.setEnabled(False)
+                self.line_edit.setFixedHeight(35)  # GP: ansonsten gibt es ein alignment-problem
+
+                content.append(self.line_edit)
+                dbs_percentage_layout.addWidget(self.line_edit, j + 1, i)
+
+        return dbs_percentage_layout, content
+
+    def create_grid_bottom(self, lineedit_title, num_rows: int, contact_names, side):
+        """creates a grid with a title and a number of rows to be defined and returns two objects"""
+        content = []
+        dbs_percentage_layout = QGridLayout()
+        if side == 0:
+            side = "L"
+        else:
+            side = "R"
+        if "1" in lineedit_title:
+            group = "G1"
+        elif "2" in lineedit_title:
+            group = "G2"
+        # contact_name_side_name_title
+        for i in range(1):  # Only one column
+            dbs_percentage_layout.addWidget(QLabel(f'{lineedit_title}:\t'), i, 0)
+            for j in range(num_rows):
+                self.line_edit = QLineEdit()
+                self.line_edit.setObjectName(
+                    f'{contact_names[j + 1]}_{side}{group}')
+                # print(self.line_edit.objectName())
+                print(getattr(self.line_edit, 'objectName')())
+
+                self.line_edit.setEnabled(False)
+                self.line_edit.setFixedHeight(35)  # GP: ansonsten gibt es ein alignment-problem
+
+                content.append(self.line_edit)
+                dbs_percentage_layout.addWidget(self.line_edit, j + 1, i)
+
+        return dbs_percentage_layout, content
+
     @QtCore.pyqtSlot()
     def disable_SecondGroup(self):
         self.set_lineedit_state(self.group_layouts_contacts[1], enabled=False)
@@ -350,38 +428,110 @@ class DBSsettingsDialog(QDialog):
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):
         """Saves the entered information in a csv-file according to the self.date information"""
+        self.save_data2csv()
+        #self.close()
 
-        subj_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
+    def update_inputs_with_existing_data(self):
+        print("updating...")
+        current_subj = General.read_current_subj()
+        subject_id = current_subj['id'][0]
+        df_general = Clean.extract_subject_data(subject_id)
+        match = re.search(r'^(pre|intra|post)op', self.date)
+
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
-
-        match = re.search(r'^(pre|intra|post)op', self.date)  # gets the condition, to ensure correct saving.
-        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
-                    for v in self.medication_names}
-
         try:
-            idx2replace = df.index[df['ID'] == subj_id][0]  # looks for index at dataframe in which data shall be stored
-            df_subj = df.iloc[idx2replace, :]
-            df.iloc[idx2replace, :] = df_subj
-            first_index = False
+            df_subj = df.iloc[df.index[df['Reason_postop'] == self.reason][0], :].to_dict()
+            print(df_subj.get('Lead_manufacturer'))
+            print(df_subj.get('implanted_leads'))
+            if pd.isna(df_subj.get('Lead_manufacturer')) and pd.isna(df_subj.get('implanted_leads')):
+                print("No data for Lead_manufacturer and implanted_leads")
+                return # No action needed if Lead_manufacturer or implanted_leads are empty
+            else: # Update the inputs with existing data
+                print(df_subj.items())
+                #first change comboboxes to update layout:
+                self.lineEditIPG.setCurrentText(self.implanted_IPG)
+                self.changed_index_comboboxIPG()
+
+                self.lineEditLeadManufacturer.setCurrentText(df_subj.get('Lead_manufacturer'))
+                self.changed_index_comboboxSystem()
+
+                self.lineEditLeads.setCurrentText(df_subj.get('implanted_leads'))
+                self.changed_index_comboboxLeads
+
+                #fill the rest, +/- is missing
+                for key, value in df_subj.items():
+                    widget = self.findChild((QLineEdit, QComboBox), key)
+                    if widget:
+                        if isinstance(widget, QLineEdit):
+                            widget.setText(value if value == str else str(value))
+                        elif isinstance(widget, QComboBox):
+                            pass
         except IndexError:
-            df_subj = df
-            df_subj.loc[0, 'ID'] = General.read_current_subj().id[0]
-            df_subj.loc[0, 'PID_ORBIS'] = General.read_current_subj().pid[0]
-            first_index = True
+            print("IndexError")
+            return  # No existing data for this reason
 
-        for k, v in df_items.items():
-            df_subj[k] = eval('self.lineEdit{}.text()'.format(v)) if v != 'Other' \
-                else eval('self.lineEdit{}.toPlainText()'.format(v))
-        if first_index:
-            df = df.append(df_subj, ignore_index=True)
+
+
+    def save_data2csv(self):
+        #GP: copied from GUI-postoperative, not working yet
+        """Saves the entered information in a csv-file according to the self.date information"""
+        current_subj = General.read_current_subj()
+        subject_id = current_subj['id'][0]
+        df_general = Clean.extract_subject_data(subject_id)
+        match = re.search(r'^(pre|intra|post)op', self.date)
+
+        df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+        try:
+            df_subj = df.iloc[df.index[df['Reason_postop'] == self.reason][0], :].to_dict()
+        except IndexError:
+            df_subj = pd.Series(['nan' for _ in range(len(df.columns))], index=df.columns)
+
+        df_general.reset_index(inplace=True, drop=True)
+        df_subj['ID'] = General.read_current_subj().id[0]
+        df_subj['PID_ORBIS'] = df_general.iloc[0, :]['PID_ORBIS']
+        df_subj['Gender'] = df_general['gender'][0]
+        df_subj['Diagnosis_{}'.format(match.group())] = df_general['diagnosis'][0]
+
+        # Save lead Lead_manufacturer and implanted_leads
+        df_subj['Lead_manufacturer'] = self.lineEditLeadManufacturer.currentText()
+        df_subj['implanted_leads'] = self.lineEditLeads.currentText()
+
+        # DBS-Leads Data
+        data = {}
+        # Collect data from group_anode and group_cathode
+        for group in self.group_anode + self.group_cathode:
+            for line_edit in group:
+                object_name = line_edit.objectName()
+                text = line_edit.text()
+                data[object_name] = text
+
+        # Collect data from group_settings
+        for group in self.group_settings:
+            for line_edit in group:
+                object_name = line_edit.objectName()
+                text = line_edit.text()
+                data[object_name] = text
+
+        print(data)
+
+        # Update the DataFrame with the collected data
+        for key, value in data.items():
+            df_subj[key] = value
+            if df_subj[key]:
+                print("key", key)
+
+        indices_to_update = df.index[df['Reason_postop'] == self.reason]
+
+        # Check if any indices match the condition
+        if not indices_to_update.empty:
+            # Take the first index from the Int64Index object
+            index_to_update = indices_to_update[0]
+            df.loc[index_to_update] = df_subj
         else:
-            df.iloc[idx2replace, :] = df_subj
+            # Handle the case when the index is not found
+            print(f"Index for Reason_postop '{self.reason}' not found.")
 
-        df = df.replace(['nan', ''], [np.nan, np.nan])
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
-
-        self.hide()
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

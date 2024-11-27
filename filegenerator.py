@@ -20,8 +20,8 @@ def create_csv_files_from_templates(template_dir, output_dir):
             if filename == 'postoperative_template.csv':
                 pass
             else:
-                if filename.endswith('_template_new.csv'):
-                    new_filename = filename.replace('_template_new', '')
+                if filename.endswith('_template_new2.csv'):
+                    new_filename = filename.replace('_template_new2', '')
                     template_path = os.path.join(template_dir, filename)
                     output_path = os.path.join(output_dir, new_filename)
                 else:
@@ -35,6 +35,8 @@ def create_csv_files_from_templates(template_dir, output_dir):
 
                 with open(output_path, mode='w', newline='') as output_file:
                     writer = csv.writer(output_file)
+                    # Strip whitespaces from each column name, necessary for DBS-Leads to function
+                    rows[0] = [col.strip() for col in rows[0]]
                     writer.writerows(rows)
 
 if __name__ == "__main__":

@@ -120,6 +120,7 @@ class PostoperativeDialog(QDialog):
         self.optionbox_dates_postoperative.setLayout(self.optionbox_datesContent)
 
     def validate_date_input(self):
+        #GP: nutzt die staticmethod um das Format zu überprüfen (DD/MM/YYYY)
         """Validates the date input in the QLineEdit for optionbox_dates_postoperative"""
         sender = self.sender()
         date_text = sender.text()
@@ -142,6 +143,7 @@ class PostoperativeDialog(QDialog):
 
         self.subj_IPG = QLabel('Implanted IPG:\t')
         self.lineEditsubjIPG = QComboBox()
+        self.lineEditsubjIPG.addItem('Select implanted IPG')
         [self.lineEditsubjIPG.addItem(k) for k in SYSTEMS]
 
         ipg_layout = QHBoxLayout()
@@ -173,17 +175,21 @@ class PostoperativeDialog(QDialog):
         self.optionbox_visit_information.setLayout(self.optionbox_visit_informationContent)
 
     def optionbox_reports_postoperative(self, layout_general):
+        #GP: used new method to tighten up script while adding setEnabled(False)
+        def create_label_and_checkbox_pair(label_text):
+            checkbox = QCheckBox()
+            checkbox.setEnabled(False)
+            label = QLabel(label_text)
+            return checkbox, label
+
         # Create third optionbox on the second row left
         self.optionbox3 = QGroupBox('Reports')
         self.optionbox3Content = QVBoxLayout(self.optionbox3)
         layout_general.addWidget(self.optionbox3, 1, 0)
 
-        self.ReportNeurCheck = QCheckBox()
-        self.ReportNeur = QLabel('Report Neurology \t\t')
-        self.ReportNeurosurgeryCheck = QCheckBox()
-        self.ReportNeurosurgery = QLabel('Report Neurosurgery\t')
-        self.PatProgrammerCheck = QCheckBox()
-        self.PatProgrammer = QLabel('Patient Programmer in use')
+        self.ReportNeurCheck, self.ReportNeur = create_label_and_checkbox_pair('Report Neurology \t\t')
+        self.ReportNeurosurgeryCheck, self.ReportNeurosurgery = create_label_and_checkbox_pair('Report Neurosurgery\t')
+        self.PatProgrammerCheck, self.PatProgrammer = create_label_and_checkbox_pair('Patient Programmer in use')
 
         box2line1 = QHBoxLayout()
         box2line1.addWidget(self.ReportNeurCheck)
@@ -194,10 +200,8 @@ class PostoperativeDialog(QDialog):
         box2line1.addWidget(self.PatProgrammer)
         box2line1.addStretch()
 
-        self.PostopCTCheck = QCheckBox()
-        self.PostopCT = QLabel('Postoperative CT Scan\t')
-        self.PlannedVisitCheck = QCheckBox()
-        self.PlannedVisit = QLabel('Planned Visit')
+        self.PostopCTCheck, self.PostopCT = create_label_and_checkbox_pair('Postoperative CT Scan\t')
+        self.PlannedVisitCheck, self.PlannedVisit = create_label_and_checkbox_pair('Planned Visit')
 
         box2line2 = QHBoxLayout()
         box2line2.addWidget(self.PostopCTCheck)
@@ -308,23 +312,24 @@ class PostoperativeDialog(QDialog):
         """Creates two buttons a) to read medication and b) to save settings and exit GUI """
         self.ButtonEnterMedication = QPushButton('Open GUI \nMedication')
         self.ButtonEnterDBSsettings = QPushButton('Open GUI \nDBS settings')
-        self.button_buffer = QPushButton('Save')
-        self.button_save = QPushButton('Save and \nReturn')
+        self.button_save = QPushButton('Save')
+        self.button_save_return = QPushButton('Save and \nReturn')
 
         # Set fixed size for all buttons
         button_width = 200
         button_height = 75
 
         self.ButtonEnterMedication.setFixedSize(button_width, button_height)
-        self.button_buffer.setFixedSize(button_width, button_height)
         self.button_save.setFixedSize(button_width, button_height)
+        self.ButtonEnterDBSsettings.setFixedSize(button_width, button_height)
+        self.button_save_return.setFixedSize(button_width, button_height)
 
         hlay_bottom = QHBoxLayout()
         hlay_bottom.addStretch(5)
         hlay_bottom.addWidget(self.ButtonEnterMedication)
         hlay_bottom.addWidget(self.ButtonEnterDBSsettings)
-        hlay_bottom.addWidget(self.button_buffer)
         hlay_bottom.addWidget(self.button_save)
+        hlay_bottom.addWidget(self.button_save_return)
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
@@ -336,11 +341,11 @@ class PostoperativeDialog(QDialog):
         self.lineEditsubjIPG.currentIndexChanged.connect(self.update_IPG)
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.ButtonEnterDBSsettings.clicked.connect(self.onClickedDBSsettings)
-        self.button_buffer.clicked.connect(self.onClickedSave)
-        self.button_save.clicked.connect(self.onClickedSaveReturn)
+        self.button_save.clicked.connect(self.onClickedSave)
+        self.button_save_return.clicked.connect(self.onClickedSaveReturn)
 
     # From here on, you can find the function of the buttons, etc.
-    def fill_combobox(self, new_date = None):
+    def fill_combobox(self, new_date = None): #GP: new_date als neue Variable (s.u.)
         """fills ComboBox for postoperative visits"""
         items_available = Content.extract_postoperative_dates()
         default_options = ['Please select date or enter new data', 'Enter new data']
@@ -353,7 +358,7 @@ class PostoperativeDialog(QDialog):
             else:
                 return (len(default_options), item)
 
-        # GP: Makes sure date is string
+        # GP: Makes sure date is string, kann wahrscheinlich wieder weg... hatte vor der Formatierung Probleme gemacht
         for index in range(len(unique_dates)):
             if type(unique_dates[index]) == str:
                 pass
@@ -366,6 +371,8 @@ class PostoperativeDialog(QDialog):
         # self.update_context() # Not sure if that is needed but so far it drops no error, so keep it!
         print(unique_dates)
         #GP: Set the current index to the newly added date if it exists
+        #GP: stellt direkt nach Eingabe des Datums die optionbox auf das Datum ein
+        #GP: direkte Eingabe möglich, ohne nochmal manuell das Datum zu ändern
         if new_date:
             self.lineEditreason.setCurrentText(new_date)
 
@@ -468,6 +475,7 @@ class PostoperativeDialog(QDialog):
         self.PostopCTCheck.setChecked(bool(row["CTscan_postop"]))
         self.PlannedVisitCheck.setChecked(bool(row["Planned_Visit_postop"]))
 
+    #GP: kann gelöscht werden:
     def read_content_csv_old(self):
         """DO NOT DELETE UNTIL THE PERCENTAGE OF CURRENT IS TRANSFERRED! After selecting the reason for visit, data is read from the csv-file [preoperative] if available"""
         print('updating content for the selected visit date...')
@@ -532,7 +540,7 @@ class PostoperativeDialog(QDialog):
             self.lineEditUPDRSII.setText(str(row["UPDRSII_postop"])) \
                 if str(row["UPDRSII_postop"]) != 'nan' else self.lineEditUPDRSII.setText('')
             self.lineEditHRUQ.setText(str(row["HRUQ_postop"])) \
-                if str(row["HRUQ_postop"]) != 'nan' else self.lineEditHRUQ.setText('')
+                if str(row["HRUQ_postop"]) != 'nan' else self.lineEditHRUQ.setText('') #GP: typo
             self.lineEditMoCa.setText(str(row["MoCa_postop"])) \
                 if str(row["MoCa_postop"]) != 'nan' else self.lineEditMoCa.setText('')
             self.lineEditMMST.setText(str(row["MMST_postop"])) \
@@ -574,8 +582,13 @@ class PostoperativeDialog(QDialog):
             if row["CTscan_postop"] != 0:
                 self.PostopCTCheck.setChecked(True)
             if row["Planned_Visit_postop"] != 0:
-                self.PlannedVisitCheck.setChecked(True)
+                self.PlannedVisitCheck.setChecked(True) #GP: fehlte bisher, Checkbox war aber vorhanden
 
+    @staticmethod
+    def set_checkbox_state(state, *checkboxes):
+        """this function enables checkboxes, needed to avoid data entries without first selecting reason"""
+        for checkbox in checkboxes:
+            checkbox.setEnabled(state)
 
     @staticmethod
     def set_lineedit_state(state, *line_edits):
@@ -592,52 +605,62 @@ class PostoperativeDialog(QDialog):
             [self.optionbox_tests,
              self.optionbox_dates_postoperative,
             ])
+        checkboxes = Content.find_checkbox_objects(
+            [self.PostopCTCheck,
+             self.PlannedVisitCheck,
+             self.ReportNeurCheck,
+             self.ReportNeurosurgeryCheck,
+             self.PatProgrammerCheck])
 
         if ((selected_item1 != 'Enter new data' and selected_item1 != 'Please select date or enter new data') and
                 selected_item2 != ''):
             self.set_lineedit_state(True, *optionboxes)
+            self.set_checkbox_state(True, *checkboxes)
         else:
             self.set_lineedit_state(False, *optionboxes)
+            self.set_checkbox_state(False, *checkboxes)
 
         if self.lineEditreason.currentText() == 'Please select date or enter new data':
             pass
         elif self.lineEditreason.currentText() == 'Enter new data':
             self.reason_visit = Output.open_input_dialog_postoperative(self)
-            data_frame = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
-            subj_details = General.read_current_subj()
+            if self.reason_visit != None: #GP wenn open_input_dialog None ausgibt, wird None als date gespeichert
+                data_frame = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
+                subj_details = General.read_current_subj()
 
-            # GP: checking BEFORE new data is added to postoperative.csv
-            match = re.search(r'^(pre|intra|post)op', self.date)
-            filtered_df = data_frame[data_frame['PID_ORBIS'] == subj_details.pid[0]]
+                # GP: checking BEFORE new data is added to postoperative.csv
+                match = re.search(r'^(pre|intra|post)op', self.date)
+                filtered_df = data_frame[data_frame['PID_ORBIS'] == subj_details.pid[0]]
 
-            if not filtered_df.empty:
-                list_of_dates = filtered_df['Reason_postop'].tolist()
-                if self.reason_visit in list_of_dates:
-                    Output.msg_box('There is already an identical entry for this subject. Please enter a different reason',
-                                   title=f'Warning, double entry for subj {subj_details.id[0]}')
-                    self.fill_combobox()
-                    return
+                if not filtered_df.empty:
+                    list_of_dates = filtered_df['Reason_postop'].tolist()
+                    if self.reason_visit in list_of_dates:
+                        Output.msg_box('There is already an identical entry for this subject. Please enter a different reason',
+                                       title=f'Warning, double entry for subj {subj_details.id[0]}')
+                        self.fill_combobox()
+                        return
 
-            #if any(filtered_df['Reason_{}'.format(self.date)].isin([self.reason_visit])):
-            #    Output.msg_box(
-            #        'There is already an identical entry for this subject. Please enter a different reason',
-            #        title=f'Warning, double entry for subj {subj_details.id[0]}')
-            #    self.fill_combobox()
-            #    return
+                #if any(filtered_df['Reason_{}'.format(self.date)].isin([self.reason_visit])):
+                #    Output.msg_box(
+                #        'There is already an identical entry for this subject. Please enter a different reason',
+                #        title=f'Warning, double entry for subj {subj_details.id[0]}')
+                #    self.fill_combobox()
+                #    return
 
+                data_frame.loc[len(data_frame), ['ID', 'PID_ORBIS', 'Reason_{}'.format(match.group())]] = [subj_details.id[0],
+                                                                                                           subj_details.pid[0],
+                                                                                                           self.reason_visit]
 
+                data_frame = data_frame.replace(['nan', ''], [np.nan, np.nan])
+                data_frame = data_frame.applymap(lambda x: str(x).replace(';', ' -'))
+                data_frame.to_csv(os.path.join(FILEDIR, f"{self.date}.csv"), index=False)
+                new_date = self.reason_visit
 
-            data_frame.loc[len(data_frame), ['ID', 'PID_ORBIS', 'Reason_{}'.format(match.group())]] = [subj_details.id[0],
-                                                                                                       subj_details.pid[0],
-                                                                                                       self.reason_visit]
-
-            data_frame = data_frame.replace(['nan', ''], [np.nan, np.nan])
-            data_frame = data_frame.applymap(lambda x: str(x).replace(';', ' -'))
-            data_frame.to_csv(os.path.join(FILEDIR, f"{self.date}.csv"), index=False)
-            new_date = self.reason_visit
-
-            self.fill_combobox(new_date)
-            self.read_content_csv()
+                self.fill_combobox(new_date)
+                self.read_content_csv()
+            else:
+                self.lineEditreason.setCurrentText('Please select date or enter new data')
+                pass
         else:
             self.reason_visit = self.lineEditreason.currentText()
             self.read_content_csv()
@@ -671,10 +694,23 @@ class PostoperativeDialog(QDialog):
     @QtCore.pyqtSlot()
     def onClickedDBSsettings(self):
         """shows the DBSsettiongs dialog when button is pressed"""
+        if self.lineEditsubjIPG.currentText() == 'Select implanted IPG':
+            QMessageBox.warning(self, 'No IPG Selected', 'Please select an IPG before continuing.')
+            return
+        else:
+            implanted_IPG = self.lineEditsubjIPG.currentText()
+        try:
+            reason = self.reason_visit
+        except AttributeError:
+            QMessageBox.warning(self, 'No reason selected', 'Please select a date or create a new date before continuing.')
+            return
+        print(reason)
+        self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date, reason = reason, implanted_IPG = implanted_IPG)  # creates medication dialog
         self.dialog_DBSsettings.show()
 
     @QtCore.pyqtSlot()
     def onClickedSave(self):
+        self.check_IPG_selection()
         self.save_data2csv()
 
     @QtCore.pyqtSlot()
@@ -688,6 +724,7 @@ class PostoperativeDialog(QDialog):
         Returns: None
 
         """
+        self.check_IPG_selection()
         self.save_data2csv()
         self.close()
 
@@ -696,6 +733,12 @@ class PostoperativeDialog(QDialog):
         subject_id = current_subj['id'][0]
         df_general = Clean.extract_subject_data(subject_id)
         match = re.search(r'^(pre|intra|post)op', self.date)
+        try:
+            reason_test = self.reason_visit
+        except AttributeError:
+            QMessageBox.warning(self, 'No Date Selected', 'Please select a date or enter new data before saving.')
+            return
+
 
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
         try:
@@ -706,10 +749,11 @@ class PostoperativeDialog(QDialog):
         df_general.reset_index(inplace=True, drop=True)
         df_subj['ID'] = General.read_current_subj().id[0]
         df_subj['PID_ORBIS'] = df_general.iloc[0, :]['PID_ORBIS']
-        df_subj['Gender'] = df_general['gender'][0]
+        df_subj['Gender'] = df_general['gender'][0] #GP: typo
         df_subj['Diagnosis_{}'.format(match.group())] = df_general['diagnosis'][0]
 
         # Extract text for the upper left optionbox
+        # GP: Important dates maybe should not change with changing Date(reason_visit)
         line_edits = [
             (self.lineEditAdmission_Nch, 'Admission_NCh'),
             (self.lineEditAdmission_NR, 'Admission_NR'),
@@ -726,7 +770,9 @@ class PostoperativeDialog(QDialog):
             df_subj[column_key] = line_edit.text()
 
         # upper right
+        #TODO IPG not saving yet
         df_subj['AE_{}'.format(match.group())] = self.lineEditAdverse_Event.text()
+        df_subj['Implanted_IPG'] = self.lineEditsubjIPG.currentText()
 
         # middle right
         df_subj['UPDRS1_{}'.format(match.group())] = self.lineEditUPDRSI.text()
@@ -734,11 +780,11 @@ class PostoperativeDialog(QDialog):
         df_subj['TSS_postop'] = self.lineEditTSS.text()
         df_subj['CGIC_patient_postop'] = self.lineEditCGICPat.text()
         df_subj['CGIC_clinician_caregiver_postop'] = self.lineEditCGICClinician.text()
-        df_subj["UPDRS_On_postop"] = self.lineEditUPDRSON.text()
+        df_subj["UPDRS_On_postop"] = self.lineEditUPDRSON.text() #GP: typo
         df_subj["UPDRSII_postop"] = self.lineEditUPDRSII.text()
-        df_subj["UPDRS_Off_postop"] = self.lineEditUPDRSOFF.text()
+        df_subj["UPDRS_Off_postop"] = self.lineEditUPDRSOFF.text() #GP: typo
         df_subj["H&Y_postop"] = self.lineEditHY.text()
-        df_subj["HRUQ_postop"] = self.lineEditHRUQ.text()
+        df_subj["HRUQ_postop"] = self.lineEditHRUQ.text() #GP: typo
         df_subj["MoCa_postop"] = self.lineEditMoCa.text()
         df_subj["MMST_postop"] = self.lineEditMMST.text()
         df_subj["BDI2_postop"] = self.lineEditBDIII.text()
@@ -794,6 +840,10 @@ class PostoperativeDialog(QDialog):
                                            "All Files (*)", options=option)
         print(file)
 
+    def check_IPG_selection(self):
+        if self.lineEditsubjIPG.currentText() == 'Select implanted IPG':
+            QMessageBox.warning(self, 'No IPG Selected', 'Please select an IPG before continuing.')
+            return
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

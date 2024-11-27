@@ -287,15 +287,39 @@ class Content:
 
     @staticmethod
     def create_first_column(num_rows, string2use: list):
-        """Creates first column in a grid, which indicates what content at easch column"""
+        """Creates first column in a grid, which indicates what content at each column"""
         titleRow_layout = QGridLayout()
 
-        for j in range(num_rows + 1):
-            label = QLabel('') if j == 0 else QLabel(str(string2use[j-1]))
-            label.setAlignment(QtCore.Qt.AlignCenter)
-            titleRow_layout.addWidget(label, j, 0)
+        if num_rows == 3:
+            for j in range(num_rows + 1):
+                    label = QLabel('') if j == 0 else QLabel(str(string2use[j-1]))
+                    label.setAlignment(QtCore.Qt.AlignCenter)
+                    label.setFixedHeight(35)
+                    titleRow_layout.addWidget(label, j, 0)
+            return titleRow_layout
 
-        return titleRow_layout
+        else:
+            for j in range(num_rows + 1):
+                if j == 0:
+                    label = QLabel('')
+                    label.setAlignment(QtCore.Qt.AlignCenter)
+                    label.setFixedHeight(35)
+                    titleRow_layout.addWidget(label, j, 0)
+                elif j ==1:
+                    label = QLabel(str(string2use[j - 1]))
+                    #QLabel(str(string2use[j - 1]))
+                    label.setAlignment(QtCore.Qt.AlignCenter)
+                    label.setFixedSize(50, 35)
+                    titleRow_layout.addWidget(label, j, 0)
+                else:
+                    label = QLabel(str(string2use[j - 1]))
+                    label.setAlignment(QtCore.Qt.AlignCenter)
+                    label.setFixedSize(50, 35)
+                    hbox = QHBoxLayout()
+                    hbox.addWidget(label)
+                    hbox.addStretch()
+                    titleRow_layout.addLayout(hbox, j, 0)
+            return titleRow_layout
 
     @staticmethod
     def create_title(num_columns, string2use):
@@ -324,7 +348,7 @@ class Content:
         return dbs_percentage_layout
 
     @staticmethod
-    def create_grid_columntitle(name_title, num_rows: int):
+    def create_grid_columntitleX(name_title, num_rows: int, group_num, side):
         """creates a grid with a title and a number of rows to be defined and returns two objects"""
         content = []
         dbs_percentage_layout = QGridLayout()
@@ -384,6 +408,18 @@ class Content:
         return line_edits
 
     @staticmethod
+    def find_checkbox_objects(widget_list):
+        """Finds and returns a list of QCheckBox objects from the provided widget list."""
+        checkbox_objects = []
+        for widget in widget_list:
+            if isinstance(widget, QGroupBox):
+                for child in widget.findChildren(QCheckBox):
+                    checkbox_objects.append(child)
+            elif isinstance(widget, QCheckBox):
+                checkbox_objects.append(widget)
+        return checkbox_objects
+
+    @staticmethod
     def object_visibility(obj, action):
         """ Modifies the visibility of an object; here it makes sure selection occurs sequentially"""
 
@@ -427,7 +463,7 @@ class Output:
                 self, 'Input Dialog', 'Please enter the date after surgery or the event:'
             )
             if not ok:  # User canceled the dialog
-                return None
+                return None #if None is retuned, None is added to list
 
             # Validate and format the entered date
             formatted_date = General.validate_and_format_dates(result)

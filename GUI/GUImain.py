@@ -69,7 +69,7 @@ class ChooseGUI(QDialog):
 
         selected_button = self.sender().checkedButton().text()
         if selected_button in flag_mapping.values():
-            General.get_data_subject(flag=selected_button.lower(), pid2lookfor=int(subj_details.pid))
+            General.get_data_subject(flag=selected_button.lower(), pid2lookfor=int(subj_details.pid.iloc[0]))
 
             if selected_button.lower() == 'preoperative':
                 dialog_date = PreoperativeDialog(parent=self)
@@ -78,11 +78,12 @@ class ChooseGUI(QDialog):
             else:
                 dialog_date = PostoperativeDialog(parent=self)
 
-            self.hide()
-            if dialog_date.exec():
-                pass  # Your logic after the dialog is executed
-            self.show()
-
+            #self.hide()
+            #if dialog_date.exec():
+            #    pass  # Your logic after the dialog is executed
+            #self.show()
+            dialog_date.show()  # Use show() instead of exec() to keep the main window running
+            #GP: every time a msg_box closed, the whole program shut down
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

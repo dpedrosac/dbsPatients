@@ -462,21 +462,32 @@ class IntraoperativeDialog(QDialog):
                 getattr(self, checkbox_name).setCheckState(QtCore.Qt.Unchecked)
 
         # Set selected items for target_intraop
-        target_choices = df_subj["target_intraop"][0].split(', ')
-        for i in range(self.targetList.count()):
-            item = self.targetList.item(i)
-            if item.text() in target_choices:
-                item.setSelected(True)
-            else:
+        if isinstance(df_subj["target_intraop"][0], str): #GP: if cell is 'nan', its still considered a float, float.split() Error
+            target_choices = df_subj["target_intraop"][0].split(', ')
+            for i in range(self.targetList.count()):
+                item = self.targetList.item(i)
+                if item.text() in target_choices:
+                    item.setSelected(True)
+                else:
+                    item.setSelected(False)
+
+        else:
+            for i in range(self.targetList.count()):
+                item = self.targetList.item(i)
                 item.setSelected(False)
 
         # Set selected items for neur_test_intraop
-        neurologist_choices = df_subj["neur_test_intraop"][0].split(', ')
-        for i in range(self.testingNeurList.count()):
-            item = self.testingNeurList.item(i)
-            if item.text() in neurologist_choices:
-                item.setSelected(True)
-            else:
+        if isinstance(df_subj["neur_test_intraop"][0], str):
+            neurologist_choices = df_subj["neur_test_intraop"][0].split(', ')
+            for i in range(self.testingNeurList.count()):
+                item = self.testingNeurList.item(i)
+                if item.text() in neurologist_choices:
+                    item.setSelected(True)
+                else:
+                    item.setSelected(False)
+        else:
+            for i in range(self.testingNeurList.count()):
+                item = self.testingNeurList.item(i)
                 item.setSelected(False)
         return
 

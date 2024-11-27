@@ -70,6 +70,8 @@ class CheckForGeneralData(QDialog):
         self.lineEditBirthdate.setFixedHeight(50)
         self.lineEditBirthdate.clicked.connect(self.open_calendar)
         self.lineEditBirthdate.editingFinished.connect(self.validate_birthdate)
+        #GP: nutzt die staticmethod um direkt nach Eingabe das Format zu kontrollieren
+        #GP: Eingabe ohne popup des Kalenders ist auch möglich
 
         lay4 = QHBoxLayout()
         lay4.addWidget(self.subj_birthdate)
@@ -198,6 +200,7 @@ class CheckForGeneralData(QDialog):
     def showDate(self, date):
         self.lineEditBirthdate.setText(str(date.toPyDate()))
 
+    #GP: zwingt den Nutzer das richtige Format zu nutzen gewünscht (DD/MM/YYYY) auch ok: mit punkten, dashes oder nur YY am Ende
     def validate_birthdate(self):
         date_text = self.lineEditBirthdate.text()
         formatted_date = General.validate_and_format_dates(date_text)

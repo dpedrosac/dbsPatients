@@ -64,6 +64,7 @@ class CheckPID(QtWidgets.QDialog):
     def onClickedCheckPID(self):
         """when button pressed, a series of checks are performed to retrieve data/to set the following GUI """
 
+        #GP: verhindert, dass der User Nullen eingibt
         if '0' in self.lineEditPID.text():
             Output.msg_box(title='"0" detected', text='Please enter the PID without zeros')
             return
