@@ -582,7 +582,7 @@ class DBSsettingsDialog(QDialog):
                 print("key", key, "value", value)
 
         if self.date == 'postoperative':
-            indices_to_update = df.index[df[')Reason_postop'] == self.reason]
+            indices_to_update = df.index[df['Reason_postop'] == self.reason]
         elif self.date == 'intraoperative':
             indices_to_update = df.index[df['ID'] == subject_id]
 
