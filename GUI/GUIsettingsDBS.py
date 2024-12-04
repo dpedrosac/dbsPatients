@@ -13,12 +13,11 @@ from dependencies import FILEDIR
 
 pd.options.mode.chained_assignment = None
 
-#TODO: Save and Return doesnt work yet
 
 class DBSsettingsDialog(QDialog):
     """Dialog to introduce the DBS-Settings at a specific date."""
 
-    def __init__(self, visit='postoperative', reason = "DD/MM/YYY", implanted_IPG = "implanted_IPG",  parent=None):
+    def __init__(self, visit='postoperative', reason = "DD/MM/YYY",  parent=None):
         super(DBSsettingsDialog, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.date = visit  # ensures the right date is entered
@@ -28,7 +27,7 @@ class DBSsettingsDialog(QDialog):
         self.group_cathode = []
         self.group_settings = []
         self.reason = reason
-        self.implanted_IPG = implanted_IPG
+        #self.implanted_IPG = implanted_IPG
 
         self.adjustSize()
         self.setup_ui()
@@ -89,9 +88,10 @@ class DBSsettingsDialog(QDialog):
             #GP: IPG hat eigene Eingabeflächen!!!
 
         except KeyError:
+            print("Keyerror DBSsettings_specific")
             return obj, obj_content
 
-        for group_number in range(1, 3):
+        for group_number in range(1, 3): #GP: erstellt 2 Gruppen
             layout, dbs_percentage_layout = QVBoxLayout(), QHBoxLayout()
             group_label = QLabel(f"Group {group_number}")
             #group_label.setFixedSize(100, 100)  # Set the desired width and height
@@ -154,7 +154,7 @@ class DBSsettingsDialog(QDialog):
         manufacturer_layout.addWidget(self.lineEditIPG)
         manufacturer_layout.addStretch()
 
-        self.lineEditIPG.setCurrentText(self.implanted_IPG)
+        #self.lineEditIPG.setCurrentText(self.implanted_IPG)
         #self.lineEditIPG.setEnabled(False)
 
         ipg_layout = QHBoxLayout()
@@ -428,7 +428,19 @@ class DBSsettingsDialog(QDialog):
     @QtCore.pyqtSlot()
     def onClickedSaveReturn(self):
         """Saves the entered information in a csv-file according to the self.date information"""
-        self.save_data2csv()
+        missing_info = []
+        if "Please" in self.lineEditIPG.currentText():
+            missing_info.append("IPG")
+        if "Please" in self.lineEditLeadManufacturer.currentText():
+            missing_info.append("Lead Manufacturer")
+        if "Please" in self.lineEditLeads.currentText():
+            missing_info.append("Leads")
+
+        if missing_info:
+            QMessageBox.warning(self, 'Missing Information',
+                                f"Please select the following information: {', '.join(missing_info)}")
+        else:
+            self.save_data2csv()
         #self.close()
 
     def update_inputs_with_existing_data(self):
@@ -439,36 +451,76 @@ class DBSsettingsDialog(QDialog):
         match = re.search(r'^(pre|intra|post)op', self.date)
 
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
-        try:
-            df_subj = df.iloc[df.index[df['Reason_postop'] == self.reason][0], :].to_dict()
-            print(df_subj.get('Lead_manufacturer'))
-            print(df_subj.get('implanted_leads'))
-            if pd.isna(df_subj.get('Lead_manufacturer')) and pd.isna(df_subj.get('implanted_leads')):
-                print("No data for Lead_manufacturer and implanted_leads")
-                return # No action needed if Lead_manufacturer or implanted_leads are empty
-            else: # Update the inputs with existing data
-                print(df_subj.items())
-                #first change comboboxes to update layout:
-                self.lineEditIPG.setCurrentText(self.implanted_IPG)
-                self.changed_index_comboboxIPG()
+        if self.date == 'postoperative':
+            try:
+                df_subj = df.iloc[df.index[df['Reason_postop'] == self.reason][0], :].to_dict() #GP: new problems with DBSsettings for intraoperative
+                print(df_subj.get('Lead_manufacturer'))
+                print(df_subj.get('implanted_leads'))
+                if pd.isna(df_subj.get('Implanted_IPG')):
+                    print("No data for Implanted_IPG")
+                    return
+                elif pd.isna(df_subj.get('Lead_manufacturer')) and pd.isna(df_subj.get('implanted_leads')):
+                    print("No data for Lead_manufacturer and implanted_leads")
+                    return # No action needed if Lead_manufacturer or implanted_leads are empty
+                else: # Update the inputs with existing data
+                    print(df_subj.items())
+                    #first change comboboxes to update layout:
+                    self.lineEditIPG.setCurrentText(df_subj.get('Implanted_IPG'))
+                    self.changed_index_comboboxIPG()
 
-                self.lineEditLeadManufacturer.setCurrentText(df_subj.get('Lead_manufacturer'))
-                self.changed_index_comboboxSystem()
+                    self.lineEditLeadManufacturer.setCurrentText(df_subj.get('Lead_manufacturer'))
+                    self.changed_index_comboboxSystem()
 
-                self.lineEditLeads.setCurrentText(df_subj.get('implanted_leads'))
-                self.changed_index_comboboxLeads
+                    self.lineEditLeads.setCurrentText(df_subj.get('implanted_leads'))
+                    self.changed_index_comboboxLeads
 
-                #fill the rest, +/- is missing
-                for key, value in df_subj.items():
-                    widget = self.findChild((QLineEdit, QComboBox), key)
-                    if widget:
-                        if isinstance(widget, QLineEdit):
-                            widget.setText(value if value == str else str(value))
-                        elif isinstance(widget, QComboBox):
-                            pass
-        except IndexError:
-            print("IndexError")
-            return  # No existing data for this reason
+                    #fill the rest, +/- is missing
+
+
+                    for key, value in df_subj.items():
+                        widget = self.findChild((QLineEdit, QComboBox), key)
+                        if widget:
+                            if isinstance(widget, QLineEdit):
+                                widget.setText(value if value == str else str(value))
+                            elif isinstance(widget, QComboBox):
+                                pass
+            except IndexError:
+                print("IndexError")
+                return  # No existing data for this reason
+        elif self.date == 'intraoperative':
+            try:
+                df_subj = df.iloc[df.index[df['ID'] == subject_id][0],
+                          :].to_dict()  # GP: new problems with DBSsettings for intraoperative
+                if pd.isna(df_subj.get('Implanted_IPG')):
+                    print("No data for Implanted_IPG")
+                    return
+                elif pd.isna(df_subj.get('Lead_manufacturer')) and pd.isna(df_subj.get('implanted_leads')):
+                    print("No data for Lead_manufacturer and implanted_leads")
+                    return  # No action needed if Lead_manufacturer or implanted_leads are empty
+                else:  # Update the inputs with existing data
+                    print(df_subj.items())
+                    # first change comboboxes to update layout:
+                    self.lineEditIPG.setCurrentText(df_subj.get('Implanted_IPG'))
+                    self.changed_index_comboboxIPG()
+
+                    self.lineEditLeadManufacturer.setCurrentText(df_subj.get('Lead_manufacturer'))
+                    self.changed_index_comboboxSystem()
+
+                    self.lineEditLeads.setCurrentText(df_subj.get('implanted_leads'))
+                    self.changed_index_comboboxLeads
+
+                    # fill the rest, +/- is missing
+
+                    for key, value in df_subj.items():
+                        widget = self.findChild((QLineEdit, QComboBox), key)
+                        if widget:
+                            if isinstance(widget, QLineEdit):
+                                widget.setText(value if value == str else str(value))
+                            elif isinstance(widget, QComboBox):
+                                pass
+            except IndexError:
+                print(f"IndexError, no entry for {subject_id} found in {self.date}.csv")
+                return  # No existing data for this reason
 
 
 
@@ -481,18 +533,27 @@ class DBSsettingsDialog(QDialog):
         match = re.search(r'^(pre|intra|post)op', self.date)
 
         df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
-        try:
-            df_subj = df.iloc[df.index[df['Reason_postop'] == self.reason][0], :].to_dict()
-        except IndexError:
-            df_subj = pd.Series(['nan' for _ in range(len(df.columns))], index=df.columns)
+        if self.date == 'postoperative':
+            try:
+                df_subj = df.iloc[df.index[df['Reason_postop'] == self.reason][0], :].to_dict()
+            except IndexError:
+                df_subj = pd.Series(['nan' for _ in range(len(df.columns))], index=df.columns)
+
+        elif self.date == 'intraoperative':
+            try:
+                df_subj = df.iloc[df.index[df['ID'] == subject_id][0], :].to_dict()
+            except IndexError:
+                df_subj = pd.Series(['nan' for _ in range(len(df.columns))], index=df.columns)
+
 
         df_general.reset_index(inplace=True, drop=True)
         df_subj['ID'] = General.read_current_subj().id[0]
         df_subj['PID_ORBIS'] = df_general.iloc[0, :]['PID_ORBIS']
         df_subj['Gender'] = df_general['gender'][0]
-        df_subj['Diagnosis_{}'.format(match.group())] = df_general['diagnosis'][0]
+        #df_subj['Diagnosis_{}'.format(match.group())] = df_general['diagnosis'][0]
 
-        # Save lead Lead_manufacturer and implanted_leads
+        # Save lead Implanted_IPG, Lead_manufacturer and implanted_leads
+        df_subj['Implanted_IPG'] = self.lineEditIPG.currentText()
         df_subj['Lead_manufacturer'] = self.lineEditLeadManufacturer.currentText()
         df_subj['implanted_leads'] = self.lineEditLeads.currentText()
 
@@ -518,9 +579,12 @@ class DBSsettingsDialog(QDialog):
         for key, value in data.items():
             df_subj[key] = value
             if df_subj[key]:
-                print("key", key)
+                print("key", key, "value", value)
 
-        indices_to_update = df.index[df['Reason_postop'] == self.reason]
+        if self.date == 'postoperative':
+            indices_to_update = df.index[df[')Reason_postop'] == self.reason]
+        elif self.date == 'intraoperative':
+            indices_to_update = df.index[df['ID'] == subject_id]
 
         # Check if any indices match the condition
         if not indices_to_update.empty:
