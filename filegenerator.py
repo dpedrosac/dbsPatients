@@ -1,6 +1,8 @@
 import os
 import csv
 
+# TODO: wouln't it make sense to move this to utils.General?
+
 def check_for_data(output_dir):
     if os.path.exists(output_dir):
         files = os.listdir(output_dir)
