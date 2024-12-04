@@ -30,7 +30,7 @@ class CheckPID(QtWidgets.QDialog):
         self.optionbox_guistart = QtWidgets.QGroupBox('Please enter the PID_Orbis')
         self.settings_optionbox1 = QtWidgets.QVBoxLayout(self.optionbox_guistart)
 
-        self.subj_PID = QtWidgets.QLabel('PID-ORBIS (without zeros):\t\t')
+        self.subj_PID = QtWidgets.QLabel('PID-ORBIS:\t\t\t')
         self.lineEditPID = QtWidgets.QLineEdit()
 
         self.lineEditPID.setFixedWidth(200)
@@ -48,8 +48,10 @@ class CheckPID(QtWidgets.QDialog):
         layout_buttons = QtWidgets.QHBoxLayout()
         self.button_checkPID = QtWidgets.QPushButton('Check for \nexistence')
         self.button_checkPID.clicked.connect(self.onClickedCheckPID)
+        self.button_checkPID.setFixedSize(200,75)
         self.button_close = QtWidgets.QPushButton('Close GUI')
         self.button_close.clicked.connect(self.close)
+        self.button_close.setFixedSize(200,75)
 
         layout_buttons.addStretch(1)
         layout_buttons.addWidget(self.button_checkPID)
@@ -65,9 +67,9 @@ class CheckPID(QtWidgets.QDialog):
         """when button pressed, a series of checks are performed to retrieve data/to set the following GUI """
 
         #GP: verhindert, dass der User Nullen eingibt
-        if '0' in self.lineEditPID.text():
-            Output.msg_box(title='"0" detected', text='Please enter the PID without zeros')
-            return
+        #if '0' in self.lineEditPID.text():
+        #    Output.msg_box(title='"0" detected', text='Please enter the PID without zeros')
+        #    return
 
         if not self.lineEditPID.text():
             Output.msg_box(text='Missing input for the PID, please enter a number', title='Missing input')
@@ -78,8 +80,9 @@ class CheckPID(QtWidgets.QDialog):
             General.get_data_subject(flag='general_data', pid2lookfor=self.lineEditPID.text())
             df = General.import_dataframe(filename2load, separator_csv=',')
 
-            PID2lookfor = self.lineEditPID.text().lstrip('0')  # string that is searched for in metadata file
-            idx_PID = df.index[df['PID_ORBIS'] == int(PID2lookfor)].to_list()
+            PID2lookfor = self.lineEditPID.text()  # string that is searched for in metadata file
+            df['PID_ORBIS'] = df['PID_ORBIS'].astype(str)  # Convert the PID_ORBIS column to strings
+            idx_PID = df.index[df['PID_ORBIS'] == PID2lookfor].to_list()
 
         if not idx_PID:
             Output.msg_box(text='No corresponding subject found, please create new entry', title='Missing PID')
