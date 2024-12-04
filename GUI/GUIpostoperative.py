@@ -6,10 +6,10 @@ from PyQt5 import QtCore
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox, QMessageBox
-from GUI.GUImedication import MedicationDialog
+from GUImedication import MedicationDialog
 from GUI.GUIsettingsDBS import DBSsettingsDialog
 from utils.helper_functions import General, Content, Clean, Output
-from dependencies import FILEDIR, SYSTEMS
+from dependencies import FILEDIR
 
 
 class PostoperativeDialog(QDialog):
@@ -65,7 +65,7 @@ class PostoperativeDialog(QDialog):
         self.dialog_medication.hide()
 
     def create_DBSsettings_dialog(self):
-        self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date)  # creates medication dialog
+        self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date)  # creates DBSsettings dialog
         self.dialog_DBSsettings.hide()
 
     def optionbox_dates_postoperative(self, layout_general):
@@ -141,15 +141,15 @@ class PostoperativeDialog(QDialog):
         layout_general.addWidget(self.optionbox_visit_information, 0, 1)
         self.optionbox_visit_informationContent = QVBoxLayout(self.optionbox_visit_information)
 
-        self.subj_IPG = QLabel('Implanted IPG:\t')
-        self.lineEditsubjIPG = QComboBox()
-        self.lineEditsubjIPG.addItem('Select implanted IPG')
-        [self.lineEditsubjIPG.addItem(k) for k in SYSTEMS]
+        #self.subj_IPG = QLabel('Implanted IPG:\t')
+        #self.lineEditsubjIPG = QComboBox()
+        #self.lineEditsubjIPG.addItem('Select implanted IPG')
+        #[self.lineEditsubjIPG.addItem(k) for k in SYSTEMS]
 
-        ipg_layout = QHBoxLayout()
-        ipg_layout.addWidget(self.subj_IPG)
-        ipg_layout.addWidget(self.lineEditsubjIPG)
-        ipg_layout.addStretch()
+        #ipg_layout = QHBoxLayout()
+        #ipg_layout.addWidget(self.subj_IPG)
+        #ipg_layout.addWidget(self.lineEditsubjIPG)
+        #ipg_layout.addStretch()
 
         self.subj_reason = QLabel('Reason:\t\t')
         self.lineEditreason = QComboBox()
@@ -169,7 +169,7 @@ class PostoperativeDialog(QDialog):
         adverse_event_layout.addWidget(self.lineEditAdverse_Event)
         adverse_event_layout.addStretch()
 
-        self.optionbox_visit_informationContent.addLayout(ipg_layout)
+        #self.optionbox_visit_informationContent.addLayout(ipg_layout)
         self.optionbox_visit_informationContent.addLayout(reason_layout)
         self.optionbox_visit_informationContent.addLayout(adverse_event_layout)
         self.optionbox_visit_information.setLayout(self.optionbox_visit_informationContent)
@@ -338,7 +338,7 @@ class PostoperativeDialog(QDialog):
     def connect_button_actions(self):
         """Defines the actions that are taken once a button is pressed or specific input is made"""
         self.lineEditreason.currentIndexChanged.connect(self.update_context)
-        self.lineEditsubjIPG.currentIndexChanged.connect(self.update_IPG)
+        #self.lineEditsubjIPG.currentIndexChanged.connect(self.update_IPG)
         self.ButtonEnterMedication.clicked.connect(self.onClickedMedication)
         self.ButtonEnterDBSsettings.clicked.connect(self.onClickedDBSsettings)
         self.button_save.clicked.connect(self.onClickedSave)
@@ -600,7 +600,7 @@ class PostoperativeDialog(QDialog):
         """updates the context according to what was selected in the ComboBox"""
 
         selected_item1 = self.lineEditreason.currentText()
-        selected_item2 = self.lineEditsubjIPG.currentText()
+        #selected_item2 = self.lineEditsubjIPG.currentText()
         optionboxes = Content.find_lineedit_objects(
             [self.optionbox_tests,
              self.optionbox_dates_postoperative,
@@ -612,8 +612,7 @@ class PostoperativeDialog(QDialog):
              self.ReportNeurosurgeryCheck,
              self.PatProgrammerCheck])
 
-        if ((selected_item1 != 'Enter new data' and selected_item1 != 'Please select date or enter new data') and
-                selected_item2 != ''):
+        if selected_item1 != 'Enter new data' and selected_item1 != 'Please select date or enter new data': # and selected_item2 != ''):
             self.set_lineedit_state(True, *optionboxes)
             self.set_checkbox_state(True, *checkboxes)
         else:
@@ -694,23 +693,23 @@ class PostoperativeDialog(QDialog):
     @QtCore.pyqtSlot()
     def onClickedDBSsettings(self):
         """shows the DBSsettiongs dialog when button is pressed"""
-        if self.lineEditsubjIPG.currentText() == 'Select implanted IPG':
-            QMessageBox.warning(self, 'No IPG Selected', 'Please select an IPG before continuing.')
-            return
-        else:
-            implanted_IPG = self.lineEditsubjIPG.currentText()
+        #if self.lineEditsubjIPG.currentText() == 'Select implanted IPG':
+        #    QMessageBox.warning(self, 'No IPG Selected', 'Please select an IPG before continuing.')
+        #    return
+        #else:
+        #    implanted_IPG = self.lineEditsubjIPG.currentText()
         try:
             reason = self.reason_visit
         except AttributeError:
             QMessageBox.warning(self, 'No reason selected', 'Please select a date or create a new date before continuing.')
             return
         print(reason)
-        self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date, reason = reason, implanted_IPG = implanted_IPG)  # creates medication dialog
+        self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date, reason = reason) #, implanted_IPG = implanted_IPG)  # creates medication dialog
         self.dialog_DBSsettings.show()
 
     @QtCore.pyqtSlot()
     def onClickedSave(self):
-        self.check_IPG_selection()
+        #self.check_IPG_selection()
         self.save_data2csv()
 
     @QtCore.pyqtSlot()
@@ -724,7 +723,7 @@ class PostoperativeDialog(QDialog):
         Returns: None
 
         """
-        self.check_IPG_selection()
+        #self.check_IPG_selection()
         self.save_data2csv()
         self.close()
 
@@ -767,12 +766,14 @@ class PostoperativeDialog(QDialog):
         # Iterate over the list and update the DataFrame
         for line_edit, column_name in line_edits:
             column_key = f'{column_name}_{match.group()}'
+            #print(column_key)
+            #print(line_edit.text())
             df_subj[column_key] = line_edit.text()
 
         # upper right
         #TODO IPG not saving yet
         df_subj['AE_{}'.format(match.group())] = self.lineEditAdverse_Event.text()
-        df_subj['Implanted_IPG'] = self.lineEditsubjIPG.currentText()
+        #df_subj['Implanted_IPG'] = self.lineEditsubjIPG.currentText()
 
         # middle right
         df_subj['UPDRS1_{}'.format(match.group())] = self.lineEditUPDRSI.text()
@@ -814,7 +815,11 @@ class PostoperativeDialog(QDialog):
             # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
 
         indices_to_update = df.index[df['Reason_postop'] == self.reason_visit]
-
+        print("df", df)
+        print("df_subj", df)
+        print("indices_to_update:")
+        print(indices_to_update)
+        #GP: self.reason_visit not accessible? or: Index empty? -> Why? ->
         # Check if any indices match the condition
         if not indices_to_update.empty:
             # Take the first index from the Int64Index object
