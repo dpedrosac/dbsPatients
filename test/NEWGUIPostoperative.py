@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QApplication, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox
-from GUI.GUImedication import MedicationDialog
+from test.GUImedication import MedicationDialog
 from utils.helper_functions import General, Content, Clean, Output, check_nan
 from dependencies import FILEDIR
 from utils.logger import logger

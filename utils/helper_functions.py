@@ -10,7 +10,7 @@ import pandas as pds
 from pathlib import Path
 from dependencies import ROOTDIR, FILEDIR, LEADS
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, QInputDialog, \
-    QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox, QMessageBox
+    QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox, QMessageBox, QDialogButtonBox
 from PyQt5 import QtCore
 
 
@@ -29,10 +29,24 @@ class General:
         """TODO: should be reoplaced as defined in dependnciesList w/ available medication against PD;
         parenthesis intended to introduce pre|intra|postoperative"""
 
-        medication = ['Levodopa Carbidopa{}', 'Levodopa Carbidopa CR{}', 'Entacapone{}', 'Tolcapone{}',
-                      'Pramipexole{}', 'Ropinirole{}', 'Rotigotin{}', 'Selegilin oral{}', 'Other{}',
-                      'Selegilin sublingual{}', 'Rasagilin{}', 'Amantadine{}', 'Apomorphine{}',
-                      'Piribedil{}', 'Safinamid{}', 'Opicapone{}']
+        medication = ['Levodopa Carbidopa{}', # delete carbidopa
+                      'Levodopa Carbidopa CR{}', #delete carbidopa
+                      #'Levodopa ER',
+                      #'Duodopa',
+                      'Entacapone{}',
+                      'Tolcapone{}',
+                      'Opicapone{}',
+                      'Selegiline oral{}',
+                      'Selegiline sublingual{}',
+                      'Rasagiline{}',
+                      'Safinamide{}',
+                      'Apomorphine{}',
+                      'Piribedil{}',
+                      'Pramipexole{}',
+                      'Ropinirole{}',
+                      'Rotigotine{}',
+                      'Amantadine{}',
+                      ]
         return medication
 
     @staticmethod
@@ -478,6 +492,31 @@ class Output:
                 print(f'Validated and formatted date: {formatted_date}')
                 return formatted_date
 
+    @staticmethod
+    def delete_msg_box(pid_subject):
+        # Create a custom dialog for user confirmation
+        dialog = QDialog()
+        dialog.setWindowTitle('Delete Data')
+        dialog_layout = QVBoxLayout(dialog)
+
+        label = QLabel(f'All data for PID {pid_subject} will be lost.\nTo proceed, type "Yes" below:')
+        dialog_layout.addWidget(label)
+
+        line_edit = QLineEdit()
+        line_edit.setFixedSize(200, 50)
+        dialog_layout.addWidget(line_edit)
+
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        dialog_layout.addWidget(button_box)
+
+        button_box.accepted.connect(dialog.accept)
+        button_box.rejected.connect(dialog.reject)
+
+        if dialog.exec() == QDialog.Accepted and line_edit.text().lower() == 'yes':
+            return True
+        else:
+            return False
+
 class Clean:
     def __init__(self, _debug=False):
         pass
@@ -497,6 +536,19 @@ class Clean:
         df = General.import_dataframe(os.path.join(FILEDIR, 'general_data.csv'))
         df = df.loc[df['ID'] == subject_id]
         return df
+
+    @staticmethod
+    def delete_subject_data(subject_id, path=FILEDIR):
+        """Deletes rows with the specified subject_id from all CSV files in the data folder."""
+        csv_files = ['preoperative.csv', 'intraoperative.csv', 'postoperative.csv', 'general_data.csv']
+
+        for file in csv_files:
+            file_path = os.path.join(path, file)
+            df = pds.read_csv(file_path)
+            df = df[df['ID'] != subject_id]  # Delete rows with the specified subject_id
+            df.to_csv(file_path, index=False)  # Save the updated DataFrame back to the CSV file
+
+
 
 
 def check_nan(x):

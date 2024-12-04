@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-import os, sys, re
+import sys
 import numpy as np
 import pandas as pds
 from PyQt5 import QtCore
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
-    QHBoxLayout, QWidget, QGridLayout, QLineEdit, QLabel, QCheckBox
-from GUI.GUImedication import MedicationDialog
+    QHBoxLayout, QGridLayout, QLineEdit, QLabel, QCheckBox
+from GUImedication import MedicationDialog
 from utils.helper_functions import General, Content, Clean, Output
 from dependencies import FILEDIR
 
@@ -32,7 +32,7 @@ class PreoperativeDialog(QDialog):
 
     def setup_general_layout(self):
         """Defines the general layout for the GUI"""
-        subj_details = General.read_current_subj()  # reads information for the subject last bein processed
+        subj_details = General.read_current_subj()  # reads information for the subject last being processed
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)  # for identical general columns in 'preoperative.csv'
 
@@ -64,11 +64,11 @@ class PreoperativeDialog(QDialog):
         # Connect button actions that are needed so that everything works
         self.connect_button_actions()
 
-        # Obtain data that has been stored already for the preoperatively
+        # Obtain data that has been stored already in preoperative.csv
         self.updatePreoperativeData()
 
     def initialize_content(self):
-        """Initializes the contant that may be needed later for reading or saving data from/to csv-files"""
+        """Initializes the content that may be needed later for reading or saving data from/to csv-files"""
 
         self.content_widgets = {
             'First_Diagnosed_preop': 'lineEditFirstDiagnosed',
@@ -100,12 +100,13 @@ class PreoperativeDialog(QDialog):
     def optionbox_dates_preoperative(self, layout_general):
         """creates upper left optionbox in which important dates are added"""
 
-        def create_line_edit_for_dates(label_text, line_edit_width=500, label_width=800):
-            label = QLabel(f'{label_text} (dd/mm/yyyy):\t\t')
+        def create_line_edit_for_dates(label_text, line_edit_width=180, label_width=250):
+            label = QLabel(f'{label_text}:\t')
             label.setFixedWidth(label_width)
             line_edit = QLineEdit()
             line_edit.setEnabled(False)
             line_edit.setFixedWidth(line_edit_width)
+            line_edit.setPlaceholderText("  (DD/MM/YYYY)")
             return label, line_edit
 
         def create_horizontal_layout_dates(*widgets):
@@ -119,36 +120,22 @@ class PreoperativeDialog(QDialog):
         self.optionbox_dates_preoperative_Content = QVBoxLayout(self.optionbox_dates_preoperative)
         layout_general.addWidget(self.optionbox_dates_preoperative, 0, 0)
 
-        FirstDiagnosed, self.lineEditFirstDiagnosed = create_line_edit_for_dates('First diagnosed')
-        AdmNeurIndCheck, self.lineEditAdmNeurIndCheck = create_line_edit_for_dates('Admission Neurology')
-        DismNeurIndCheck, self.lineEditDismNeurIndCheck = create_line_edit_for_dates('Dismission Neurology')
-        OutpatientContact, self.lineEditOutpatientContact = create_line_edit_for_dates('Outpatient contact')
-        NsurgContact, self.lineEditNsurgContact = create_line_edit_for_dates('Neurosurgical contact')
-        DBSconference, self.lineEditDBSconference = create_line_edit_for_dates('DBS conference')
+        date_labels = [
+            ('First diagnosed', 'lineEditFirstDiagnosed'),
+            ('Admission Neurology', 'lineEditAdmNeurIndCheck'),
+            ('Dismission Neurology', 'lineEditDismNeurIndCheck'),
+            ('Outpatient contact', 'lineEditOutpatientContact'),
+            ('Neurosurgical contact', 'lineEditNsurgContact'),
+            ('DBS conference', 'lineEditDBSconference')
+        ]
 
-        # Create lines of layout
-        textbox_line1_1 = create_horizontal_layout_dates(FirstDiagnosed, self.lineEditFirstDiagnosed)
-        textbox_line2_1 = create_horizontal_layout_dates(AdmNeurIndCheck, self.lineEditAdmNeurIndCheck)
-        textbox_line3_1 = create_horizontal_layout_dates(DismNeurIndCheck, self.lineEditDismNeurIndCheck)
-        textbox_line1_2 = create_horizontal_layout_dates(OutpatientContact, self.lineEditOutpatientContact)
-        textbox_line2_2 = create_horizontal_layout_dates(NsurgContact, self.lineEditNsurgContact)
-        textbox_line3_2 = create_horizontal_layout_dates(DBSconference, self.lineEditDBSconference)
-
-        # Add layouts to option box content
-        horizontal_layout = QHBoxLayout()
-        horizontal_layout.addLayout(textbox_line1_1)
-        horizontal_layout.addLayout(textbox_line1_2)
-        self.optionbox_dates_preoperative_Content.addLayout(horizontal_layout)
-
-        horizontal_layout = QHBoxLayout()
-        horizontal_layout.addLayout(textbox_line2_1)
-        horizontal_layout.addLayout(textbox_line2_2)
-        self.optionbox_dates_preoperative_Content.addLayout(horizontal_layout)
-
-        horizontal_layout = QHBoxLayout()
-        horizontal_layout.addLayout(textbox_line3_1)
-        horizontal_layout.addLayout(textbox_line3_2)
-        self.optionbox_dates_preoperative_Content.addLayout(horizontal_layout)
+        for i in range(0, len(date_labels), 2):
+            horizontal_layout = QHBoxLayout()
+            for label_text, line_edit_name in date_labels[i:i + 2]:
+                label, line_edit = create_line_edit_for_dates(label_text)
+                setattr(self, line_edit_name, line_edit)
+                horizontal_layout.addLayout(create_horizontal_layout_dates(label, line_edit))
+            self.optionbox_dates_preoperative_Content.addLayout(horizontal_layout)
 
         self.optionbox_dates_preoperative.setLayout(self.optionbox_dates_preoperative_Content)
 
@@ -168,10 +155,10 @@ class PreoperativeDialog(QDialog):
         self.lineEditNsurgContact.setEnabled(not self.lineEditNsurgContact.isEnabled())
         self.lineEditDBSconference.setEnabled(not self.lineEditDBSconference.isEnabled())
 
-
     def optionbox_reports_preoperative(self, layout_general):
 
         self.optionbox_reports_preoperative = QGroupBox('Reports and study participation:')
+        self.optionbox_reports_preoperative.setFixedHeight(90)  #GP: Set the fixed height to 90 pixels, else alignment problems
         self.optionbox_reportsContent = QVBoxLayout(self.optionbox_reports_preoperative)
         layout_general.addWidget(self.optionbox_reports_preoperative, 1, 0)
 
@@ -190,7 +177,7 @@ class PreoperativeDialog(QDialog):
 
         textbox = QHBoxLayout()
         for checkbox_name, label_text in checkboxes_info:
-            checkbox, checkbox_label = create_checkbox(label_text)
+            checkbox, checkbox_label = create_checkbox(f'{label_text}               ') #GP: added whitespace to spread out checkboxes
             setattr(self, checkbox_name, checkbox)
             setattr(self, f'{checkbox_name}_Label', checkbox_label)
             textbox.addWidget(checkbox)
@@ -240,17 +227,21 @@ class PreoperativeDialog(QDialog):
         for i in range(0, 2):  # rows
             idx_cols = 0
             for k, v in content[i].items():  # columns
-                self.GridCoordinatesLeft.addWidget(QLabel(k), i, idx_cols)
+                label = QLabel(k)
+                label.setAlignment(QtCore.Qt.AlignCenter)
+                self.GridCoordinatesLeft.addWidget(label, i, idx_cols)
+                #self.GridCoordinatesLeft.addWidget(QLabel(k), i, idx_cols)
                 idx_cols += 1
                 self.GridCoordinatesLeft.addWidget(v, i, idx_cols)
                 idx_cols += 1
 
-        self.optionbox_questionnairesContent.addStretch()
+        #self.optionbox_questionnairesContent.addStretch() #GP: fixed alignment issues
         self.optionbox_questionnairesContent.addLayout(self.GridCoordinatesLeft)
         self.optionbox_questionnairesContent.addStretch()
 
     def optionbox_preoperative_other(self, layout_general):
         self.optionbox_other = QGroupBox('Other:')
+        self.optionbox_other.setFixedHeight(90) #GP: fixed alignment issues
         self.optionbox_otherContent = QVBoxLayout(self.optionbox_other)
         layout_general.addWidget(self.optionbox_other, 3, 0)
 
@@ -268,7 +259,7 @@ class PreoperativeDialog(QDialog):
 
         box4line1 = QHBoxLayout()
         for checkbox_name, label_text in checkboxes_info:
-            checkbox, checkbox_label = create_checkbox(label_text)
+            checkbox, checkbox_label = create_checkbox(f'{label_text}               ')
             setattr(self, checkbox_name, checkbox)
             setattr(self, f'{checkbox_name}_Label', checkbox_label)
             box4line1.addWidget(checkbox)
@@ -315,7 +306,6 @@ class PreoperativeDialog(QDialog):
         # Add the horizontal layout to the general layout
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
-        # self.read_content_csv()
 
     def updatePreoperativeData(self):
         """Displays all the information that has been stored already in the csv files"""
@@ -346,8 +336,6 @@ class PreoperativeDialog(QDialog):
 
     def connect_button_actions(self):
         """Defines the actions that are taken once a button is pressed or specific input is made"""
-        # self.lineEditreason.currentIndexChanged.connect(self.update_context)
-        # self.lineEditsubjIPG.currentIndexChanged.connect(self.update_IPG)
         self.button_medication.clicked.connect(self.onClickedMedication)
         self.button_save.clicked.connect(self.onClickedSave)
         self.button_save_return.clicked.connect(self.onClickedSaveReturn)
@@ -364,7 +352,15 @@ class PreoperativeDialog(QDialog):
     def onClickedMedication(self):
         """Shows medication dialog ; former implementation with creating GUI was replaced with show/hide GUI which is
         initiated at beginning at the disadvantage of not being saved until GUIpreoperative is closed"""
-        self.dialog_medication.show()
+
+        subject_id = General.read_current_subj().id[0]
+        df = General.import_dataframe(f'{self.date}.csv', separator_csv=',')
+
+        if subject_id in df['ID'].values:
+            self.dialog_medication.show()
+        else:
+            Output.msg_box('Please save data before entering medication!', f'No entry for ID: {subject_id}')
+            return
 
     @QtCore.pyqtSlot()
     def onClickedSave(self):
@@ -405,7 +401,7 @@ class PreoperativeDialog(QDialog):
         for column, widget in self.content_widgets.items():
             if 'lineEdit' in widget:
                 widget_object = getattr(self, widget)
-                print(widget_object.text())
+                #print(widget_object.text())
                 date = General.validate_and_format_dates(widget_object.text())
                 df_subj[column] = date
             else:

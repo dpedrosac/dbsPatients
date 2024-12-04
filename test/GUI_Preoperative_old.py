@@ -4,7 +4,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLineEdit, QLabel, QComboBox, QPushButton
 
-from GUI.GUImedication import MedicationDialog
+from test.GUImedication import MedicationDialog
 
 textfield_width = 450
 
