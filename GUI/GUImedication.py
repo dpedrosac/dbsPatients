@@ -57,7 +57,7 @@ class MedicationDialog(QDialog):
 
         layout_bottom = QHBoxLayout()
         layout_ledd = QHBoxLayout()
-        self.ledd_label = QLabel('LEDD:')
+        self.ledd_label = QLabel('Total, LEDD:')
         self.ledd_total = QLabel('')
         layout_ledd.addWidget(self.ledd_label)
         layout_ledd.addWidget(self.ledd_total)
@@ -80,7 +80,7 @@ class MedicationDialog(QDialog):
     def add_medication_row(self, idx, med):
 
         if idx % 10 == 0 and idx >= 20:
-            print("index", idx)
+            #print("index", idx)
             headers = ['Medication', 'Dose', 'Unit', '/Day\t']
             for i, header in enumerate(headers):
                 label = QLabel(header)
@@ -118,9 +118,103 @@ class MedicationDialog(QDialog):
     def onClickedAddMedication(self, row):
         self.add_medication_row(row, 'Enter new Medication')
 
-
     def onClickedCalculateLEDD(self):
+        self.calculate_ledd()
 
+    @QtCore.pyqtSlot()
+    def onClickedSaveReturn(self):
+        subj_id = General.read_current_subj().id[0]
+        df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+
+        match = re.search(r'^(pre|intra|post)op', self.date)
+        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
+                    for v in self.medication_names}
+
+        #print(self.inputs)
+
+        idx2replace = df.index[df['ID'] == subj_id][0]
+        df_subj = df.iloc[idx2replace, :]
+        #print(self.inputs)
+        #print(df_items)
+        #print(self.date.replace("erative", ""))
+
+        for k, v in df_items.items():
+            med_label, dose_input, dose_unit, med_times = self.inputs[list(df_items.keys()).index(k)]
+            if dose_input.text() and med_times.text():
+                df_subj[k] = f"{dose_input.text()}§{dose_unit.text()}§{med_times.text()}"
+            else:
+                df_subj[k] = ""
+
+        other_medications = ""
+        if len(self.inputs) > len(df_items.keys()):
+            for i in range(len(df_items.keys()), len(self.inputs)):
+                med_label, dose_input, dose_unit, med_times = self.inputs[i]
+                if med_label.text() and dose_input.text() and med_times.text():
+                    other_medications += f"{med_label.text()}§{dose_input.text()}§{dose_unit.text()}§{med_times.text()}"
+                    if i < len(self.inputs) - 1:
+                        other_medications += "%"
+            df_subj[f"Other_{self.date.replace("erative", "")}"] = other_medications
+
+        self.onClickedCalculateLEDD()
+        df_subj[f"LEDD_{self.date.replace('erative', '')}"] = float(self.ledd_total.text())
+
+        df.iloc[idx2replace, :] = df_subj
+        df = df.fillna(np.nan).infer_objects(copy=False)
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+
+        self.close()
+
+    def updateDisplayedMedication(self):
+        df_subj = Content.extract_saved_data(self.date)
+        match = re.search(r'^(pre|intra|post)op', self.date)
+        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
+                    for v in self.medication_names}
+
+        if not df_subj["ID"]:
+            return
+        #print(df_items)
+        for k, v in df_items.items():
+            med_label, dose_input, dose_unit, med_times = self.inputs[list(df_items.keys()).index(k)]
+            if v != 'Other':
+                value = str(df_subj['{}_{}'.format(v, match.group())][0])
+                #print(type(value))
+                #print(value)
+                if value != 'nan':
+                    dose_input.setText(value.split('§')[0])
+                    med_times.setText(value.split('§')[2])
+                else:
+                    dose_input.setText("")
+                    med_times.setText("")
+            else:
+                other_medications = df_subj.get(f"Other_{self.date.replace('erative', '')}")
+                test = df_subj.get("Entacapone_preop")
+                #print(test)
+                #print(type(test))
+                try:
+                    other_medications_str = other_medications[0]
+                    other_list = other_medications_str.split('%')
+                    #print(other_list)
+                    for med in other_list:
+                        med = med.replace("[]''", "")
+                        if med != "":
+                            med_label_text, dose_input_text, dose_unit_text, med_times_text = med.split('§')
+                            self.onClickedAddMedication(len(self.inputs))
+                            med_label, dose_input, dose_unit, med_times = self.inputs[len(self.inputs) - 1]
+                            med_label.setText(med_label_text)
+                            dose_input.setText(dose_input_text)
+                            dose_unit.setCurrentText(dose_unit_text)
+                            med_times.setText(med_times_text)
+                except AttributeError:
+                    print("Error")
+                    pass
+        ledd_value = df_subj[f"LEDD_{self.date.replace('erative', '')}"][0]
+        if pd.notna(ledd_value):
+            self.ledd_total.setText(str(ledd_value))
+
+        self.calculate_ledd()
+        return
+
+    def calculate_ledd(self):
         conversion_factors = {"Levodopa Carbidopa": 1,  # IR
                               "Levodopa Carbidopa CR": 0.75,
                               "Levodopa (ER)": 0.5,  # missing
@@ -138,7 +232,7 @@ class MedicationDialog(QDialog):
                               "Ropinirole": 20,
                               "Rotigotine": 30,
                               "Amantadine": 1,
-                              'Other' : 0
+                              'Other': 0
                               }
 
         total_led = 0
@@ -159,7 +253,7 @@ class MedicationDialog(QDialog):
                 except ValueError:
                     pass
             elif 'capone' in med_name:
-                if dose_input.text() != '':
+                if dose_input.text() != '' and float(dose_input.text()) > 0:
                     try:
                         dose = total_led
                         comt = dose * factor
@@ -179,101 +273,7 @@ class MedicationDialog(QDialog):
         print(total_comt)
         print(total_ledd)
         total_ledd += total_led + total_comt
-        self.ledd_total.setText(f"{total_ledd:.2f}")
-
-
-    @QtCore.pyqtSlot()
-    def onClickedSaveReturn(self):
-        subj_id = General.read_current_subj().id[0]
-        df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
-
-        match = re.search(r'^(pre|intra|post)op', self.date)
-        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
-                    for v in self.medication_names}
-
-        print(self.inputs)
-        print(self.inputs[13][0].text(), self.inputs[14][0].text())
-
-        idx2replace = df.index[df['ID'] == subj_id][0]
-        df_subj = df.iloc[idx2replace, :]
-        print(self.inputs)
-        print(df_items)
-        print(self.date.replace("erative", ""))
-
-        for k, v in df_items.items():
-            med_label, dose_input, dose_unit, med_times = self.inputs[list(df_items.keys()).index(k)]
-            if dose_input.text() and med_times.text():
-                df_subj[k] = f"{dose_input.text()}§{dose_unit.text()}§{med_times.text()}"
-            else:
-                df_subj[k] = ""
-
-        other_medications = ""
-        if len(self.inputs) > len(df_items.keys()):
-            for i in range(len(df_items.keys()), len(self.inputs)):
-                med_label, dose_input, dose_unit, med_times = self.inputs[i]
-                if med_label.text() and dose_input.text() and med_times.text():
-                    other_medications += f"{med_label.text()}§{dose_input.text()}§{dose_unit.text()}§{med_times.text()}"
-                    if i < len(self.inputs) - 1:
-                        other_medications += "%"
-            df_subj[f"Other_{self.date.replace("erative", "")}"] = other_medications
-
-        self.onClickedCalculateLEDD()
-        df_subj[f"LEDD_{self.date.replace('erative', '')}"] = self.ledd_total.text()
-
-        df.iloc[idx2replace, :] = df_subj
-        df = df.fillna(np.nan).infer_objects(copy=False)
-        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
-
-        self.close()
-
-    def updateDisplayedMedication(self):
-        df_subj = Content.extract_saved_data(self.date)
-        match = re.search(r'^(pre|intra|post)op', self.date)
-        df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
-                    for v in self.medication_names}
-
-        if not df_subj["ID"]:
-            return
-        print(df_items)
-        for k, v in df_items.items():
-            med_label, dose_input, dose_unit, med_times = self.inputs[list(df_items.keys()).index(k)]
-            if v != 'Other':
-                value = str(df_subj['{}_{}'.format(v, match.group())][0])
-                print(type(value))
-                print(value)
-                if value != 'nan':
-                    dose_input.setText(value.split('§')[0])
-                    med_times.setText(value.split('§')[2])
-                else:
-                    dose_input.setText("")
-                    med_times.setText("")
-            else:
-                other_medications = df_subj.get(f"Other_{self.date.replace('erative', '')}")
-                test = df_subj.get("Entacapone_preop")
-                print(test)
-                print(type(test))
-                try:
-                    other_medications_str = other_medications[0]
-                    other_list = other_medications_str.split('%')
-                    print(other_list)
-                    for med in other_list:
-                        med = med.replace("[]''", "")
-                        if med != "":
-                            med_label_text, dose_input_text, dose_unit_text, med_times_text = med.split('§')
-                            self.onClickedAddMedication(len(self.inputs))
-                            med_label, dose_input, dose_unit, med_times = self.inputs[len(self.inputs) - 1]
-                            med_label.setText(med_label_text)
-                            dose_input.setText(dose_input_text)
-                            dose_unit.setCurrentText(dose_unit_text)
-                            med_times.setText(med_times_text)
-                except AttributeError:
-                    print("Error")
-                    pass
-        ledd_value = df_subj[f"LEDD_{self.date.replace('erative', '')}"][0]
-        if pd.notna(ledd_value):
-            self.ledd_total.setText(str(ledd_value))
-
-        return
+        self.ledd_total.setText(f"{total_ledd:.2f} mg")
 
 
 if __name__ == '__main__':

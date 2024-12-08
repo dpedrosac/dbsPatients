@@ -1,15 +1,17 @@
-import sys
-from tkinter.ttk import Combobox
+import sys, os
+import pandas as pds
 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QWidget, QButtonGroup, QGroupBox, \
-    QHBoxLayout, QComboBox, QMessageBox
+    QHBoxLayout, QComboBox, QMessageBox, QLabel
 from utils.helper_functions import General, Clean, Output
 from GUI.GUIintraoperative import IntraoperativeDialog
 from GUI.GUIpostoperative import PostoperativeDialog
 from GUI.GUIpreoperative import PreoperativeDialog
 from GUI.GUIgeneral_data import CheckForGeneralData
-#from GUI.GUIcheckPID import CheckPID
+from GUI.GUIcheckPID import CheckPID
+from dependencies import ROOTDIR, FILEDIR
+
 
 
 class ChooseGUI(QDialog):
@@ -42,15 +44,24 @@ class ChooseGUI(QDialog):
         groupbox3 = QGroupBox('Change current Patient')
         self.layout.addWidget(groupbox3)
 
+
+
+
         # Set window title and geometry
-        self.setWindowTitle('Choose GUI for subj with PID: {}'.format(str(int(subj_details.pid.iloc[0]))))
-        self.setGeometry(400, 100, 800, 300)  # left, right, width, height
+        #self.setWindowTitle('Choose GUI for subj with PID: {}'.format(str(int(subj_details.pid.iloc[0]))))
+        self.setGeometry(400, 100, 800, 350)  # left, right, width, height
         self.move(750, 375)
 
         # Add buttons to the group boxes
         self.optionbox_guimain(groupbox1)
         self.optionbox_patient_data(groupbox2)
         self.optionbox_change_patient(groupbox3)
+
+        # Populate pid_list
+        self.populate_pid_list()
+
+        # Check if current_subject has an entry in general_data
+        self.check_current_subject()
 
     def optionbox_guimain(self, groupbox1):
         """Create content for buttons of GUImain and add them to the layout."""
@@ -74,37 +85,40 @@ class ChooseGUI(QDialog):
 
     def optionbox_patient_data(self, groupbox2):
         """Create content for patient data and add them to the layout."""
-        button_general_data = QPushButton('General Data')
-        button_delete_data = QPushButton('Delete Patient')
+        self.button_general_data = QPushButton('General Data')
+        self.button_delete_data = QPushButton('Delete Patient')
 
 
         vbox2 = QVBoxLayout()
-        vbox2.addWidget(button_general_data)
-        vbox2.addWidget(button_delete_data)
+        vbox2.addWidget(self.button_general_data)
+        vbox2.addWidget(self.button_delete_data)
 
         groupbox2.setLayout(vbox2)
 
-        button_general_data.clicked.connect(self.onClickGeneralData)
-        button_delete_data.clicked.connect(self.onClickDeleteData)
-
+        self.button_general_data.clicked.connect(self.onClickGeneralData)
+        self.button_delete_data.clicked.connect(self.onClickDeleteData)
 
     def optionbox_change_patient(self, groupbox3):
 
-        button_select_patient = QPushButton('Select different\nPatient')
+        select_patient_label = QLabel('Select different Patient:')
         self.pid_list = QComboBox()
-        self.pid_list.setEnabled(False)
+        self.pid_list.setEnabled(True)
         self.button_change_patient = QPushButton('Change Patient')
         self.button_change_patient.setEnabled(False)
+        self.button_checkPID = QPushButton('Add new PID\nor\nCheck PID')
 
         vbox3 = QVBoxLayout()
-        vbox3.addWidget(button_select_patient)
+        vbox3.addWidget(self.button_checkPID)
+        vbox3.addWidget(select_patient_label)
         vbox3.addWidget(self.pid_list)
         vbox3.addWidget(self.button_change_patient)
 
+
         groupbox3.setLayout(vbox3)
 
-        button_select_patient.clicked.connect(self.onClickSelectPatient)
+        #button_select_patient.clicked.connect(self.onClickSelectPatient)
         self.button_change_patient.clicked.connect(self.onClickChangePatient)
+        self.button_checkPID.clicked.connect(self.onClickCheckPID)
 
     def create_checkable_button(self, text):
         """Create a checkable button with the given text."""
@@ -164,9 +178,40 @@ class ChooseGUI(QDialog):
         filename2load = 'general_data.csv'
         General.get_data_subject(flag='general_data', pid2lookfor=self.pid_list.currentText()) #TODO change pid2lookfor to id2lookfor
         df = General.import_dataframe(filename2load, separator_csv=',')
-        idx_PID = df.index[df['PID_ORBIS'] == self.pid_list.currentText()].to_list()
+        idx_PID = df.index[df['PID_ORBIS'] == int(self.pid_list.currentText())].to_list()
+        print(idx_PID)
 
         General.write_csv_temp(df, idx_PID)  # creates a new temporary file called current_subj.csv in ./temp
+        self.restart_program()
+
+    def onClickCheckPID(self):
+        """Opens the Check PID GUI"""
+        dialog_check_pid = CheckPID(parent=self)
+        dialog_check_pid.exec_()
+        #dialog_check_pid.show()
+        self.restart_program()
+
+    def check_current_subject(self):
+        current_subj_path = os.path.join(ROOTDIR, 'temp', 'current_subj.csv')
+        general_data_path = os.path.join(FILEDIR, 'general_data.csv')
+
+        # Load the current_subj.csv file
+        current_subj_df = pds.read_csv(current_subj_path)
+
+        # Load the general_data.csv file
+        general_data_df = pds.read_csv(general_data_path)
+
+        # Check if the id in current_subj is in the ID column of general_data
+        current_id = current_subj_df['pid'].iloc[0]
+        if current_id in general_data_df['PID_ORBIS'].values:
+            self.setWindowTitle('Choose GUI for subj with PID: {}'.format(current_id))
+        else:
+            self.setWindowTitle('No PID chosen')
+            self.button_openGUI_Postoperative.setEnabled(False)
+            self.button_openGUI_Intraoperative.setEnabled(False)
+            self.button_openGUI_Preoperative.setEnabled(False)
+            self.button_general_data.setEnabled(False)
+            self.button_delete_data.setEnabled(False)
 
     def populate_pid_list(self):
         filename2load = 'general_data.csv'

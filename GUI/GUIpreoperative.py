@@ -5,16 +5,13 @@ import pandas as pds
 from PyQt5 import QtCore
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
-    QHBoxLayout, QGridLayout, QLineEdit, QLabel, QCheckBox
+    QHBoxLayout, QGridLayout, QLineEdit, QLabel, QCheckBox, QMessageBox
 from GUImedication import MedicationDialog
 from utils.helper_functions import General, Content, Clean, Output
-from dependencies import FILEDIR
+from dependencies import FILEDIR, dtype_dict_preoperative
 
 pds.options.mode.chained_assignment = None  # default='warn' cf.
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
-# TODO's: needs fix: go on 'save and return' after entering data before entering medicationGUI,
-#  or else on 'return' all windows close and data will be deleted
-
 
 class PreoperativeDialog(QDialog):
     """Dialog to introduce all important information of preoperative data ('Indikationsprüfung')"""
@@ -36,7 +33,7 @@ class PreoperativeDialog(QDialog):
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)  # for identical general columns in 'preoperative.csv'
 
-        self.create_medication_dialog()
+        #self.create_medication_dialog()
 
         self.setWindowTitle(f'Please insert the preoperative patient data (PID: {int(subj_details.pid.iloc[0])})')
         self.setGeometry(200, 100, 280, 170)
@@ -93,20 +90,21 @@ class PreoperativeDialog(QDialog):
             'S&E_preop': 'se',
         }
 
-    def create_medication_dialog(self):
-        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog
-        self.dialog_medication.hide()
+    #def create_medication_dialog(self):
+    #    self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog
+    #    self.dialog_medication.hide()
 
     def optionbox_dates_preoperative(self, layout_general):
         """creates upper left optionbox in which important dates are added"""
 
-        def create_line_edit_for_dates(label_text, line_edit_width=180, label_width=250):
+        def create_line_edit_for_dates(label_text, line_edit_width=180, label_width=350):
             label = QLabel(f'{label_text}:\t')
             label.setFixedWidth(label_width)
             line_edit = QLineEdit()
             line_edit.setEnabled(False)
             line_edit.setFixedWidth(line_edit_width)
-            line_edit.setPlaceholderText("  (DD/MM/YYYY)")
+            line_edit.setPlaceholderText("(DD/MM/YYYY)")
+            line_edit.editingFinished.connect(self.validate_date_input)
             return label, line_edit
 
         def create_horizontal_layout_dates(*widgets):
@@ -154,6 +152,20 @@ class PreoperativeDialog(QDialog):
         self.lineEditOutpatientContact.setEnabled(not self.lineEditOutpatientContact.isEnabled())
         self.lineEditNsurgContact.setEnabled(not self.lineEditNsurgContact.isEnabled())
         self.lineEditDBSconference.setEnabled(not self.lineEditDBSconference.isEnabled())
+
+    def validate_date_input(self):
+        """Validates the date input in the QLineEdit for optionbox_dates_postoperative"""
+        sender = self.sender()
+        date_text = sender.text()
+        formatted_date = General.validate_and_format_dates(date_text)
+        print(date_text)
+        if date_text == '':
+            pass
+        elif formatted_date == 'Invalid date format':
+            QMessageBox.warning(self, 'Invalid Date', 'The entered date is invalid. Please enter a date in the format DD/MM/YYYY.')
+            sender.setText('')
+        else:
+            sender.setText(formatted_date)
 
     def optionbox_reports_preoperative(self, layout_general):
 
@@ -357,6 +369,7 @@ class PreoperativeDialog(QDialog):
         df = General.import_dataframe(f'{self.date}.csv', separator_csv=',')
 
         if subject_id in df['ID'].values:
+            self.dialog_medication = MedicationDialog(parent=self, visit=self.date)
             self.dialog_medication.show()
         else:
             Output.msg_box('Please save data before entering medication!', f'No entry for ID: {subject_id}')
@@ -401,12 +414,11 @@ class PreoperativeDialog(QDialog):
         for column, widget in self.content_widgets.items():
             if 'lineEdit' in widget:
                 widget_object = getattr(self, widget)
-                #print(widget_object.text())
-                date = General.validate_and_format_dates(widget_object.text())
-                df_subj[column] = date
+                df_subj[column] = widget_object.text()
             else:
                 widget_object = getattr(self, widget)
                 df_subj[column] = widget_object.text()
+
         checkboxes = ["Video_preop", "MRI_preop", "fpcit_spect_preop", "Report_preop",
                       "Decision_DBS_preop", "icVRCS_preop", "inexVRCS_preop"]
 
@@ -446,22 +458,30 @@ class PreoperativeDialog(QDialog):
             #"hruq": ("No numerical score"),
             "eq5d": (-0.59, 1.0),
             "se": (0, 100),
-            "self.se": (0, 100)
         }
         check_inputs_text = ""
+        count = 0
         for test_name, (min_val, max_val) in neurological_tests.items():
             widget = getattr(self, test_name, None)
             if widget:
+                print(widget)
                 try:
                     value = float(widget.text())
                     if value < min_val or value > max_val:
                         check_inputs_text += f"Value for {test_name} is out of range: {value}\n"
                 except ValueError:
+                    count += 1
                     if widget.text() == "":
                         pass
                     else:
                         check_inputs_text += f"Invalid input for {test_name}: {widget.text()}\n"
-        Output.msg_box(check_inputs_text if check_inputs_text != "" else "Correct inputs", 'Check input')
+
+        if count + 1 == len(neurological_tests.keys()):
+            Output.msg_box('No inputs found', 'Check input')
+        elif check_inputs_text != "":
+            Output.msg_box(check_inputs_text, 'Check input')
+        else:
+            Output.msg_box("Correct inputs", 'Check input')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

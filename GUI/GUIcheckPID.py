@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import sys
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
+from dependencies import ROOTDIR
 from utils.helper_functions import General, Output
 from GUI.GUIgeneral_data import CheckForGeneralData
-from GUI.GUImain import ChooseGUI
+#from GUI.GUImain import ChooseGUI
 
 
 class CheckPID(QtWidgets.QDialog):
@@ -12,9 +13,9 @@ class CheckPID(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
+        self.setWindowIcon(QtGui.QIcon(f'{ROOTDIR}/test/unimr_lead_image.png'))
         self.EnterNewPID = CheckForGeneralData()
-        self.GuiMain = ChooseGUI()
+        #self.GuiMain = ChooseGUI()
 
         self.setWindowTitle('Please enter the PID to search for')
         self.setGeometry(400, 100, 500, 300)  # left, right, width, height
@@ -87,7 +88,8 @@ class CheckPID(QtWidgets.QDialog):
         if not idx_PID:
             Output.msg_box(text='No corresponding subject found, please create new entry', title='Missing PID')
             self.EnterNewPID.lineEditPID.setText(self.lineEditPID.text())  # Populate lineEditPID in EnterNewPID
-            self.EnterNewPID.show()
+            self.EnterNewPID.exec_()
+            #self.EnterNewPID.show()
             self.hide()
 
         elif len(idx_PID) > 1:
@@ -95,10 +97,14 @@ class CheckPID(QtWidgets.QDialog):
                            title='Too many PID entries')
             return
         else:
+            print("else")
+            Output.msg_box(text='PID ({}) is already existent'.format(PID2lookfor),
+                           title='PID found!')
+
             General.write_csv_temp(df, idx_PID)  # creates a new temporary file called current_subj.csv in ./temp
-            self.GuiMain.setWindowTitle(f'Current Subject: {self.lineEditPID.text()}')  #GP: update GuiMain window title
-            self.hide()
-            self.GuiMain.show()
+            #self.GuiMain.setWindowTitle(f'Current Subject: {self.lineEditPID.text()}')  #GP: update GuiMain window title
+            self.close()
+            #self.GuiMain.show()
 
 
 if __name__ == '__main__':
