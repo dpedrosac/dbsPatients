@@ -8,7 +8,7 @@ import os
 import shutil
 import pandas as pds
 from pathlib import Path
-from dependencies import ROOTDIR, FILEDIR, LEADS
+from dependencies import ROOTDIR, FILEDIR, LEADS, dtype_dict_intraoperative, dtype_dict_preoperative, dtype_dict_postoperative
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, QInputDialog, \
     QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox, QMessageBox, QDialogButtonBox
 from PyQt5 import QtCore
@@ -111,27 +111,56 @@ class General:
     def synchronize_data_with_general(flag, id2lookfor, messagebox=True, DEBUG=False):
         """adds gender and ID to where no entries were made in the csv-files"""
 
+        if flag == 'preoperative':
+            dtype_dict = dtype_dict_preoperative
+        elif flag == 'postoperative':
+            dtype_dict = dtype_dict_postoperative
+        elif flag == 'intraoperative':
+            dtype_dict = dtype_dict_intraoperative
+
         df_general = General.import_dataframe('general_data.csv', separator_csv=',')
         if df_general.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
             df_general = General.import_dataframe('general_data.csv', separator_csv=';')
 
         idx1 = df_general.index[df_general['ID'] == id2lookfor].to_list()
 
-        file2change = General.import_dataframe('{}.csv'.format(flag), separator_csv=',')
+        file2change = General.import_dataframe(f'{flag}.csv', separator_csv=',')
         if file2change.shape[1] == 1:  # avoids problems with comma-separated vs. semicolon-separated csv-files
-            file2change = General.import_dataframe('{}.csv'.format(flag), separator_csv=';')
+            file2change = General.import_dataframe(f'{flag}.csv', separator_csv=';')
+
+        # Handle empty values before casting
+        for column, dtype in dtype_dict.items():
+            if column in file2change.columns:
+                if pds.api.types.is_integer_dtype(dtype):
+                    file2change[column] = file2change[column].fillna(0)
+                elif pds.api.types.is_float_dtype(dtype):
+                    file2change[column] = file2change[column].fillna(0.0)
+                elif pds.api.types.is_string_dtype(dtype):
+                    file2change[column] = file2change[column].fillna('')
+
+        # Ensure the DataFrame has the correct data types
+        for column, dtype in dtype_dict.items():
+            if column in file2change.columns:
+                try:
+                    file2change[column] = file2change[column].astype(dtype)
+                except ValueError:
+                    if pds.api.types.is_integer_dtype(dtype):
+                        file2change[column] = 0
+                    elif pds.api.types.is_float_dtype(dtype):
+                        file2change[column] = 0.0
+                    elif pds.api.types.is_string_dtype(dtype):
+                        file2change[column] = ""
 
         indices2change = file2change.index[file2change['ID'] == id2lookfor].to_list()
         for k in indices2change:
-            # file2change['Gender'].loc[int(k)] = int(df_general['Gender'].iloc[idx1])
-            file2change['PID_ORBIS'].loc[int(k)] = int(df_general['PID_ORBIS'].iloc[idx1])
+            file2change.loc[int(k), 'PID_ORBIS'] = int(df_general.loc[idx1[0], 'PID_ORBIS'])
 
         if messagebox:
             Output.msg_box(text='There were changes in the file \n\t{} \nfor subj\n\t{}.\n Please '
-                                'confirm to continue'.format('{}.csv'.format(flag),
+                                'confirm to continue'.format(f'{flag}.csv',
                                                              int(df_general['PID_ORBIS'].iloc[idx1])),
                            title='Changed data in {}.csv'.format(flag), flag='Warning')
-        file2change.to_csv(os.path.join(FILEDIR, '{}.csv'.format(flag)), index=False)
+        file2change.to_csv(os.path.join(FILEDIR, f'{flag}.csv'), index=False)
 
         return
 
@@ -152,7 +181,10 @@ class General:
             try:
                 # Attempt to reformat the date
                 parsed_date = pds.to_datetime(date, dayfirst=True)
-                formatted_date = parsed_date.strftime('%d/%m/%Y')
+                year = parsed_date.year
+                if year > 2025: #handle future years after being parsed
+                    year -= 100
+                formatted_date = parsed_date.replace(year=year).strftime('%d/%m/%Y')
                 return formatted_date
             except ValueError:
                 return 'Invalid date format'
