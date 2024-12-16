@@ -6,8 +6,8 @@ from pathlib import Path
 import pandas as pds
 from PyQt5 import QtCore
 import numpy as np
-from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, QSpacerItem, QSizePolicy, \
-    QHBoxLayout, QGridLayout, QLineEdit, QLabel, QListWidget, QCheckBox
+from PyQt5.QtWidgets import (QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox,
+                             QHBoxLayout, QGridLayout, QLineEdit, QLabel, QListWidget, QCheckBox, QMessageBox)
 
 from GUImedication import MedicationDialog
 from GUI.GUIsettingsDBS import DBSsettingsDialog
@@ -36,8 +36,8 @@ class IntraoperativeDialog(QDialog):
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)  # for identical general columns in 'preoperative.csv'
 
-        self.create_medication_dialog()
-        self.create_DBSsettings_dialog()
+        #self.create_medication_dialog()
+        #self.create_DBSsettings_dialog()
 
         self.setWindowTitle(f'Please insert the intraoperative patient data (PID: {int(subj_details.pid.iloc[0])})')
         self.setGeometry(200, 100, 280, 170)
@@ -78,23 +78,25 @@ class IntraoperativeDialog(QDialog):
             'op_duration_intraop': 'lineEditDurationSurgery'
         }
 
-    def create_medication_dialog(self):
-        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog
-        self.dialog_medication.hide()
+    #def create_medication_dialog(self):
+    #    self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog
+    #    self.dialog_medication.hide()
 
-    def create_DBSsettings_dialog(self):
-        self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date, reason="Initial intraoperative settings")  # creates medication dialog
-        self.dialog_DBSsettings.hide()
+    #def create_DBSsettings_dialog(self):
+    #    self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date, reason="Initial intraoperative settings")  # creates medication dialog
+    #    self.dialog_DBSsettings.hide()
 
     def optionbox_dates_intraoperative(self, layout_general):
         """creates upper left optionbox in which important dates are added"""
 
-        def create_line_edit_for_dates(label_text, line_edit_width=500, label_width=800):
-            label = QLabel(f'{label_text} (dd/mm/yyyy):\t\t')
+        def create_line_edit_for_dates(label_text, line_edit_width=200, label_width=250):
+            label = QLabel(f'{label_text}:')
             label.setFixedWidth(label_width)
             line_edit = QLineEdit()
+            line_edit.setPlaceholderText('DD/MM/YYYY')
             line_edit.setEnabled(False)
             line_edit.setFixedWidth(line_edit_width)
+            line_edit.editingFinished.connect(self.validate_date_input)
             return label, line_edit
 
         def create_horizontal_layout_dates(*widgets):
@@ -135,6 +137,21 @@ class IntraoperativeDialog(QDialog):
         self.toggle_button.setFixedSize(150, 50)
         self.toggle_button.clicked.connect(self.toggle_line_edit)
         self.optionbox_datesContent.addWidget(self.toggle_button)
+
+    def validate_date_input(self):
+        #GP: nutzt die staticmethod um das Format zu überprüfen (DD/MM/YYYY)
+        """Validates the date input in the QLineEdit for optionbox_dates_postoperative"""
+        sender = self.sender()
+        date_text = sender.text()
+        formatted_date = General.validate_and_format_dates(date_text)
+        print(date_text)
+        if date_text == '':
+            pass
+        elif formatted_date == 'Invalid date format':
+            QMessageBox.warning(self, 'Invalid Date', 'The entered date is invalid. Please enter a date in the format DD/MM/YYYY.')
+            sender.setText('')
+        else:
+            sender.setText(formatted_date)
 
     def toggle_line_edit(self):
         line_edits = [
@@ -178,51 +195,55 @@ class IntraoperativeDialog(QDialog):
         layout_general.addWidget(self.optionbox3, 1, 0)
 
         # Checkboxes Reports
-        self.ReportNeurCheck = QCheckBox()
-        self.ReportNeurLabel = QLabel('Report Neurology')
-        self.ReportNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.AwakePatientCheck = QCheckBox()
-        self.AwakePatientLabel = QLabel('Awake Patient')
-        self.AwakePatientLabel.setAlignment(QtCore.Qt.AlignLeft)
+        def create_checkbox_label_pair(label_text):
+            checkbox = QCheckBox()
+            label = QLabel(label_text)
+            label.setAlignment(QtCore.Qt.AlignLeft)
+            return checkbox, label
 
+        # Checkboxes Reports
+        self.ReportNeurCheck, self.ReportNeurLabel = create_checkbox_label_pair('Report Neurology')
+        self.AwakePatientCheck, self.AwakePatientLabel = create_checkbox_label_pair('Awake Patient')
+        self.ReportNChCheck, self.ReportNChLabel = create_checkbox_label_pair('Report Neurosurgery')
+        self.ProtocolNeurCheck, self.ProtocolNeurLabel = create_checkbox_label_pair('Protocol Neurology')
+
+        # Create a single horizontal layout for all checkbox/label pairs
         box3line1 = QHBoxLayout()
         box3line1.addWidget(self.ReportNeurCheck)
         box3line1.addWidget(self.ReportNeurLabel)
-        box3line1.addStretch()
+        box3line1.addWidget(QLabel("      "))
         box3line1.addWidget(self.AwakePatientCheck)
         box3line1.addWidget(self.AwakePatientLabel)
+        box3line1.addWidget(QLabel("      "))
+        box3line1.addWidget(self.ReportNChCheck)
+        box3line1.addWidget(self.ReportNChLabel)
+        box3line1.addWidget(QLabel("      "))
+        box3line1.addWidget(self.ProtocolNeurCheck)
+        box3line1.addWidget(self.ProtocolNeurLabel)
         box3line1.addStretch()
 
-        self.ReportNChCheck = QCheckBox()
-        self.ReportNChLabel = QLabel('Report Neurosurgery')
-        self.ReportNChLabel.setAlignment(QtCore.Qt.AlignLeft)
-        self.ProtocolNeurCheck = QCheckBox()
-        self.ProtocolNeurLabel = QLabel('Protocol Neurology')
-        self.ProtocolNeurLabel.setAlignment(QtCore.Qt.AlignLeft)
-
-        box3line2 = QHBoxLayout()
-        box3line2.addWidget(self.ReportNChCheck)
-        box3line2.addWidget(self.ReportNChLabel)
-        box3line2.addStretch()
-        box3line2.addWidget(self.ProtocolNeurCheck)
-        box3line2.addWidget(self.ProtocolNeurLabel)
-        box3line2.addStretch()
-
         # Duration and Trajectories enter field
-        self.DurationSurgery = QLabel('Duration surgery (min):\t')
+        self.DurationSurgery = QLabel('Duration surgery:')
+        self.DurationSurgery.setFixedWidth(250)
         self.lineEditDurationSurgery = QLineEdit()
+        self.lineEditDurationSurgery.setFixedWidth(50)
+        self.time_label = QLabel('min')
         self.Trajectories = QLabel('Trajectories:')
+        self.Trajectories.setFixedWidth(250)
         self.lineEditTrajectories = QLineEdit()
 
+        box3line2 = QHBoxLayout()
+        box3line2.addWidget(self.DurationSurgery)
+        box3line2.addWidget(self.lineEditDurationSurgery)
+        box3line2.addWidget(self.time_label)
         box3line3 = QHBoxLayout()
-        box3line3.addWidget(self.DurationSurgery)
-        box3line3.addWidget(self.lineEditDurationSurgery)
         box3line3.addWidget(self.Trajectories)
         box3line3.addWidget(self.lineEditTrajectories)
         box3line3.addStretch()
 
         # List selection neurologist
         self.testingNeurLabel = QLabel('Testing Neurologist(s):')
+        self.testingNeurLabel.setFixedWidth(250)
         self.testingNeurList = QListWidget()
         self.testingNeurList.show()
         ls = ['Oehrn/Weber', 'Pedrosa', 'Waldthaler', 'Other']
@@ -230,13 +251,14 @@ class IntraoperativeDialog(QDialog):
 
         box3line4 = QHBoxLayout()
         box3line4.addWidget(self.testingNeurLabel)
-        #box3line4.addStretch()
         box3line4.addWidget(self.testingNeurList)
         box3line4.addStretch()
 
         self.optionbox3Content.addLayout(box3line1)
+        self.optionbox3Content.addWidget(QLabel(" "))
         self.optionbox3Content.addLayout(box3line2)
         self.optionbox3Content.addLayout(box3line3)
+        self.optionbox3Content.addWidget(QLabel(" "))
         self.optionbox3Content.addLayout(box3line4)
 
         self.optionbox3.setLayout(self.optionbox3Content)
@@ -280,10 +302,12 @@ class IntraoperativeDialog(QDialog):
     def onClickedMedication(self):
         """Shows medication dialog ; former implementation with creating GUI was replaced with show/hide GUI which is
         initiated at beginning at the disadvantage of not being saved until GUIintraoperative is closed"""
+        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)
         self.dialog_medication.show()
 
     def onClickedDBSsettings(self):
         """shows the DBSsettings dialog when button is pressed"""
+        self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date)  # creates medication dialog
         self.dialog_DBSsettings.show()
 
     @QtCore.pyqtSlot()
@@ -295,7 +319,7 @@ class IntraoperativeDialog(QDialog):
         self.save_data2csv()
         self.close()
 
-    # =========================== reloads existing data ===========================#
+    # =========================== reloads/saves  data ===========================#
     def updateIntraoperativeData(self):
         """adds information extracted from database already provided"""
 
@@ -311,7 +335,7 @@ class IntraoperativeDialog(QDialog):
                 df_subj[column][0]) != 'nan' else widget_object.setText('')
 
         # Intraoperative Checkboxes
-        checkboxes = {"report_file_NR_intraop": 'ProtocolNeurCheck',
+        checkboxes = {"report_file_NR_intraop": 'ReportNeurCheck',
                       "awake_intraop": 'AwakePatientCheck',
                       "report_file_NCh_intraop": 'ReportNChCheck',
                       "protocol_intraop": 'ProtocolNeurCheck'}
@@ -352,17 +376,6 @@ class IntraoperativeDialog(QDialog):
                 item.setSelected(False)
         return
 
-    # ====================   Defines actions when buttons are pressed      ====================
-    @QtCore.pyqtSlot()
-    def on_clickedMedication(self):
-        """shows the medication dialog when button is pressed; former implementation with creating GUI was replaced with
-        show/hide GUI which is initiated at beginning"""
-        self.dialog_medication.show()
-
-    @QtCore.pyqtSlot()
-    def onClickedSave(self):
-        self.save_data2csv()
-
     def save_data2csv(self):
         subject_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
         df_general = Clean.extract_subject_data(subject_id)
@@ -397,15 +410,14 @@ class IntraoperativeDialog(QDialog):
                     df_subj[column] = widget_object.text()
                     pass
                 else:
-                    date = General.validate_and_format_dates(widget_object.text())
-                    df_subj[column] = date
+                    df_subj[column] = widget_object.text()
             else:
                 widget_object = getattr(self, widget)
                 df_subj[column] = widget_object.text()
 
-        checkboxes = {"report_file_NR_intraop": 'ProtocolNeurCheck',
+        checkboxes = {"report_file_NR_intraop": 'ReportNeurCheck',
                       "awake_intraop": 'AwakePatientCheck',
-                      "report_file_NCh_intraop" : 'ReportNChCheck',
+                      "report_file_NCh_intraop": 'ReportNChCheck',
                       "protocol_intraop": 'ProtocolNeurCheck'}
 
 
