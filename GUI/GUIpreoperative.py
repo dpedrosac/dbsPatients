@@ -426,16 +426,31 @@ class PreoperativeDialog(QDialog):
             df_subj[checkbox] = 1 if getattr(self, checkbox).isChecked() else 0
 
         # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
-        try:
-            idx2replace = df.index[df['ID'] == subject_id][0]
-            df.loc[idx2replace, :] = df_subj
-            df = df.replace(['nan', ''], [np.nan, np.nan])
-        except IndexError:
-            df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
-            df = pds.concat([df, df_subj], ignore_index=True)
-            # df = df.append(df_subj, ignore_index=True)
-            df = df.replace('nan', np.nan)
+        # try:
+        #     idx2replace = df.index[df['ID'] == subject_id][0]
+        #     # df.loc[idx2replace, :] = df_subj
+        #     df_subj = pds.to_numeric(df_subj, errors='coerce')  # Convert to numeric, set invalid values to NaN
+        #     df.loc[idx2replace, :] = df_subj.fillna(0).astype(int)  # Replace NaN with 0 and cast to int
+        #     df = df.replace(['nan', ''], [np.nan, np.nan])
+        # except IndexError:
+        #     df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
+        #     df = pds.concat([df, df_subj], ignore_index=True)
+        #     # df = df.append(df_subj, ignore_index=True)
+        #     df = df.replace('nan', np.nan)
 
+        try: # Changed because of FutureWarning
+            idx2replace = df.index[df['ID'] == subject_id][0] # Find the index to replace where ID matches
+            df_subj = pds.Series(df_subj)
+            df.loc[idx2replace, :] = pds.to_numeric(df_subj, errors='coerce').fillna(0).astype(int)
+
+        except IndexError: # Handle case where subject_id is not found
+            new_index = df.index.max() + 1 if not df.empty else 0  # Set new index safely
+            df_subj = pds.DataFrame([df_subj], index=[new_index])  # Wrap as DataFrame with new index
+            df = pds.concat([df, df_subj], ignore_index=False)  # Append to the existing DataFrame
+
+        # Replace invalid placeholders with np.nan (e.g., 'nan', empty strings)
+        df.replace(to_replace={"": np.nan, "nan": np.nan}, inplace=True)
+        df = df.infer_objects(copy=False) # as requested by OpenAI; problem was not understandable
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 
         #self.close()

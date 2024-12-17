@@ -3,60 +3,56 @@ from setuptools.command.install import install
 import os
 import shutil
 
+# Function to parse requirements.txt
+def parse_requirements():
+    """Read requirements.txt and return a list of dependencies."""
+    requirements_file = os.path.join(os.path.dirname(__file__), "requirements.txt")
+    if os.path.exists(requirements_file):
+        with open(requirements_file) as f:
+            return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+    return []
 
-class Install_dbsPatients(install):
-    """Customized setuptools install command to handle file and folder copying."""
+class CustomInstall(install):
+    """Custom install command to handle copying files and folders."""
 
     def run(self):
-        install.run(self)
-        self.copy_custom_folders_and_files()
+        """Run the default install process and add custom steps."""
+        install.run(self)  # Run standard installation
+        self.copy_files_to_data_folder()
 
-    def copy_custom_folders_and_files(self):
-        """Copy folders and handle the `.install` folder operations."""
-        # Define paths
+    def copy_files_to_data_folder(self):
+        """Create 'data' folder and copy .install files with renaming."""
         base_dir = os.path.abspath(os.path.dirname(__file__))
-        target_base_dir = os.path.join(base_dir, "output")  # Change as needed
+        target_data_dir = os.path.join(base_dir, "data")  # Target "data" folder
 
-        # Directories to copy
-        dirs_to_copy = ["data"]
-        os.makedirs(target_base_dir, exist_ok=True)
+        # Create 'data' folder if it does not exist
+        os.makedirs(target_data_dir, exist_ok=True)
+        print(f"Created or verified 'data' folder at: {target_data_dir}")
 
-        # Copy folders
-        for folder in dirs_to_copy:
-            src = os.path.join(base_dir, folder)
-            dst = os.path.join(target_base_dir, folder)
-            if os.path.exists(src):
-                shutil.copytree(src, dst, dirs_exist_ok=True)
-                print(f"Copied {folder} to {dst}")
-            else:
-                print(f"Warning: {folder} not found in {base_dir}")
-
-        # Handle ".install" folder
+        # Source folder: .install
         install_dir = os.path.join(base_dir, ".install")
-        data_dir = os.path.join(target_base_dir, "data")
-        os.makedirs(data_dir, exist_ok=True)
 
         if os.path.exists(install_dir):
             for file_name in os.listdir(install_dir):
                 if file_name.endswith("_template.csv"):
                     src_file = os.path.join(install_dir, file_name)
-                    # Remove "_template" from the file name
                     new_file_name = file_name.replace("_template", "")
-                    dst_file = os.path.join(data_dir, new_file_name)
+                    dst_file = os.path.join(target_data_dir, new_file_name)
                     shutil.copy2(src_file, dst_file)
-                    print(f"Copied and renamed {file_name} to {dst_file}")
+                    print(f"Copied and renamed '{src_file}' to '{dst_file}'")
         else:
-            print(f"Warning: .install folder not found in {base_dir}")
+            print(f"Warning: The '.install' folder does not exist in {base_dir}")
 
 
+# Setup configuration
 setup(
     name="dbsPatients",
     version="0.1",
-    packages=find_packages(), #find_packages() will automatically discover and include the packages in the folder
-    package_data={"dbsPatients": [".install/*.csv"]}, # Not sure if needed as dbsPatients..install or similar
+    packages=find_packages(),  # Automatically discover packages
+    install_requires=parse_requirements(),  # Parse and include requirements
     cmdclass={
-        'install': Install_dbsPatients,  # Override the default install command
-            },
+        'install': CustomInstall,  # Override the install command
+         },
     include_package_data=True,
     zip_safe=False,
 )

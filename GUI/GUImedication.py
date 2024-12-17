@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys, re
-import pandas as pd
+import pandas as pds
 import numpy as np
 from PyQt5 import QtCore
 from pathlib import Path
@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBox
     QHBoxLayout, QLabel, QGridLayout, QPlainTextEdit, QComboBox
 from utils.helper_functions import General, Content
 from dependencies import FILEDIR
-pd.options.mode.chained_assignment = None
+pds.options.mode.chained_assignment = None
 
 
 class MedicationDialog(QDialog):
@@ -57,7 +57,7 @@ class MedicationDialog(QDialog):
 
         layout_bottom = QHBoxLayout()
         layout_ledd = QHBoxLayout()
-        self.ledd_label = QLabel('Total, LEDD:')
+        self.ledd_label = QLabel('Total, LEDD [in mg]:')
         self.ledd_total = QLabel('')
         layout_ledd.addWidget(self.ledd_label)
         layout_ledd.addWidget(self.ledd_total)
@@ -158,7 +158,10 @@ class MedicationDialog(QDialog):
         self.onClickedCalculateLEDD()
         df_subj[f"LEDD_{self.date.replace('erative', '')}"] = float(self.ledd_total.text())
 
-        df.iloc[idx2replace, :] = df_subj
+        # df.iloc[idx2replace, :] = df_subj Resolved FutureWarning
+        df_subj = pds.to_numeric(df_subj, errors='coerce')  # Convert to numeric, set invalid values to NaN
+        df.loc[idx2replace, :] = df_subj.fillna(0).astype(int)  # Replace NaN with 0 and cast to int
+
         df = df.fillna(np.nan).infer_objects(copy=False)
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 
@@ -208,7 +211,7 @@ class MedicationDialog(QDialog):
                     print("Error")
                     pass
         ledd_value = df_subj[f"LEDD_{self.date.replace('erative', '')}"][0]
-        if pd.notna(ledd_value):
+        if pds.notna(ledd_value):
             self.ledd_total.setText(str(ledd_value))
 
         self.calculate_ledd()
@@ -273,7 +276,8 @@ class MedicationDialog(QDialog):
         print(total_comt)
         print(total_ledd)
         total_ledd += total_led + total_comt
-        self.ledd_total.setText(f"{total_ledd:.2f} mg")
+#         self.ledd_total.setText(f"{total_ledd:.2f} mg") # difficult because of the "mg" part. Would add that if needed
+        self.ledd_total.setText(f"{total_ledd}")
 
 
 if __name__ == '__main__':
