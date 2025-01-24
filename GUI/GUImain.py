@@ -44,11 +44,7 @@ class ChooseGUI(QDialog):
         groupbox3 = QGroupBox('Change current Patient')
         self.layout.addWidget(groupbox3)
 
-
-
-
         # Set window title and geometry
-        #self.setWindowTitle('Choose GUI for subj with PID: {}'.format(str(int(subj_details.pid.iloc[0]))))
         self.setGeometry(400, 100, 800, 350)  # left, right, width, height
         self.move(750, 375)
 
@@ -88,7 +84,6 @@ class ChooseGUI(QDialog):
         self.button_general_data = QPushButton('General Data')
         self.button_delete_data = QPushButton('Delete Patient')
 
-
         vbox2 = QVBoxLayout()
         vbox2.addWidget(self.button_general_data)
         vbox2.addWidget(self.button_delete_data)
@@ -113,10 +108,8 @@ class ChooseGUI(QDialog):
         vbox3.addWidget(self.pid_list)
         vbox3.addWidget(self.button_change_patient)
 
-
         groupbox3.setLayout(vbox3)
 
-        #button_select_patient.clicked.connect(self.onClickSelectPatient)
         self.button_change_patient.clicked.connect(self.onClickChangePatient)
         self.button_checkPID.clicked.connect(self.onClickCheckPID)
 
@@ -138,7 +131,7 @@ class ChooseGUI(QDialog):
 
         selected_button = self.sender().checkedButton().text()
         if selected_button in flag_mapping.values():
-            General.get_data_subject(flag=selected_button.lower(), pid2lookfor=int(subj_details.pid.iloc[0]))
+            General.get_data_subject(flag=selected_button.lower(), pid2lookfor=subj_details.pid.iloc[0]) #GP: PID not integer
 
             if selected_button.lower() == 'preoperative':
                 dialog_date = PreoperativeDialog(parent=self)
@@ -171,14 +164,12 @@ class ChooseGUI(QDialog):
         else:
             QMessageBox.information(self, 'Action Cancelled', 'Data deletion has been cancelled.')
 
-    def onClickSelectPatient(self):
-        self.populate_pid_list()
 
     def onClickChangePatient(self):
         filename2load = 'general_data.csv'
         General.get_data_subject(flag='general_data', pid2lookfor=self.pid_list.currentText()) #TODO change pid2lookfor to id2lookfor
         df = General.import_dataframe(filename2load, separator_csv=',')
-        idx_PID = df.index[df['PID_ORBIS'] == int(self.pid_list.currentText())].to_list()
+        idx_PID = df.index[df['PID_ORBIS'] == f"PID_{self.pid_list.currentText()}"].to_list()
         print(idx_PID)
 
         General.write_csv_temp(df, idx_PID)  # creates a new temporary file called current_subj.csv in ./temp
@@ -188,7 +179,6 @@ class ChooseGUI(QDialog):
         """Opens the Check PID GUI"""
         dialog_check_pid = CheckPID(parent=self)
         dialog_check_pid.exec_()
-        #dialog_check_pid.show()
         self.restart_program()
 
     def check_current_subject(self):
@@ -204,7 +194,7 @@ class ChooseGUI(QDialog):
         # Check if the id in current_subj is in the ID column of general_data
         current_id = current_subj_df['pid'].iloc[0]
         if current_id in general_data_df['PID_ORBIS'].values:
-            self.setWindowTitle('Choose GUI for subj with PID: {}'.format(current_id))
+            self.setWindowTitle(f'Choose GUI for subj with PID: {current_id.strip("PID_")}')
         else:
             self.setWindowTitle('No PID chosen')
             self.button_openGUI_Postoperative.setEnabled(False)
@@ -222,7 +212,11 @@ class ChooseGUI(QDialog):
         self.button_change_patient.setEnabled(True)
         # Iterate through each PID_ORBIS and add it to the combobox
         for pid in df['PID_ORBIS']:
-            self.pid_list.addItem(str(pid))
+            self.pid_list.addItem(str(pid).strip("PID_"))
+        try:
+            curr_no = df.index[df['PID_ORBIS'] == General.read_current_subj().pid[0]].tolist()[0]
+            self.pid_list.setCurrentIndex(curr_no)
+        except IndexError: pass
 
     def restart_program(self):
         """Restart the program by creating a new instance of the main class."""
