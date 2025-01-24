@@ -11,8 +11,8 @@ from PyQt5.QtWidgets import (QApplication, QDialog, QPushButton, QVBoxLayout, QG
 
 from GUImedication import MedicationDialog
 from GUI.GUIsettingsDBS import DBSsettingsDialog
-from utils.helper_functions import General, Content, Clean
-from dependencies import FILEDIR
+from utils.helper_functions import General, Content, Clean, Output
+from dependencies import FILEDIR, dtype_dict_intraoperative
 
 pds.options.mode.chained_assignment = None  # default='warn' cf.
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
@@ -39,7 +39,7 @@ class IntraoperativeDialog(QDialog):
         #self.create_medication_dialog()
         #self.create_DBSsettings_dialog()
 
-        self.setWindowTitle(f'Please insert the intraoperative patient data (PID: {int(subj_details.pid.iloc[0])})')
+        self.setWindowTitle(f'Please insert the intraoperative patient data (PID: {str(subj_details.pid.iloc[0]).strip("PID_")})')
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 200)
 
@@ -302,8 +302,15 @@ class IntraoperativeDialog(QDialog):
     def onClickedMedication(self):
         """Shows medication dialog ; former implementation with creating GUI was replaced with show/hide GUI which is
         initiated at beginning at the disadvantage of not being saved until GUIintraoperative is closed"""
-        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)
-        self.dialog_medication.show()
+        subject_id = General.read_current_subj().id[0]
+        df = General.import_dataframe(f'{self.date}.csv', separator_csv=',')
+
+        if subject_id in df['ID'].values:
+            self.dialog_medication = MedicationDialog(parent=self, visit=self.date)
+            self.dialog_medication.show()
+        else:
+            Output.msg_box('Please save data before entering medication!', f'No entry for ID: {subject_id}')
+            return
 
     def onClickedDBSsettings(self):
         """shows the DBSsettings dialog when button is pressed"""
@@ -393,8 +400,7 @@ class IntraoperativeDialog(QDialog):
         # Compare with general_data.csv
         try:
             df_subj['ID'] = General.read_current_subj().id[0]
-            df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][
-                0]  # is this necessary? -> Error if subj has no data in general_data
+            df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][0]
             df_subj['Gender'] = df_general['gender'][0]
             df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
         except KeyError:
@@ -402,18 +408,10 @@ class IntraoperativeDialog(QDialog):
 
         # Now extract changed data from the GUI
         for column, widget in self.content_widgets.items():
-            if 'lineEdit' in widget:
-                widget_object = getattr(self, widget)
-                print(widget_object.text())
-                if widget == 'lineEditTrajectories' or widget == 'lineEditDurationSurgery':
-                    widget_object = getattr(self, widget)
-                    df_subj[column] = widget_object.text()
-                    pass
-                else:
-                    df_subj[column] = widget_object.text()
-            else:
-                widget_object = getattr(self, widget)
-                df_subj[column] = widget_object.text()
+            widget_object = getattr(self, widget)
+            df_subj[column] = widget_object.text().strip()
+            if df_subj[column] == "":
+                df_subj[column] = ""
 
         checkboxes = {"report_file_NR_intraop": 'ReportNeurCheck',
                       "awake_intraop": 'AwakePatientCheck',
@@ -425,19 +423,62 @@ class IntraoperativeDialog(QDialog):
             df_subj[df_name] = 1 if getattr(self, checkbox_name).isChecked() else 0
 
         # Extract selected items from QListWidgets
-        selected_neurologist_items = [self.testingNeurList.item(i).text() for i in
-                                      range(self.testingNeurList.count()) if
-                                      self.testingNeurList.item(i).isSelected()]
+        selected_neurologist_items = [self.testingNeurList.item(i).text() for i in range(self.testingNeurList.count())
+                                      if self.testingNeurList.item(i).isSelected()]
         df_subj["neur_test_intraop"] = ', '.join(selected_neurologist_items)
 
         selected_target_items = [self.targetList.item(i).text() for i in range(self.targetList.count()) if
                                  self.targetList.item(i).isSelected()]
         df_subj["target_intraop"] = ', '.join(selected_target_items)
 
+        # Ensure the correct data types using dtype_dict_intraoperative
+        error_keys = []
+        for key, dtype in dtype_dict_intraoperative.items():
+            if key in df_subj:
+                try:
+                    if dtype == "float64":
+                        df_subj[key] = float(df_subj[key]) if df_subj[key] != "" else np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = int(df_subj[key]) if df_subj[key] != "" else pds.NA
+                    elif dtype == "object":
+                        df_subj[key] = str(df_subj[key]) if df_subj[key] != "" else ""
+                    df_subj[key] = pds.array([df_subj[key]], dtype=dtype)[0]
+                except (ValueError, TypeError):
+                    print("Error", dtype, df_subj[key])
+                    error_keys.append(key)
+                    if dtype == "float64":
+                        df_subj[key] = np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = pds.NA
+                    elif dtype == "object":
+                        df_subj[key] = ""
+
+        for error_key in error_keys:
+            print(error_key, df_subj[error_key], df[error_key])
+
+        # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
+        try:
+            idx2replace = df.index[df['ID'] == subject_id][0]
+            for key, value in df_subj.items():
+                if pds.isna(value) or value in ["", "nan"]:
+                    if key in dtype_dict_intraoperative.keys():
+                        df[key] = df[key].astype(dtype_dict_intraoperative[key])
+                        df.at[idx2replace, key] = value
+                else:
+                    if key in dtype_dict_intraoperative.keys():
+                        df[key] = df[key].astype(dtype_dict_intraoperative[key])
+                        df.at[idx2replace, key] = value
+        except IndexError:
+            df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
+            df = pds.concat([df, df_subj], ignore_index=True)
+
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+
+        """
         # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
         # try:
         #     idx2replace = df.index[df['ID'] == subject_id][0]
-        #     # df.loc[idx2replace, :] = df_subj
+        #     df.loc[idx2replace, :] = df_subj
         #     df_subj = pds.to_numeric(df_subj, errors='coerce')  # Convert to numeric, set invalid values to NaN
         #     df.loc[idx2replace, :] = df_subj.fillna(0).astype(int)  # Replace NaN with 0 and cast to int
         #     df = df.replace(['nan', ''], [np.nan, np.nan])
@@ -456,9 +497,7 @@ class IntraoperativeDialog(QDialog):
             new_index = df.index.max() + 1 if not df.empty else 0  # Set new index safely
             df_subj = pds.DataFrame([df_subj], index=[new_index])  # Wrap as DataFrame with new index
             df = pds.concat([df, df_subj], ignore_index=False)  # Append to the existing DataFrame
-
-
-        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+        """
 
 
 if __name__ == '__main__':
