@@ -17,7 +17,7 @@ pd.options.mode.chained_assignment = None
 class DBSsettingsDialog(QDialog):
     """Dialog to introduce the DBS-Settings at a specific date."""
 
-    def __init__(self, visit='postoperative', reason = "DD/MM/YYY",  parent=None):
+    def __init__(self, visit='postoperative', reason = "DD/MM/YYYY",  parent=None):
         super(DBSsettingsDialog, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.date = visit  # ensures the right date is entered
@@ -40,7 +40,9 @@ class DBSsettingsDialog(QDialog):
         """Defines the general layout for the GUI"""
 
         subj_details = General.read_current_subj() # reads information for the subject last being processed
-        self.setWindowTitle(f'Postoperative DBS settings (PID: {int(subj_details.pid.iloc[0])}) on date: {self.reason}')
+        if self.reason != "DD/MM/YYYY":
+            self.setWindowTitle(f'Postoperative DBS settings (PID: {str(subj_details.pid.iloc[0]).strip("PID_")}) on date: {self.reason}')
+        else: self.setWindowTitle(f'Intraoperative DBS settings (PID: {str(subj_details.pid.iloc[0]).strip("PID_")})')
 
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
@@ -498,7 +500,7 @@ class DBSsettingsDialog(QDialog):
                         widget = self.findChild((QLineEdit, QComboBox), key)
                         if widget:
                             if isinstance(widget, QLineEdit):
-                                if str(value) == "" or str(value) == "nan":
+                                if str(value) == "" or str(value) == "nan" or pd.isna(value):
                                     widget.setText("")
                                 else:
                                     widget.setText(value if value == str else str(value))
@@ -538,7 +540,10 @@ class DBSsettingsDialog(QDialog):
                         widget = self.findChild((QLineEdit, QComboBox), key)
                         if widget:
                             if isinstance(widget, QLineEdit):
-                                widget.setText(value if value == str else str(value))
+                                if pd.isna(value) or value == "" or value == "nan":
+                                    widget.setText("")
+                                else:
+                                    widget.setText(value if value == str else str(value))
                             elif isinstance(widget, QComboBox):
                                 pass
             except IndexError:
@@ -549,31 +554,34 @@ class DBSsettingsDialog(QDialog):
         current_subj = General.read_current_subj()
         subject_id = current_subj['id'][0]
         df_general = Clean.extract_subject_data(subject_id)
-        match = re.search(r'^(pre|intra|post)op', self.date)
 
-        df_subj = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+        df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+
         if self.date == 'postoperative':
             try:
-                df_current = df_subj[df_subj['Reason_postop'] == self.reason].iloc[0].to_dict()
+                df_subj = df[df['Reason_postop'] == self.reason].iloc[0].to_dict()
             except IndexError:
-                df_current = pd.Series(['nan' for _ in range(len(df_subj.columns))], index=df_subj.columns)
+                df_subj = {k: '' for k in df.columns}
+            dtype_dict = dependencies.dtype_dict_postoperative
         elif self.date == 'intraoperative':
             try:
-                df_current = df_subj.iloc[df_subj.index[df_subj['ID'] == subject_id][0], :].to_dict()
+                df_subj = df.iloc[df.index[df['ID'] == subject_id][0], :].to_dict()
             except IndexError:
-                df_current = pd.Series(['nan' for _ in range(len(df_subj.columns))], index=df_subj.columns)
+                df_subj = {k: '' for k in df.columns}
+            dtype_dict = dependencies.dtype_dict_intraoperative
         else:
-            df_current = pd.Series(['nan' for _ in range(len(df_subj.columns))], index=df_subj.columns)
+            df_subj = {k: '' for k in df.columns}
+            dtype_dict = {}
 
         df_general.reset_index(inplace=True, drop=True)
-        df_current['ID'] = General.read_current_subj().id[0]
-        df_current['PID_ORBIS'] = df_general.iloc[0, :]['PID_ORBIS']
-        df_current['Gender'] = df_general['gender'][0]
+        df_subj['ID'] = General.read_current_subj().id[0]
+        df_subj['PID_ORBIS'] = df_general.iloc[0, :]['PID_ORBIS']
+        df_subj['Gender'] = df_general['gender'][0]
 
         # Save lead Implanted_IPG, Lead_manufacturer and implanted_leads
-        df_current['Implanted_IPG'] = self.lineEditIPG.currentText()
-        df_current['Lead_manufacturer'] = self.lineEditLeadManufacturer.currentText()
-        df_current['implanted_leads'] = self.lineEditLeads.currentText()
+        df_subj['Implanted_IPG'] = self.lineEditIPG.currentText()
+        df_subj['Lead_manufacturer'] = self.lineEditLeadManufacturer.currentText()
+        df_subj['implanted_leads'] = self.lineEditLeads.currentText()
 
         # DBS-Leads Data
         data = {}
@@ -593,23 +601,80 @@ class DBSsettingsDialog(QDialog):
 
         # Update the DataFrame with the collected data
         for key, value in data.items():
-            df_current[key] = value
-
+            df_subj[key] = value
+        """
         if self.date == 'postoperative':
-            indices_to_update = df_subj.index[df_subj['Reason_postop'] == self.reason]
+            indices_to_update = df.index[df['Reason_postop'] == self.reason]
         elif self.date == 'intraoperative':
-            indices_to_update = df_subj.index[df_subj['ID'] == subject_id]
+            indices_to_update = df.index[df['ID'] == subject_id]
         else:
             indices_to_update = pd.Index([])
 
+        real_df = pd.DataFrame([df_subj])
         if not indices_to_update.empty:
             index_to_update = indices_to_update[0]
-            df_subj.loc[index_to_update] = df_current
-        else:
-            # Handle the case when the index is not found
-            print(f"Index for Reason_postop '{self.reason}' not found.")
+            for key, dtype in dtype_dict.items():
+                if key in df_subj:
+                    try:
+                        real_df[key] = real_df[key].astype(dtype)
+                    except ValueError:
+                        real_df[key] = np.nan
+            for key, value in current_subj.items():
+                if key in dtype_dict.keys():
+                    df[key] = df[key].astype(dtype_dict[key])
 
-        df_subj.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+            df.loc[index_to_update] = real_df.iloc[0]
+        else:
+            df = df.append(df_subj, ignore_index=True)
+
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)"""
+
+        for key, dtype in dtype_dict.items():
+            if key in df_subj:
+                try:
+                    if dtype == "float64":
+                        df_subj[key] = str(df_subj[key]) if not (
+                                pd.isna(df_subj[key]) or str(df_subj[key]) in ["", "nan"]) else np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = str(df_subj[key]) if not (
+                                pd.isna(df_subj[key]) or str(df_subj[key]) in ["", "nan"]) else pd.NA
+                    elif dtype == "object":
+                        df_subj[key] = str(df_subj[key]) if not (
+                                    pd.isna(df_subj[key]) or str(df_subj[key]) in ["", "nan"]) else ""
+                    df_subj[key] = pd.array([df_subj[key]], dtype=dtype)[0]
+                except (ValueError, TypeError):
+                    print("Error", dtype, df_subj[key])
+                    if dtype == "float64":
+                        df_subj[key] = np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = pd.NA
+                    elif dtype == "object":
+                        df_subj[key] = ""
+
+        try:
+            if self.date == 'postoperative':
+                idx2replace = df.index[df['Reason_postop'] == self.reason][0]
+            elif self.date == 'intraoperative':
+                idx2replace = df.index[df['ID'] == subject_id][0]
+            else:
+                idx2replace = pd.Index([])
+            for key, value in df_subj.items():
+                if pd.isna(value) or value in ["", "nan"]:
+                    if key in dtype_dict.keys():
+                        df[key] = df[key].astype(dtype_dict[key])
+                        df.at[idx2replace, key] = value
+                else:
+                    if key in dtype_dict.keys():
+                        df[key] = df[key].astype(dtype_dict[key])
+                        df.at[idx2replace, key] = value
+                    df.at[idx2replace, key] = value
+        except IndexError:
+            df_subj = pd.DataFrame(df_subj, index=[df.index.shape[0]])
+            df_subj = df_subj.dropna(how='all')  # Exclude all-NA entries
+            df = pd.concat([df, df_subj], ignore_index=True)  # GP: FutureWarning, as long as one column does not have any data
+
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+
         self.close()
 
 if __name__ == '__main__':
