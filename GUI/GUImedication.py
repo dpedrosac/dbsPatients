@@ -7,20 +7,23 @@ from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QLabel, QGridLayout, QPlainTextEdit, QComboBox
 from utils.helper_functions import General, Content
-from dependencies import FILEDIR
+from dependencies import FILEDIR, dtype_dict_postoperative, dtype_dict_intraoperative, dtype_dict_preoperative
 pds.options.mode.chained_assignment = None
 
 
 class MedicationDialog(QDialog):
     """Dialog to introduce the medication at a specific date."""
 
-    def __init__(self, visit='preoperative', parent=None):
+    def __init__(self, visit='preoperative', postop_date = False, parent=None):
         super(MedicationDialog, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.date = visit
         self.inputs = {}
+        self.postop_date = postop_date
         self.medication_names = General.available_PDmedication()
         self.setup_ui()
+        if postop_date:
+            print(self.postop_date)
 
     def setup_ui(self):
         self.setup_general_layout()
@@ -28,7 +31,7 @@ class MedicationDialog(QDialog):
 
     def setup_general_layout(self):
         df_subj = Content.extract_saved_data(self.date)
-        self.setWindowTitle('{} Medication of PID: {}'.format(self.date.capitalize(), int(General.read_current_subj().pid.iloc[0])))
+        self.setWindowTitle('{} Medication of PID: {}'.format(self.date.capitalize(), str(General.read_current_subj().pid.iloc[0]).strip("PID_")))
         self.setGeometry(200, 1000, 200, 170)
         self.move(700, 250)
 
@@ -80,7 +83,6 @@ class MedicationDialog(QDialog):
     def add_medication_row(self, idx, med):
 
         if idx % 10 == 0 and idx >= 20:
-            #print("index", idx)
             headers = ['Medication', 'Dose', 'Unit', '/Day\t']
             for i, header in enumerate(headers):
                 label = QLabel(header)
@@ -130,13 +132,12 @@ class MedicationDialog(QDialog):
         df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
                     for v in self.medication_names}
 
-        #print(self.inputs)
-
-        idx2replace = df.index[df['ID'] == subj_id][0]
+        if self.postop_date:
+            idx2replace = df.index[(df['ID'] == subj_id) & (df['Reason_postop'] == self.postop_date)][0]
+        else:
+            idx2replace = df.index[df['ID'] == subj_id][0]
         df_subj = df.iloc[idx2replace, :]
-        #print(self.inputs)
-        #print(df_items)
-        #print(self.date.replace("erative", ""))
+
 
         for k, v in df_items.items():
             med_label, dose_input, dose_unit, med_times = self.inputs[list(df_items.keys()).index(k)]
@@ -158,58 +159,61 @@ class MedicationDialog(QDialog):
         self.onClickedCalculateLEDD()
         df_subj[f"LEDD_{self.date.replace('erative', '')}"] = float(self.ledd_total.text())
 
-        # df.iloc[idx2replace, :] = df_subj Resolved FutureWarning
-        df_subj = pds.to_numeric(df_subj, errors='coerce')  # Convert to numeric, set invalid values to NaN
-        df.loc[idx2replace, :] = df_subj.fillna(0).astype(int)  # Replace NaN with 0 and cast to int
+        df = df.fillna(np.nan).convert_dtypes()
+        #print(df['LEDD_preop'].dtype)
 
-        df = df.fillna(np.nan).infer_objects(copy=False)
+        for k, v in df_items.items():
+            df[k] = df[k].astype(str)
+        df[f"Other_{self.date.replace("erative", "")}"] = df[f"Other_{self.date.replace("erative", "")}"].astype(str)
+
+        df.iloc[idx2replace, :] = df_subj
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 
         self.close()
 
     def updateDisplayedMedication(self):
-        df_subj = Content.extract_saved_data(self.date)
+        if self.postop_date:
+            df_postop = Content.extract_saved_data(self.date, followup_timing=self.postop_date)
+            df_subj = df_postop.to_dict('list')
+        else:
+            df_subj = Content.extract_saved_data(self.date)
         match = re.search(r'^(pre|intra|post)op', self.date)
         df_items = {v.format('_{}'.format(match.group())).replace(' ', '_'): v.format('').replace(' ', '_')
                     for v in self.medication_names}
 
         if not df_subj["ID"]:
             return
-        #print(df_items)
+
         for k, v in df_items.items():
             med_label, dose_input, dose_unit, med_times = self.inputs[list(df_items.keys()).index(k)]
-            if v != 'Other':
-                value = str(df_subj['{}_{}'.format(v, match.group())][0])
-                #print(type(value))
-                #print(value)
-                if value != 'nan':
-                    dose_input.setText(value.split('§')[0])
-                    med_times.setText(value.split('§')[2])
-                else:
-                    dose_input.setText("")
-                    med_times.setText("")
+            value = str(df_subj['{}_{}'.format(v, match.group())][0])
+            if value != 'nan':
+                dose_input.setText(value.split('§')[0])
+                med_times.setText(value.split('§')[2])
             else:
-                other_medications = df_subj.get(f"Other_{self.date.replace('erative', '')}")
-                test = df_subj.get("Entacapone_preop")
-                #print(test)
-                #print(type(test))
-                try:
-                    other_medications_str = other_medications[0]
-                    other_list = other_medications_str.split('%')
-                    #print(other_list)
-                    for med in other_list:
-                        med = med.replace("[]''", "")
-                        if med != "":
-                            med_label_text, dose_input_text, dose_unit_text, med_times_text = med.split('§')
-                            self.onClickedAddMedication(len(self.inputs))
-                            med_label, dose_input, dose_unit, med_times = self.inputs[len(self.inputs) - 1]
-                            med_label.setText(med_label_text)
-                            dose_input.setText(dose_input_text)
-                            dose_unit.setCurrentText(dose_unit_text)
-                            med_times.setText(med_times_text)
-                except AttributeError:
-                    print("Error")
-                    pass
+                dose_input.setText("")
+                med_times.setText("")
+
+        if df_subj.get(f"Other_{self.date.replace('erative', '')}"):
+            other_medications = df_subj.get(f"Other_{self.date.replace('erative', '')}")
+            try:
+                other_medications_str = other_medications[0]
+                other_list = other_medications_str.split('%')
+                for num, med in enumerate(other_list):
+                    med = med.replace("[]''", "")
+                    if med != "":
+                        med_label_text, dose_input_text, dose_unit_text, med_times_text = med.split('§')
+                        self.onClickedAddMedication(len(self.inputs))
+                        med_label, dose_input, dose_unit, med_times = self.inputs[len(self.inputs) - 1]
+                        med_label.setText(med_label_text)
+                        dose_input.setText(dose_input_text)
+                        med_times.setText(med_times_text)
+
+            except AttributeError:
+                print("AttributeError")
+                pass
+        else: print("no other meds entered")
+
         ledd_value = df_subj[f"LEDD_{self.date.replace('erative', '')}"][0]
         if pds.notna(ledd_value):
             self.ledd_total.setText(str(ledd_value))
@@ -272,10 +276,8 @@ class MedicationDialog(QDialog):
                 except ValueError:
                     pass
 
-        print(total_led)
-        print(total_comt)
-        print(total_ledd)
         total_ledd += total_led + total_comt
+        total_ledd = int(total_ledd) #rounding because Int64 is expected
 #         self.ledd_total.setText(f"{total_ledd:.2f} mg") # difficult because of the "mg" part. Would add that if needed
         self.ledd_total.setText(f"{total_ledd}")
 
