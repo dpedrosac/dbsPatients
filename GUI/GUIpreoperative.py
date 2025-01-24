@@ -35,7 +35,7 @@ class PreoperativeDialog(QDialog):
 
         #self.create_medication_dialog()
 
-        self.setWindowTitle(f'Please insert the preoperative patient data (PID: {int(subj_details.pid.iloc[0])})')
+        self.setWindowTitle(f'Please insert the preoperative patient data (PID: {str(subj_details.pid.iloc[0]).strip("PID_")})')
         self.setGeometry(200, 100, 280, 170)
         self.move(400, 200)
 
@@ -90,10 +90,6 @@ class PreoperativeDialog(QDialog):
             'S&E_preop': 'se',
         }
 
-    #def create_medication_dialog(self):
-    #    self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog
-    #    self.dialog_medication.hide()
-
     def optionbox_dates_preoperative(self, layout_general):
         """creates upper left optionbox in which important dates are added"""
 
@@ -103,7 +99,6 @@ class PreoperativeDialog(QDialog):
             line_edit = QLineEdit()
             line_edit.setEnabled(False)
             line_edit.setFixedWidth(line_edit_width)
-            line_edit.setPlaceholderText("(DD/MM/YYYY)")
             line_edit.editingFinished.connect(self.validate_date_input)
             return label, line_edit
 
@@ -146,12 +141,20 @@ class PreoperativeDialog(QDialog):
     #GP: Nutzer hat die Möglichkeit die LineEdit zu aktivieren, beim Start inaktiv
     def toggle_line_edit(self):
         """Toggle the enabled state of the line edit"""
-        self.lineEditFirstDiagnosed.setEnabled(not self.lineEditFirstDiagnosed.isEnabled())
-        self.lineEditAdmNeurIndCheck.setEnabled(not self.lineEditAdmNeurIndCheck.isEnabled())
-        self.lineEditDismNeurIndCheck.setEnabled(not self.lineEditDismNeurIndCheck.isEnabled())
-        self.lineEditOutpatientContact.setEnabled(not self.lineEditOutpatientContact.isEnabled())
-        self.lineEditNsurgContact.setEnabled(not self.lineEditNsurgContact.isEnabled())
-        self.lineEditDBSconference.setEnabled(not self.lineEditDBSconference.isEnabled())
+        line_edits = [
+            self.lineEditFirstDiagnosed,
+            self.lineEditAdmNeurIndCheck,
+            self.lineEditDismNeurIndCheck,
+            self.lineEditOutpatientContact,
+            self.lineEditNsurgContact,
+            self.lineEditDBSconference
+        ]
+        for line_edit in line_edits:
+            line_edit.setEnabled(not line_edit.isEnabled())
+            if line_edit.isEnabled():
+                line_edit.setPlaceholderText("DD/MM/YYYY")
+            else:
+                line_edit.setPlaceholderText("")
 
     def validate_date_input(self):
         """Validates the date input in the QLineEdit for optionbox_dates_postoperative"""
@@ -318,7 +321,6 @@ class PreoperativeDialog(QDialog):
         # Add the horizontal layout to the general layout
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
-
     def updatePreoperativeData(self):
         """Displays all the information that has been stored already in the csv files"""
 
@@ -327,10 +329,19 @@ class PreoperativeDialog(QDialog):
             print("No ID for current_subject in preoperative.csv found") #GP: zum debugging
             return
 
+        integer_list = ["UPDRS_On_preop", "UPDRS_Off_preop",
+                        "NMSQ_preop", "MoCa_preop", "DemTect_preop",
+                        "MMST_preop", "PDQ8_preop", "BDI2_preop",
+                        "PDQ39_preop", "UPDRSII_preop", "H&Y_preop",
+                        "EQ5D_preop", "S&E_preop"]
+
         for column, widget in self.content_widgets.items():
             widget_object = getattr(self, widget)
-            widget_object.setText(str(df_subj[column][0])) if str(
-                df_subj[column][0]) != 'nan' else widget_object.setText('')
+            value = df_subj[column][0]
+            if column in integer_list:
+                widget_object.setText(str(int(value)) if str(value) not in ['nan', '0'] else '')
+            else:
+                widget_object.setText(str(value) if str(value) not in ['nan', '0'] else '')
 
         # Edit Upper CheckBoxes with content using a ternary operator
 
@@ -371,9 +382,9 @@ class PreoperativeDialog(QDialog):
         if subject_id in df['ID'].values:
             self.dialog_medication = MedicationDialog(parent=self, visit=self.date)
             self.dialog_medication.show()
-        else:
-            Output.msg_box('Please save data before entering medication!', f'No entry for ID: {subject_id}')
-            return
+        #else:
+        #    Output.msg_box('Please save data before entering medication!', f'No entry for ID: {subject_id}')
+        #    return
 
     @QtCore.pyqtSlot()
     def onClickedSave(self):
@@ -385,7 +396,6 @@ class PreoperativeDialog(QDialog):
         self.close()
 
     def save_data2csv(self):
-
         subject_id = General.read_current_subj().id[0]  # reads data from current_subj (saved in ./tmp)
         df_general = Clean.extract_subject_data(subject_id)
 
@@ -402,22 +412,18 @@ class PreoperativeDialog(QDialog):
         # Compare with general_data.csv
         try:
             df_subj['ID'] = General.read_current_subj().id[0]
-            df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][0] # is this necessary? -> GP: Error if subj has no data in general_data
+            df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][0]
             df_subj['Gender'] = df_general['gender'][0]
             df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
         except KeyError:
-            print("No Data in general_data for this ID found") #GP: zum debugging, kann später entfernt werden
+            print("No Data in general_data for this ID found")
 
         # Now extract changed data from the GUI
-
-        #GP: implementiert den Format-check für eingegebene Daten (DD/MM/YYYY)
         for column, widget in self.content_widgets.items():
-            if 'lineEdit' in widget:
-                widget_object = getattr(self, widget)
-                df_subj[column] = widget_object.text()
-            else:
-                widget_object = getattr(self, widget)
-                df_subj[column] = widget_object.text()
+            widget_object = getattr(self, widget)
+            df_subj[column] = widget_object.text().strip()
+            if df_subj[column] == "":
+                df_subj[column] = ""
 
         checkboxes = ["Video_preop", "MRI_preop", "fpcit_spect_preop", "Report_preop",
                       "Decision_DBS_preop", "icVRCS_preop", "inexVRCS_preop"]
@@ -425,35 +431,61 @@ class PreoperativeDialog(QDialog):
         for checkbox in checkboxes:
             df_subj[checkbox] = 1 if getattr(self, checkbox).isChecked() else 0
 
+        preop_medication = [med.replace(' ', '_').replace('{}', '_preop') for med in General.available_PDmedication()]
+
+        for med in preop_medication:
+            if med in df_subj:
+                df_subj[med] = df_subj[med] if df_subj[med] != '' else np.nan
+            else:
+                df_subj[med] = np.nan
+
+        # Ensure the correct data types using dtype_dict_preoperative
+        # why integer does not work with nullable values: https://pandas.pydata.org/docs/user_guide/integer_na.html
+        error_keys = []
+        for key, dtype in dtype_dict_preoperative.items():
+            if key in df_subj:
+                try:
+                    if dtype == "float64":
+                        df_subj[key] = float(df_subj[key]) if df_subj[key] != "" else np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = int(df_subj[key]) if df_subj[key] != "" else pds.NA
+                    elif dtype == "object":
+                        df_subj[key] = str(df_subj[key]) if df_subj[key] != "" else ""
+                    df_subj[key] = pds.array([df_subj[key]], dtype=dtype)[0]
+                except (ValueError, TypeError):
+                    print("Error", dtype, df_subj[key])
+                    error_keys.append(key)
+                    if dtype == "float64":
+                        df_subj[key] = np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = pds.NA
+                    elif dtype == "object":
+                        df_subj[key] = ""
+        print("df:", df)
+        print("df_subj:", df_subj)
+        for error_key in error_keys:
+            print(error_key, df_subj[error_key], df[error_key])
+
         # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
-        # try:
-        #     idx2replace = df.index[df['ID'] == subject_id][0]
-        #     # df.loc[idx2replace, :] = df_subj
-        #     df_subj = pds.to_numeric(df_subj, errors='coerce')  # Convert to numeric, set invalid values to NaN
-        #     df.loc[idx2replace, :] = df_subj.fillna(0).astype(int)  # Replace NaN with 0 and cast to int
-        #     df = df.replace(['nan', ''], [np.nan, np.nan])
-        # except IndexError:
-        #     df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
-        #     df = pds.concat([df, df_subj], ignore_index=True)
-        #     # df = df.append(df_subj, ignore_index=True)
-        #     df = df.replace('nan', np.nan)
+        try:
+            idx2replace = df.index[df['ID'] == subject_id][0]
+            print("INDEX2REPLACE:\n", idx2replace)
+            for key, value in df_subj.items():
+                if pds.isna(value) or value in ["", "nan"]:
+                    if key in dtype_dict_preoperative.keys():
+                        df[key] = df[key].astype(dtype_dict_preoperative[key])
+                        df.at[idx2replace, key] = value
+                else:
+                    if key in dtype_dict_preoperative.keys():
+                        df[key] = df[key].astype(dtype_dict_preoperative[key])
+                        df.at[idx2replace, key] = value
+        except IndexError:
+            df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
+            df_subj = df_subj.dropna(how='all')  # Exclude all-NA entries
+            df = pds.concat([df, df_subj], ignore_index=True) #GP: FutureWarning, as long as one column does not have any data
 
-        try: # Changed because of FutureWarning
-            idx2replace = df.index[df['ID'] == subject_id][0] # Find the index to replace where ID matches
-            df_subj = pds.Series(df_subj)
-            df.loc[idx2replace, :] = pds.to_numeric(df_subj, errors='coerce').fillna(0).astype(int)
-
-        except IndexError: # Handle case where subject_id is not found
-            new_index = df.index.max() + 1 if not df.empty else 0  # Set new index safely
-            df_subj = pds.DataFrame([df_subj], index=[new_index])  # Wrap as DataFrame with new index
-            df = pds.concat([df, df_subj], ignore_index=False)  # Append to the existing DataFrame
-
-        # Replace invalid placeholders with np.nan (e.g., 'nan', empty strings)
-        df.replace(to_replace={"": np.nan, "nan": np.nan}, inplace=True)
-        df = df.infer_objects(copy=False) # as requested by OpenAI; problem was not understandable
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 
-        #self.close()
 
     def check_inputs(self):
         """Checks if the input values for the questionnaires/scores are within the specified ranges"""
