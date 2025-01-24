@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import os
 import random
 import string
@@ -36,7 +37,7 @@ class FillGeneralData:
 
     def generate_data(self):
         data = {
-            'PID_ORBIS': [str(random.randint(1000000000, 9999999999)) for _ in range(self.num_records)],
+            'PID_ORBIS': [f"PID_{random.randint(1000000000, 9999999999)}" for _ in range(self.num_records)],
             'surname': [self.random_string().capitalize() for _ in range(self.num_records)],
             'name': [self.random_string().capitalize() for _ in range(self.num_records)],
             'birthdate': [self.random_date() for _ in range(self.num_records)],
@@ -45,7 +46,7 @@ class FillGeneralData:
             'gender': [random.choice(self.genders) for _ in range(self.num_records)],
             'diagnosis': [random.choice(self.diagnoses) for _ in range(self.num_records)],
             'side_dominance': [random.choice(self.side_dominance) for _ in range(self.num_records)],
-            'IPG_serial_number': [random.randint(10000, 99999) for _ in range(self.num_records)]
+            'IPG_serial_number': [f"IPG_{random.randint(10000, 99999)}" for _ in range(self.num_records)]
         }
         return data
 
@@ -96,7 +97,8 @@ class FillPreoperative:
 
         # Fill dates_preoperative fields with random dates from 1980 to 2020
         for field in Lists.dates_preoperative:
-            data[field] = [self.random_date() for _ in range(self.num_records)]
+            data[field] = [self.random_date() if random.choice([True, False]) else np.nan for _ in
+                           range(self.num_records)]
 
         # Fill checkboxes_preoperative fields with 0 or 1
         for field in Lists.checkboxes_preoperative:
@@ -104,14 +106,16 @@ class FillPreoperative:
 
         # Fill tests_preoperative fields with random integers from 1 to 8
         for field in Lists.tests_preoperative:
-            data[field] = [random.randint(1, 8) for _ in range(self.num_records)]
+            data[field] = [random.randint(1, 8) if random.choice([True, False]) else np.nan for _ in
+                           range(self.num_records)]
 
             # Fill medication_preoperative fields with '000§mg§0' format
             for field in Lists.medication_preoperative:
                 if field == 'Other_preop':
                     data[field] = "New_med§100§mg§1"
-                data[field] = [f"{random.choice(range(100, 1100, 100))}§mg§{random.randint(1, 6)}" for _ in
-                               range(self.num_records)]
+                else:
+                    data[field] = [f"{random.choice(range(100, 1100, 100))}§mg§{random.randint(1, 6)}" if random.choice([True, False]) else np.nan for _ in
+                           range(self.num_records)]
 
         # Fill remaining fields with empty strings or appropriate default values
         remaining_fields = set(Lists.preoperative_template_fields) - set(data.keys())
@@ -169,16 +173,15 @@ class FillPostoperative:
         }
 
         for i in range(self.num_records):
-            # Choose random Implanted_IPG and implanted_leads for each ID
             implanted_ipg = random.choice(SYSTEMS)
             implanted_leads = random.choice(list(LEADS.keys()))
             lead_manufacturer = LEADS[implanted_leads]['Manufacturer']
 
             leads_settings_general = ["IPG_LG1_ktd", "IPG_LG2_ktd", "IPG_LG1_ano", "IPG_LG2_ano",
-                              "IPG_RG1_ktd", "IPG_RG2_ktd", "IPG_RG1_ano", "IPG_RG2_ano",
-                              "Amp_LG1", "Amp_LG2", "Freq_LG1", "Freq_LG2", "PW_LG1",
-                              "PW_LG2", "Amp_RG1", "Amp_RG2", "Freq_RG1", "Freq_RG2", "PW_RG1", "PW_RG2"
-                              ]
+                                      "IPG_RG1_ktd", "IPG_RG2_ktd", "IPG_RG1_ano", "IPG_RG2_ano",
+                                      "Amp_LG1", "Amp_LG2", "Freq_LG1", "Freq_LG2", "PW_LG1",
+                                      "PW_LG2", "Amp_RG1", "Amp_RG2", "Freq_RG1", "Freq_RG2", "PW_RG1", "PW_RG2"
+                                      ]
             leads_settings = []
 
             for num in LEADS[implanted_leads]['Contacts_name'][0]:
@@ -193,7 +196,8 @@ class FillPostoperative:
                         lead_name = f'{num}_{side}_{polarity}'
                         leads_settings.append(lead_name)
 
-            for _ in range(5):  # Create 5 datasets for each ID
+            num_datasets = random.randint(1, 5)  # Create between 1 and 5 datasets for each ID
+            for _ in range(num_datasets):
                 data['PID_ORBIS'].append(self.general_data['PID_ORBIS'][i])
                 data['surname'].append(self.general_data['surname'][i])
                 data['name'].append(self.general_data['name'][i])
@@ -210,7 +214,7 @@ class FillPostoperative:
                 for field in Lists.dates_postoperative:
                     if field not in data:
                         data[field] = []
-                    data[field].append(self.random_date())
+                    data[field].append(self.random_date() if random.choice([True, False]) else np.nan)
 
                 # Fill checkboxes_postoperative fields with 0 or 1
                 for field in Lists.checkboxes_postoperative:
@@ -222,7 +226,7 @@ class FillPostoperative:
                 for field in Lists.tests_postoperative:
                     if field not in data:
                         data[field] = []
-                    data[field].append(random.randint(1, 8))
+                    data[field].append(random.randint(1, 8) if random.choice([True, False]) else np.nan)
 
                 # Fill medication_postoperative fields with 'AAA§mg§B' format
                 for field in Lists.medication_postoperative:
@@ -231,30 +235,29 @@ class FillPostoperative:
                     if field == 'Other_postop':
                         data[field].append("New_med§100§mg§1")
                     else:
-                        data[field].append(f"{random.choice(range(100, 1100, 100))}§mg§{random.randint(1, 6)}")
+                        data[field].append(f"{random.choice(range(100, 1100, 100))}§mg§{random.randint(1, 6)}" if random.choice([True, False]) else np.nan)
 
                 for field in Lists.dbs_postoperative:
                     if field not in data:
                         data[field] = []
-                    if field in leads_settings or field in leads_settings_general:
+                    if field in leads_settings_general:
                         data[field].append(random.randint(1, 10))
+                    elif field in leads_settings:
+                        data[field].append(random.choice([np.nan, random.randint(1, 10)]))
                     else:
                         data[field].append('')
 
         # Fill remaining fields with empty strings or appropriate default values
         remaining_fields = set(Lists.postoperative_template_fields) - set(data.keys())
         for field in remaining_fields:
-            data[field] = []
-            for _ in range(self.num_records):
-                for i in range(5):
-                    data[field].append('')
+            data[field] = ['' for _ in range(len(data['PID_ORBIS']))]
 
         return data
 
     def save_to_csv(self):
         data = self.generate_data_postoperative()
         df = pd.DataFrame(data)
-        df = df.reindex(columns=self.template_df.columns)  # Ensure the same format as the template
+        df = df.reindex(columns=self.template_df.columns)
         df.to_csv(self.file_path, index=False)
         print(f"Data saved to {self.file_path}")
 
@@ -339,11 +342,10 @@ class FillIntraoperative:
             data['Lead_manufacturer'].append(lead_manufacturer)
             data['implanted_leads'].append(implanted_leads)
 
-            # Fill dates_intraoperative fields with random dates from 1980 to 2020
             for field in Lists.dates_intraoperative:
                 if field not in data:
                     data[field] = []
-                data[field].append(self.random_date())
+                data[field].append(self.random_date() if random.choice([True, False]) else np.nan)
 
             # Fill checkboxes_intraoperative fields with 0 or 1
             for field in Lists.checkboxes_intraoperative:
@@ -354,7 +356,7 @@ class FillIntraoperative:
             for field in Lists.lineedits_intraoperative:
                 if field not in data:
                     data[field] = []
-                data[field].append(random.choice(range(1, 120)))
+                data[field].append(random.choice(range(1, 120)) if random.choice([True, False]) else np.nan)
 
             # Fill tests_intraoperative fields with random integers from 1 to 8
             for field in Lists.listwidgets_intraoperative:
@@ -372,15 +374,15 @@ class FillIntraoperative:
                 if field == 'Other_intraop':
                     data[field].append("New_med§100§mg§1")
                 else:
-                    data[field].append(f"{random.choice(range(100, 1100, 100))}§mg§{random.randint(1, 6)}")
-
-
+                    data[field].append(f"{random.choice(range(100, 1100, 100))}§mg§{random.randint(1, 6)}" if random.choice([True, False]) else np.nan)
 
             for field in Lists.dbs_intraoperative:
                 if field not in data:
                     data[field] = []
-                if field in leads_settings or field in leads_settings_general:
+                if field in leads_settings_general:
                     data[field].append(random.randint(1, 10))
+                elif field in leads_settings:
+                    data[field].append(random.choice([np.nan, random.randint(1, 10)]))
                 else:
                     data[field].append('')
 
@@ -396,10 +398,9 @@ class FillIntraoperative:
     def save_to_csv(self):
         data = self.generate_data_intraoperative()
         df = pd.DataFrame(data)
-        df = df.reindex(columns=self.template_df.columns)  # Ensure the same format as the template
+        df = df.reindex(columns=self.template_df.columns)
         df.to_csv(self.file_path, index=False)
         print(f"Data saved to {self.file_path}")
-
 
 if __name__ == '__main__':
     if input("Do you want to override the data? (yes/no): ").lower() == 'yes':
