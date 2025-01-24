@@ -9,13 +9,13 @@ from dependencies import FILEDIR, ROOTDIR
 class CheckForGeneralData(QDialog):
     """GUI which provides a mean to enter all the general data of a patient"""
 
-    def __init__(self, instance = None, parent=None):
+    def __init__(self, instance=None, parent=None):
         super().__init__(parent)
         self.setWindowTitle('Enter data for the unknown subject')
         self.setGeometry(400, 100, 1000, 400)  # left, right, width, height
         self.move(550, 200)
         self.textfield_width = 450
-        self.instance = instance #GP: if general_data gets accessed through GUImain
+        self.instance = instance  # GP: if general_data gets accessed through GUImain
 
         self.init_ui()
         if self.instance:
@@ -46,11 +46,6 @@ class CheckForGeneralData(QDialog):
         self.lineEditName = QLineEdit()
         self.lineEditName.setFixedWidth(self.textfield_width)
         self.lineEditName.setFixedHeight(50)
-
-        self.subj_name_suffix = QLabel('Name Suffix:\t\t')
-        self.lineEditNameSuffix = QLineEdit()
-        self.lineEditNameSuffix.setFixedWidth(self.textfield_width)
-        self.lineEditNameSuffix.setFixedHeight(50)
 
         self.subj_birthdate = QLabel('Birthdate:\t\t')
         self.lineEditBirthdate = CustomLineEdit()
@@ -112,7 +107,6 @@ class CheckForGeneralData(QDialog):
         """Add widgets to the layout"""
         self.settings_optionbox1.addLayout(self.create_hbox_layout(self.subj_surname, self.lineEditSurname))
         self.settings_optionbox1.addLayout(self.create_hbox_layout(self.subj_name, self.lineEditName))
-        self.settings_optionbox1.addLayout(self.create_hbox_layout(self.subj_name_suffix, self.lineEditNameSuffix))
         self.settings_optionbox1.addLayout(self.create_hbox_layout(self.subj_birthdate, self.lineEditBirthdate))
         self.settings_optionbox1.addLayout(self.create_hbox_layout(self.subj_PID, self.lineEditPID))
         self.settings_optionbox1.addLayout(self.create_hbox_layout(self.subj_ID, self.lineEditID))
@@ -144,20 +138,19 @@ class CheckForGeneralData(QDialog):
         self.layout_buttons.addWidget(self.button_savegeneraldata)
         self.layout_buttons.addWidget(self.button_close)
 
-    @QtCore.pyqtSlot()
     def open_calendar(self):
         """opens a calendar in order to enter the birthdate of a subject"""
-        self.calendarWindow = QWidget(self)
-        self.cal = QCalendarWidget(self)
+        self.calendarWindow = QDialog(self)
+        self.cal = QCalendarWidget(self.calendarWindow)
         self.cal.setGridVisible(True)
         self.cal.clicked[QtCore.QDate].connect(self.showDate)
 
         hbox = QHBoxLayout()
         hbox.addWidget(self.cal)
         self.calendarWindow.setLayout(hbox)
-        self.calendarWindow.setGeometry(300, 300, 700, 450)
+        self.calendarWindow.setGeometry(100, 500, 900, 500)
         self.calendarWindow.setWindowTitle('Calendar')
-        self.calendarWindow.show()
+        self.calendarWindow.exec_()
 
     def showDate(self, date):
         formatted_date = date.toString('dd/MM/yyyy')  # Format the date as DD/MM/YYYY
@@ -180,7 +173,6 @@ class CheckForGeneralData(QDialog):
         # Read the current subject file to get the PID
         pid = current_subject_df['pid'].iloc[0]
 
-
         # Read the general data file to get the corresponding data
         general_data_df = pd.read_csv(general_data_path)
         subject_data = general_data_df[general_data_df['PID_ORBIS'] == pid].iloc[0]
@@ -190,16 +182,15 @@ class CheckForGeneralData(QDialog):
         # Populate the GUI inputs with the retrieved data
         self.lineEditSurname.setText(str(subject_data['surname']))
         self.lineEditName.setText(str(subject_data['name']))
-        # self.lineEditNameSuffix.setText(str(subject_data['Name_Suffix']))
         self.lineEditBirthdate.setText(str(subject_data['birthdate']))
-        self.lineEditPID.setText(str(subject_data['PID_ORBIS']))
+        self.lineEditPID.setText(str(subject_data['PID_ORBIS']).strip("PID_"))
         self.lineEditPID.setEnabled(False)
         self.lineEditID.setText(str(subject_data['ID']))
         self.lineEditID.setEnabled(False)
         self.lineEditGender.setCurrentText(str(subject_data['gender']))
         self.lineEditDiagnosis.setCurrentText(str(subject_data['diagnosis']))
         self.lineEditDominance.setCurrentText(str(subject_data['side_dominance']))
-        self.lineEditIPG.setText(str(subject_data['IPG_serial_number']))
+        self.lineEditIPG.setText(str(subject_data['IPG_serial_number']).strip("IPG_"))
 
     @QtCore.pyqtSlot()
     def onClickedSaveGeneralData(self):
@@ -232,14 +223,15 @@ class CheckForGeneralData(QDialog):
         else:
             filename2load = os.path.join(FILEDIR, 'general_data.csv')
             df = General.import_dataframe(filename2load, separator_csv=',')
+            pid_orbis = f'PID_{self.lineEditPID.text()}'
             if self.instance:
                 # Update the existing PID
                 pid = self.lineEditPID.text()
                 print(pid)
-                idx_PID = df.index[df['PID_ORBIS'] == int(pid)].to_list()
+                idx_PID = df.index[df['PID_ORBIS'] == pid_orbis].to_list()
                 print(idx_PID)
                 if not idx_PID:
-                    QMessageBox.warning(self, 'PID Not Found', f'The PID {pid} was not found in the data.')
+                    QMessageBox.warning(self, 'PID Not Found', f'The PID {pid_orbis} was not found in the data.')
                     return
                 idx = idx_PID[0]
                 df.at[idx, 'surname'] = self.lineEditSurname.text()
@@ -249,14 +241,14 @@ class CheckForGeneralData(QDialog):
                 df.at[idx, 'gender'] = self.lineEditGender.currentText()
                 df.at[idx, 'diagnosis'] = self.lineEditDiagnosis.currentText()
                 df.at[idx, 'side_dominance'] = self.lineEditDominance.currentText()
-                df.at[idx, 'IPG_serial_number'] = self.lineEditIPG.text()
+                df.at[idx, 'IPG_serial_number'] = f"IPG_{self.lineEditIPG.text()}" #dtype problem
 
                 df.to_csv(filename2load, index=False, sep=',')
             else:
                 entered_data = [self.lineEditSurname.text(),
                                 self.lineEditName.text(),
                                 self.lineEditBirthdate.text(),
-                                self.lineEditPID.text(),
+                                pid_orbis,
                                 self.lineEditID.text(),
                                 len(df.index),
                                 str(self.lineEditGender.currentText()),
@@ -266,14 +258,13 @@ class CheckForGeneralData(QDialog):
                 df.loc[len(df)] = entered_data
                 df.to_csv(filename2load, index=False, sep=',')
 
-                #set current_subject to just entered pid
-                General.get_data_subject(flag='general_data', pid2lookfor=self.lineEditPID.text())
+                # set current_subject to just entered pid
+                General.get_data_subject(flag='general_data', pid2lookfor=pid_orbis)
                 df = General.import_dataframe(filename2load, separator_csv=',')
-                PID2lookfor = int(self.lineEditPID.text())
-                idx_PID = df.index[df['PID_ORBIS'] == PID2lookfor].to_list()
+                idx_PID = df.index[df['PID_ORBIS'] == pid_orbis].to_list()
 
                 if not idx_PID:
-                    QMessageBox.warning(self, 'PID Not Found', f'The PID {PID2lookfor} was not found in the data.')
+                    QMessageBox.warning(self, 'PID Not Found', f'The PID {pid_orbis} was not found in the data.')
                     return
 
                 General.write_csv_temp(df, idx_PID)
