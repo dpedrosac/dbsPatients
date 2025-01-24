@@ -67,21 +67,16 @@ class CheckPID(QtWidgets.QDialog):
     def onClickedCheckPID(self):
         """when button pressed, a series of checks are performed to retrieve data/to set the following GUI """
 
-        #GP: verhindert, dass der User Nullen eingibt
-        #if '0' in self.lineEditPID.text():
-        #    Output.msg_box(title='"0" detected', text='Please enter the PID without zeros')
-        #    return
-
         if not self.lineEditPID.text():
             Output.msg_box(text='Missing input for the PID, please enter a number', title='Missing input')
             return
 
         if self.lineEditPID.text():
             filename2load = 'general_data.csv'
-            General.get_data_subject(flag='general_data', pid2lookfor=self.lineEditPID.text())
+            General.get_data_subject(flag='general_data', pid2lookfor=f"PID_{self.lineEditPID.text()}")
             df = General.import_dataframe(filename2load, separator_csv=',')
 
-            PID2lookfor = self.lineEditPID.text()  # string that is searched for in metadata file
+            PID2lookfor = f"PID_{self.lineEditPID.text()}"  # string that is searched for in metadata file
             df['PID_ORBIS'] = df['PID_ORBIS'].astype(str)  # Convert the PID_ORBIS column to strings
             idx_PID = df.index[df['PID_ORBIS'] == PID2lookfor].to_list()
 
@@ -89,7 +84,6 @@ class CheckPID(QtWidgets.QDialog):
             Output.msg_box(text='No corresponding subject found, please create new entry', title='Missing PID')
             self.EnterNewPID.lineEditPID.setText(self.lineEditPID.text())  # Populate lineEditPID in EnterNewPID
             self.EnterNewPID.exec_()
-            #self.EnterNewPID.show()
             self.hide()
 
         elif len(idx_PID) > 1:
@@ -98,13 +92,12 @@ class CheckPID(QtWidgets.QDialog):
             return
         else:
             print("else")
-            Output.msg_box(text='PID ({}) is already existent'.format(PID2lookfor),
+            Output.msg_box(text='PID ({}) is already existent'.format(PID2lookfor.strip("PID_")),
                            title='PID found!')
 
             General.write_csv_temp(df, idx_PID)  # creates a new temporary file called current_subj.csv in ./temp
             #self.GuiMain.setWindowTitle(f'Current Subject: {self.lineEditPID.text()}')  #GP: update GuiMain window title
             self.close()
-            #self.GuiMain.show()
 
 
 if __name__ == '__main__':
