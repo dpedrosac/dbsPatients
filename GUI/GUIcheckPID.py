@@ -4,7 +4,6 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from dependencies import ROOTDIR
 from utils.helper_functions import General, Output
 from GUI.GUIgeneral_data import CheckForGeneralData
-#from GUI.GUImain import ChooseGUI
 
 
 class CheckPID(QtWidgets.QDialog):
@@ -13,9 +12,9 @@ class CheckPID(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowIcon(QtGui.QIcon(f'{ROOTDIR}/test/unimr_lead_image.png'))
         self.EnterNewPID = CheckForGeneralData()
-        #self.GuiMain = ChooseGUI()
 
         self.setWindowTitle('Please enter the PID to search for')
         self.setGeometry(400, 100, 500, 300)  # left, right, width, height
@@ -28,14 +27,13 @@ class CheckPID(QtWidgets.QDialog):
         self.layout = QtWidgets.QVBoxLayout(self)  # entire layout for GUI
 
         # ====================    Create Content for First Option box on Top left      ====================
-        self.optionbox_guistart = QtWidgets.QGroupBox('Please enter the PID_Orbis')
+        self.optionbox_guistart = QtWidgets.QGroupBox('Please enter the PID')
         self.settings_optionbox1 = QtWidgets.QVBoxLayout(self.optionbox_guistart)
 
         self.subj_PID = QtWidgets.QLabel('PID-ORBIS:\t\t\t')
         self.lineEditPID = QtWidgets.QLineEdit()
 
         self.lineEditPID.setFixedWidth(200)
-        # self.lineEditPID.setFixedHeight(40)
 
         lay1 = QtWidgets.QHBoxLayout()
         lay1.addWidget(self.subj_PID)
@@ -96,7 +94,6 @@ class CheckPID(QtWidgets.QDialog):
                            title='PID found!')
 
             General.write_csv_temp(df, idx_PID)  # creates a new temporary file called current_subj.csv in ./temp
-            #self.GuiMain.setWindowTitle(f'Current Subject: {self.lineEditPID.text()}')  #GP: update GuiMain window title
             self.close()
 
 
