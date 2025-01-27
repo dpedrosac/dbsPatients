@@ -245,6 +245,14 @@ class CheckForGeneralData(QDialog):
 
                 df.to_csv(filename2load, index=False, sep=',')
             else:
+                filename2load = os.path.join(FILEDIR, 'general_data.csv')
+                df = General.import_dataframe(filename2load, separator_csv=',')
+                pid_orbis = f'PID_{self.lineEditPID.text()}'
+
+                # Check if the PID already exists
+                if pid_orbis in df['PID_ORBIS'].values:
+                    QMessageBox.warning(self, 'Duplicate PID', f'The PID {pid_orbis} already exists in the data.')
+                    return
                 entered_data = [self.lineEditSurname.text(),
                                 self.lineEditName.text(),
                                 self.lineEditBirthdate.text(),
