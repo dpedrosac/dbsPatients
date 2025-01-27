@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pds
 from PyQt5 import QtCore
 from pathlib import Path
+from datetime import datetime
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
     QHBoxLayout, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox, QMessageBox, QSpacerItem, \
     QSizePolicy, QInputDialog
@@ -34,7 +35,7 @@ class PostoperativeDialog(QDialog):
 
         self.setWindowTitle(f'Please insert the postoperative information (PID: {str(subj_details.pid.iloc[0]).strip("PID_")})')
         self.setGeometry(200, 100, 280, 170)
-        self.setMaximumWidth(2500)
+        self.setMinimumWidth(1800)
         self.move(400, 200)
 
         layout_general = QGridLayout(self)
@@ -59,14 +60,17 @@ class PostoperativeDialog(QDialog):
         # Connect button actions that are needed so that everything works
         self.connect_button_actions()
 
+        self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, True)
+        self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
+
     def optionbox_dates_postoperative(self, layout_general):
         """creates upper left optionbox in which important dates are added"""
 
-        def create_line_edit_for_dates(label_text, line_edit_width=200, label_width=250):
+        def create_line_edit_for_dates(label_text, line_edit_width=180, label_width=250):
             label = QLabel(f'{label_text}:\t\t')
             label.setFixedWidth(label_width)
             line_edit = QLineEdit()
-            line_edit.setPlaceholderText('(DD/MM/YYYY)')
+            line_edit.setPlaceholderText('DD/MM/YYYY')
             line_edit.setEnabled(False)
             line_edit.setFixedWidth(line_edit_width)
             line_edit.editingFinished.connect(self.validate_date_input)
@@ -80,7 +84,7 @@ class PostoperativeDialog(QDialog):
             return layout
 
         self.optionbox_dates_postoperative = QGroupBox('Important dates')
-        self.optionbox_dates_postoperative.setMaximumWidth(600)
+        self.optionbox_dates_postoperative.setMaximumWidth(500)
         self.optionbox_datesContent = QVBoxLayout(self.optionbox_dates_postoperative)
         layout_general.addWidget(self.optionbox_dates_postoperative, 0, 0)
 
@@ -129,7 +133,7 @@ class PostoperativeDialog(QDialog):
     def optionbox_reason_for_visit_postoperative(self, layout_general):
         """creates upper right optionbox in which reasons for visit is added"""
         self.optionbox_visit_information = QGroupBox('Information on visit')
-        self.optionbox_visit_information.setMaximumWidth(1200)
+        #self.optionbox_visit_information.setMaximumWidth(1200)
         layout_general.addWidget(self.optionbox_visit_information, 0, 1)
         self.optionbox_visit_informationContent = QVBoxLayout(self.optionbox_visit_information)
 
@@ -171,7 +175,7 @@ class PostoperativeDialog(QDialog):
 
         # Create third optionbox on the second row left
         self.optionbox3 = QGroupBox('Reports')
-        self.optionbox3.setMaximumWidth(600)
+        self.optionbox3.setMaximumWidth(500)
         self.optionbox3Content = QVBoxLayout(self.optionbox3)
         layout_general.addWidget(self.optionbox3, 1, 0)
 
@@ -216,120 +220,81 @@ class PostoperativeDialog(QDialog):
         self.optionbox3.setLayout(self.optionbox3Content)
 
     def optionbox_questionnaires_postoperative(self, layout_general):
-        """optionbox containing the postopreative tests that are being applied"""
+        """Optionbox containing the postoperative tests that are being applied"""
 
-        def create_label_and_line_edit_pair(label_text, line_edit_width=50):
-            label = QLabel(label_text)
-            label.setAlignment(QtCore.Qt.AlignCenter)
-            label.setFixedWidth(130)
+        def create_label_and_line_edit_pair(col, label_text, line_edit_width=60):
+            if col == 0:
+                label = QLabel(f"{label_text}:")
+            else:
+                label = QLabel(f"\t{label_text}:")
+            label.setAlignment(QtCore.Qt.AlignRight)
             line_edit = QLineEdit()
             line_edit.setEnabled(False)
             line_edit.setFixedWidth(line_edit_width)
             return label, line_edit
 
-        def create_horizontal_layout(*widgets):
-            layout = QHBoxLayout()
-            for widget in widgets:
-                layout.addWidget(widget)
-                if widgets.index(widget) % 2 != 0 and widgets.index(widget) != 0:
-                    layout.addItem(QSpacerItem(30, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))
-            layout.addStretch()
-            return layout
+        def add_widgets_to_grid_layout(layout, row, col, *widgets):
+            for i, widget in enumerate(widgets):
+                layout.addWidget(widget, row, col + i)
 
         self.optionbox_tests = QGroupBox('Tests')
-        self.optionbox_tests.setMaximumWidth(1200)
         self.optionbox_tests_content = QVBoxLayout(self.optionbox_tests)
         layout_general.addWidget(self.optionbox_tests)
 
-        # First line of the optionbox
-        updrs_i, self.lineEditUPDRSI = create_label_and_line_edit_pair('UPDRS I')
-        updrs_iv, self.lineEditUPDRSIV = create_label_and_line_edit_pair('UPDRS IV')
-        tss, self.lineEditTSS = create_label_and_line_edit_pair('TSS')
-        cgic_pat, self.lineEditCGICPat = create_label_and_line_edit_pair('CGIC patient')
-        cgic_clinician, self.lineEditCGICClinician = create_label_and_line_edit_pair('CGIC clinician')
 
-        testbox_line1 = create_horizontal_layout(updrs_i, self.lineEditUPDRSI, updrs_iv, self.lineEditUPDRSIV,
-                                                 tss, self.lineEditTSS, cgic_pat, self.lineEditCGICPat,
-                                                 cgic_clinician, self.lineEditCGICClinician)
+        grid_layout = QGridLayout()
 
-        # Second line of the optionbox
-        updrs_on, self.lineEditUPDRSON = create_label_and_line_edit_pair('UPDRS On')
-        updrs_ii, self.lineEditUPDRSII = create_label_and_line_edit_pair('UPDRS II')
-        hruq, self.lineEditHRUQ = create_label_and_line_edit_pair('HRUQ')
-        moca, self.lineEditMoCa = create_label_and_line_edit_pair('MoCa')
-        mmst, self.lineEditMMST = create_label_and_line_edit_pair('MMST')
+        # Create label and line edit pairs
+        questionnaires_content = {
+            'UPDRS I': 'lineEditUPDRSI',
+            'UPDRS IV': 'lineEditUPDRSIV',
+            'TSS': 'lineEditTSS',
+            'CGIC patient': 'lineEditCGICPat',
+            'CGIC clinician': 'lineEditCGICClinician',
+            'UPDRS On': 'lineEditUPDRSON',
+            'UPDRS II': 'lineEditUPDRSII',
+            'HRUQ': 'lineEditHRUQ',
+            'MoCa': 'lineEditMoCa',
+            'MMST': 'lineEditMMST',
+            'BDI-II': 'lineEditBDIII',
+            'NMSQ': 'lineEditNMSQ',
+            'UPDRS Off': 'lineEditUPDRSOFF',
+            'H&Y': 'lineEditHY',
+            'EQ5D': 'lineEditEQ5D',
+            'DemTect': 'lineEditDemTect',
+            'PDQ8': 'lineEditPDQ8',
+            'PDQ39': 'lineEditPDQ39',
+            'S&E': 'lineEditSE',
+            'UDDRS On': 'lineEditUDDRSOn',
+            'TRS On': 'lineEditTRSOn',
+            'UDDRS Off': 'lineEditUDDRSOff',
+            'TRS Off': 'lineEditTRSOff'
+        }
 
-
-        # Create second line layout
-        testbox_line2 = create_horizontal_layout(
-            updrs_on, self.lineEditUPDRSON,
-            updrs_ii, self.lineEditUPDRSII,
-            hruq, self.lineEditHRUQ,
-            moca, self.lineEditMoCa,
-            mmst, self.lineEditMMST
-        )
-
-        # Third line of the optionbox
-        bdi_ii, self.lineEditBDIII = create_label_and_line_edit_pair('BDI-II')
-        nmsq, self.lineEditNMSQ = create_label_and_line_edit_pair('NMSQ')
-        updrs_off, self.lineEditUPDRSOFF = create_label_and_line_edit_pair('UPDRS Off')
-        hy, self.lineEditHY = create_label_and_line_edit_pair('H&Y')
-        eq5d, self.lineEditEQ5D = create_label_and_line_edit_pair('EQ5D')
-
-
-        # Create third line layout
-        testbox_line3 = create_horizontal_layout(
-            bdi_ii, self.lineEditBDIII,
-            nmsq, self.lineEditNMSQ,
-            updrs_off, self.lineEditUPDRSOFF,
-            hy, self.lineEditHY,
-            eq5d, self.lineEditEQ5D
-        )
-
-        # fourth line of the optionbox
-        demtect, self.lineEditDemTect = create_label_and_line_edit_pair('DemTect')
-        pdq8, self.lineEditPDQ8 = create_label_and_line_edit_pair('PDQ8')
-        pdq39, self.lineEditPDQ39 = create_label_and_line_edit_pair('PDQ39')
-        se, self.lineEditSE = create_label_and_line_edit_pair('S&E')
-        uddrs_on, self.lineEditUDDRSOn = create_label_and_line_edit_pair('UDDRS On')
+        # Add widgets to grid layout
+        row = 0
+        col = 0
+        for label_text, line_edit_name in questionnaires_content.items():
+            label, line_edit = create_label_and_line_edit_pair(col, label_text)
+            setattr(self, line_edit_name, line_edit)
+            add_widgets_to_grid_layout(grid_layout, row, col, label, line_edit)
+            col += 2
+            if col >= 8:  # 4 pairs per row
+                col = 0
+                row += 1
 
 
-        # Create fourth line layout
-        testbox_line4 = create_horizontal_layout(
-            demtect, self.lineEditDemTect,
-            pdq8, self.lineEditPDQ8,
-            pdq39, self.lineEditPDQ39,
-            se, self.lineEditSE,
-            uddrs_on, self.lineEditUDDRSOn
-        )
-
-        #fifth line of optionbox
-        trs_on, self.lineEditTRSOn = create_label_and_line_edit_pair('TRS On')
-        uddrs_off, self.lineEditUDDRSOff = create_label_and_line_edit_pair('UDDRS Off')
-        trs_off, self.lineEditTRSOff = create_label_and_line_edit_pair('TRS Off')
-
-        # Create fifth line layout
-        testbox_line5 = create_horizontal_layout(
-            trs_on, self.lineEditTRSOn,
-            uddrs_off, self.lineEditUDDRSOff,
-            trs_off, self.lineEditTRSOff
-        )
-
-        # Add layouts to option box content
-        self.optionbox_tests_content.addLayout(testbox_line1)
-        self.optionbox_tests_content.addLayout(testbox_line2)
-        self.optionbox_tests_content.addLayout(testbox_line3)
-        self.optionbox_tests_content.addLayout(testbox_line4)
-        self.optionbox_tests_content.addLayout(testbox_line5)
-
+        # Add grid layout to option box content
+        self.optionbox_tests_content.addLayout(grid_layout)
         self.optionbox_tests.setLayout(self.optionbox_tests_content)
+
 
     def create_bottom_buttons_postoperative(self, layout_general):
         """Creates two buttons a) to read medication and b) to save settings and exit GUI """
-        self.ButtonEnterMedication = QPushButton('Open GUI \nMedication')
-        self.ButtonEnterDBSsettings = QPushButton('Open GUI \nDBS settings')
+        self.ButtonEnterMedication = QPushButton('Postoperative\nMedication')
+        self.ButtonEnterDBSsettings = QPushButton('Postoperative\nDBS settings')
         self.button_save = QPushButton('Save')
-        self.button_save_return = QPushButton('Save and \nReturn')
+        self.button_save_return = QPushButton('Save and\nReturn')
 
         # Set fixed size for all buttons
         button_width = 200
@@ -372,17 +337,22 @@ class PostoperativeDialog(QDialog):
         default_options = ['Please select date or enter new data', 'Enter new data']
         items_available = default_options if not items_available else items_available + default_options
         unique_dates = list(set(items_available))
+        print(unique_dates)
 
         def custom_sort(item):
             if item in default_options:
                 return (default_options.index(item), item)
             else:
-                return (len(default_options), item)
+                try:
+                    return (len(default_options), datetime.strptime(item, '%d/%m/%Y'))
+                except ValueError:
+                    return (len(default_options), item)
 
 
         # Add items to ComboBox
         self.lineEditreason.clear()
         self.lineEditreason.addItems(sorted(unique_dates, key=custom_sort))
+
         if new_date:
             self.lineEditreason.setCurrentText(new_date)
 
@@ -428,6 +398,13 @@ class PostoperativeDialog(QDialog):
         ]
 
         self.update_line_edits(line_edits_upper_right, row)
+
+        # Check if any line edits are still empty
+        if any(line_edit.text() == '' for line_edit, column_name in line_edits_upper_right):
+            intraoperative_dates = self.check_intraoperative_dates()
+            for line_edit, column_name in line_edits_upper_right:
+                if line_edit.text() == '' and column_name in intraoperative_dates:
+                    self.set_widget_text(line_edit, intraoperative_dates[column_name])
 
         # Upper right
         self.set_widget_text(self.lineEditAdverse_Event, row["AE_postop"])
@@ -648,6 +625,28 @@ class PostoperativeDialog(QDialog):
         df = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
         df = df[df['Reason_postop'] != date_to_delete]
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+
+    def check_intraoperative_dates(self):
+        """Checks for available dates in intraoperative.csv for the current subject."""
+        date_list = {
+            "Admission_NCh_postop": "admission_Nch_intraop",
+            "Admission_NR_postop": "Admission_intraop",
+            "Dismissal_NCh_postop": "dismissal_NCh_intraop",
+            "Dismissal_NR_postop": "Dismissal_intraop",
+            "Surgery_Date_postop": "surgery_date_intraop"
+        }
+
+        subj_details = General.read_current_subj()
+        intraoperative_df = General.import_dataframe("intraoperative.csv", separator_csv=',')
+        filtered_df = intraoperative_df[intraoperative_df['PID_ORBIS'] == subj_details.pid[0]]
+
+        available_dates = {}
+        for postop_col, intraop_col in date_list.items():
+            if intraop_col in filtered_df.columns:
+                available_dates[postop_col] = filtered_df[intraop_col].values[0] if not filtered_df[
+                    intraop_col].isna().all() else ''
+        print(available_dates)
+        return available_dates
 
     @QtCore.pyqtSlot()
     def onClickedMedication(self):
