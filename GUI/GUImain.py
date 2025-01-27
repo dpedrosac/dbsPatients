@@ -3,7 +3,7 @@ import pandas as pds
 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QWidget, QButtonGroup, QGroupBox, \
-    QHBoxLayout, QComboBox, QMessageBox, QLabel
+    QHBoxLayout, QComboBox, QMessageBox, QLabel, QSpacerItem, QSizePolicy, QGridLayout, QCheckBox
 from utils.helper_functions import General, Clean, Output
 from GUI.GUIintraoperative import IntraoperativeDialog
 from GUI.GUIpostoperative import PostoperativeDialog
@@ -11,8 +11,6 @@ from GUI.GUIpreoperative import PreoperativeDialog
 from GUI.GUIgeneral_data import CheckForGeneralData
 from GUI.GUIcheckPID import CheckPID
 from dependencies import ROOTDIR, FILEDIR
-
-
 
 class ChooseGUI(QDialog):
     """GUI responsible to offer further GUI's: 1. Preoperative 2. Intraoperative 3. Postoperative"""
@@ -27,26 +25,35 @@ class ChooseGUI(QDialog):
         self.setup_general_layout()
 
     def setup_general_layout(self):
-        subj_details = General.read_current_subj()
         self.layout = QHBoxLayout()  # layout for the central widgets
         widget = QWidget(self)
         widget.setLayout(self.layout)
+        self.setLayout(self.layout)  # Ensure the layout is set for the main widget
+
+        self.spacer_left = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Maximum)
+        self.layout.addItem(self.spacer_left)
 
         # Create the first group box for visit selection
         groupbox1 = QGroupBox('Which visit?', checkable=False)
+        groupbox1.setFixedSize(270, 350)  # Set fixed size for groupbox1
         self.layout.addWidget(groupbox1)
 
         # Create the second group box for patient data
         groupbox2 = QGroupBox('Edit Patient Data', checkable=False)
+        groupbox2.setFixedSize(270, 350)  # Set fixed size for groupbox2
         self.layout.addWidget(groupbox2)
 
         # Create the third group box for changing Patient
         groupbox3 = QGroupBox('Change current Patient')
+        groupbox3.setFixedSize(270, 350)  # Set fixed size for groupbox3
         self.layout.addWidget(groupbox3)
 
+        self.spacer_right = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Maximum)
+        self.layout.addItem(self.spacer_right)
+
         # Set window title and geometry
-        self.setGeometry(400, 100, 800, 350)  # left, right, width, height
-        self.move(750, 375)
+        self.setMinimumSize(900, 450)
+        self.move(1000, 500)
 
         # Add buttons to the group boxes
         self.optionbox_guimain(groupbox1)
@@ -58,6 +65,19 @@ class ChooseGUI(QDialog):
 
         # Check if current_subject has an entry in general_data
         self.check_current_subject()
+
+        self.setWindowFlag(Qt.WindowMinimizeButtonHint, True)
+        self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
+
+    def toggle_stylesheet(self, state):
+        if state == Qt.Checked:
+            self.setStyleSheet("""
+                QDialog { background-color: #000000; color: white; }
+                QWidget { background-color: #000000; color: white; }
+                QPushButton { background-color: #333333; color: white; }
+            """)
+        else:
+            self.setStyleSheet("")
 
     def optionbox_guimain(self, groupbox1):
         """Create content for buttons of GUImain and add them to the layout."""
@@ -88,6 +108,16 @@ class ChooseGUI(QDialog):
         vbox2.addWidget(self.button_general_data)
         vbox2.addWidget(self.button_delete_data)
 
+        # Add label and checkbox for stylesheet change beside each other
+        hbox = QHBoxLayout()
+        self.label_stylesheet = QLabel('Enable Dark Mode:')
+        self.checkbox_stylesheet = QCheckBox()
+        self.checkbox_stylesheet.stateChanged.connect(self.toggle_stylesheet)
+
+        hbox.addWidget(self.label_stylesheet)
+        hbox.addWidget(self.checkbox_stylesheet)
+        vbox2.addLayout(hbox)
+
         groupbox2.setLayout(vbox2)
 
         self.button_general_data.clicked.connect(self.onClickGeneralData)
@@ -100,10 +130,12 @@ class ChooseGUI(QDialog):
         self.pid_list.setEnabled(True)
         self.button_change_patient = QPushButton('Change Patient')
         self.button_change_patient.setEnabled(False)
-        self.button_checkPID = QPushButton('Add new PID\nor\nCheck PID')
+        self.button_add_new_pid = QPushButton('Add new PID')
+        self.button_check_pid = QPushButton('Check PID')
 
         vbox3 = QVBoxLayout()
-        vbox3.addWidget(self.button_checkPID)
+        vbox3.addWidget(self.button_add_new_pid)
+        vbox3.addWidget(self.button_check_pid)
         vbox3.addWidget(select_patient_label)
         vbox3.addWidget(self.pid_list)
         vbox3.addWidget(self.button_change_patient)
@@ -111,7 +143,8 @@ class ChooseGUI(QDialog):
         groupbox3.setLayout(vbox3)
 
         self.button_change_patient.clicked.connect(self.onClickChangePatient)
-        self.button_checkPID.clicked.connect(self.onClickCheckPID)
+        self.button_add_new_pid.clicked.connect(self.onClickAddNewPID)
+        self.button_check_pid.clicked.connect(self.onClickCheckPID)
 
     def create_checkable_button(self, text):
         """Create a checkable button with the given text."""
@@ -140,7 +173,7 @@ class ChooseGUI(QDialog):
             else:
                 dialog_date = PostoperativeDialog(parent=self)
 
-            dialog_date.show()  # Use show() instead of exec() to keep the main window running
+            dialog_date.exec_()
 
     def onClickGeneralData(self):
         """Opens the General Data GUI"""
@@ -161,9 +194,9 @@ class ChooseGUI(QDialog):
             last_index = df.index[-1]
             # Write the last index to a temporary file
             General.write_csv_temp(df, [last_index])
+            self.restart_program()
         else:
             QMessageBox.information(self, 'Action Cancelled', 'Data deletion has been cancelled.')
-
 
     def onClickChangePatient(self):
         filename2load = 'general_data.csv'
@@ -179,6 +212,12 @@ class ChooseGUI(QDialog):
         """Opens the Check PID GUI"""
         dialog_check_pid = CheckPID(parent=self)
         dialog_check_pid.exec_()
+        self.restart_program()
+
+    def onClickAddNewPID(self):
+        """Opens the Add New PID GUI"""
+        dialog_add_new_pid = CheckForGeneralData(parent=self)
+        dialog_add_new_pid.exec_()
         self.restart_program()
 
     def check_current_subject(self):
@@ -210,9 +249,12 @@ class ChooseGUI(QDialog):
         self.pid_list.clear()
         self.pid_list.setEnabled(True)
         self.button_change_patient.setEnabled(True)
-        # Iterate through each PID_ORBIS and add it to the combobox
-        for pid in df['PID_ORBIS']:
-            self.pid_list.addItem(str(pid).strip("PID_"))
+        # Sort the PID_ORBIS values
+        sorted_pids = sorted(df['PID_ORBIS'].str.strip("PID_"))
+
+        # Iterate through each sorted PID_ORBIS and add it to the combobox
+        for pid in sorted_pids:
+            self.pid_list.addItem(pid)
         try:
             curr_no = df.index[df['PID_ORBIS'] == General.read_current_subj().pid[0]].tolist()[0]
             self.pid_list.setCurrentIndex(curr_no)
@@ -223,8 +265,6 @@ class ChooseGUI(QDialog):
         self.close()  # Close the current instance
         self.__init__() # Reinitialize the class
         self.show()  # Show the new instance
-
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
