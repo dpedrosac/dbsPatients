@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5 import QtCore
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
-    QHBoxLayout, QLabel, QGridLayout, QPlainTextEdit, QComboBox
+    QHBoxLayout, QLabel, QGridLayout, QPlainTextEdit, QComboBox, QSizePolicy, QSpacerItem
 from utils.helper_functions import General, Content
 from dependencies import FILEDIR, dtype_dict_postoperative, dtype_dict_intraoperative, dtype_dict_preoperative
 pds.options.mode.chained_assignment = None
@@ -16,6 +16,7 @@ class MedicationDialog(QDialog):
 
     def __init__(self, visit='preoperative', postop_date = False, parent=None):
         super(MedicationDialog, self).__init__(parent)
+        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowContextHelpButtonHint)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.date = visit
         self.inputs = {}
@@ -30,8 +31,12 @@ class MedicationDialog(QDialog):
         self.updateDisplayedMedication()
 
     def setup_general_layout(self):
-        df_subj = Content.extract_saved_data(self.date)
-        self.setWindowTitle('{} Medication of PID: {}'.format(self.date.capitalize(), str(General.read_current_subj().pid.iloc[0]).strip("PID_")))
+        if self.postop_date:
+            self.setWindowTitle('{} Medication of PID: {} on {}'.format(self.date.capitalize(),
+                                                                  str(General.read_current_subj().pid.iloc[0]).strip(
+                                                                      "PID_"), self.postop_date))
+        else:
+            self.setWindowTitle('{} Medication of PID: {}'.format(self.date.capitalize(), str(General.read_current_subj().pid.iloc[0]).strip("PID_")))
         self.setGeometry(200, 1000, 200, 170)
         self.move(700, 250)
 
@@ -45,7 +50,7 @@ class MedicationDialog(QDialog):
         layout_general.addWidget(self.optionbox_medication, 0, 0)
 
         # Add headers
-        headers = ['Medication', 'Dose', 'Unit', '/Day\t']
+        headers = ['Medication', 'Dose', 'Unit', '/Day\t\t']
         self.grid_medication = QGridLayout()
         self.optionbox_medication_content.addLayout(self.grid_medication)
 
@@ -53,6 +58,7 @@ class MedicationDialog(QDialog):
             for i, header in enumerate(headers):
                 label = QLabel(header)
                 label.setAlignment(QtCore.Qt.AlignLeft)
+                label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)  # Allow horizontal expansion
                 self.grid_medication.addWidget(label, 0, col * 4 + i)
 
         for idx, med in enumerate(self.medication_names):
@@ -83,20 +89,20 @@ class MedicationDialog(QDialog):
     def add_medication_row(self, idx, med):
 
         if idx % 10 == 0 and idx >= 20:
-            headers = ['Medication', 'Dose', 'Unit', '/Day\t']
+            headers = ['Medication', 'Dose', 'Unit', '/Day']
             for i, header in enumerate(headers):
                 label = QLabel(header)
                 label.setAlignment(QtCore.Qt.AlignLeft)
+                label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
                 self.grid_medication.addWidget(label, 0, (idx//10) * 4 + i)
-                #self.grid_medication.setColumnMinimumWidth(col * 4 + i + 3,100)
 
         col = (idx // 10) * 4
         row = (idx % 10) + 1
 
         if med == 'Enter new Medication':
             med_label = QLineEdit(self)
-            med_label.setPlaceholderText(med)
-            med_label.setFixedHeight(35)
+            med_label.setPlaceholderText("New Medication")
+            med_label.setFixedSize(230, 35)
             self.grid_medication.addWidget(med_label, row, col)
         else:
             med_label = QLabel(med.replace("{}", ""))
@@ -105,6 +111,7 @@ class MedicationDialog(QDialog):
 
         dose_input = QLineEdit(self)
         dose_input.setFixedSize(100, 35)
+        dose_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)  # Allow horizontal expansion
         self.grid_medication.addWidget(dose_input, row, col + 1)
 
         dose_unit = QLabel('mg')
@@ -113,9 +120,28 @@ class MedicationDialog(QDialog):
 
         med_times = QLineEdit(self)
         med_times.setFixedSize(40, 35)
+        med_times.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)  # Allow horizontal expansion
         self.grid_medication.addWidget(med_times, row, col + 3)
 
+        print(med)
+        # Connect signals for Levodopa Carbidopa and Levodopa Carbidopa CR
+        if med in ["Levodopa Carbidopa{}", "Levodopa Carbidopa CR{}"]:
+            dose_input.textChanged.connect(self.update_comt_inhibitors)
+            med_times.textChanged.connect(self.update_comt_inhibitors)
+
         self.inputs[idx] = (med_label, dose_input, dose_unit, med_times)
+
+    def update_comt_inhibitors(self):
+        levodopa_entered = any(
+            dose_input.text() and med_times.text()
+            for med_label, dose_input, dose_unit, med_times in self.inputs.values()
+            if med_label.text() in ["Levodopa Carbidopa", "Levodopa Carbidopa CR"]
+        )
+        for med_label, dose_input, dose_unit, med_times in self.inputs.values():
+            if med_label.text() in ["Entacapone", "Tolcapone", "Opicapone"]:
+                dose_input.setEnabled(levodopa_entered)
+                med_times.setEnabled(levodopa_entered)
+
 
     def onClickedAddMedication(self, row):
         self.add_medication_row(row, 'Enter new Medication')
@@ -218,6 +244,7 @@ class MedicationDialog(QDialog):
         if pds.notna(ledd_value):
             self.ledd_total.setText(str(ledd_value))
 
+        self.update_comt_inhibitors()  # Call update_comt_inhibitors after reading the data
         self.calculate_ledd()
         return
 
@@ -285,5 +312,5 @@ class MedicationDialog(QDialog):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     dlg = MedicationDialog()
-    dlg.show()
+    dlg.exec_()
     sys.exit(app.exec_())
