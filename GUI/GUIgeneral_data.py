@@ -1,6 +1,8 @@
 import sys, os
 import pandas as pd
 from PyQt5 import QtCore
+from PyQt5.QtCore import QRegExp
+from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, QHBoxLayout, \
     QWidget, QLabel, QComboBox, QCalendarWidget, QMessageBox
 from utils.helper_functions import General
@@ -56,6 +58,7 @@ class CheckForGeneralData(QDialog):
 
         self.subj_PID = QLabel('PID: \t\t\t')
         self.lineEditPID = QLineEdit()
+        self.lineEditPID.setValidator(QRegExpValidator(QRegExp(r'\d+')))
         self.lineEditPID.setFixedWidth(self.textfield_width)
         self.lineEditPID.setFixedHeight(50)
 
