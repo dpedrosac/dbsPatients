@@ -476,6 +476,7 @@ class IntraoperativeDialog(QDialog):
                         df.at[idx2replace, key] = value
         except IndexError:
             df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
+            df_subj = df_subj.dropna(how='all')  # Exclude all-NA entries
             df = pds.concat([df, df_subj], ignore_index=True)
 
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
