@@ -1,6 +1,9 @@
 import sys, os
-import pandas as pds
+# Add the parent directory to the sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import pandas as pds
+from PyQt5 import QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QWidget, QButtonGroup, QGroupBox, \
     QHBoxLayout, QComboBox, QMessageBox, QLabel, QSpacerItem, QSizePolicy, QGridLayout, QCheckBox
@@ -268,6 +271,7 @@ class ChooseGUI(QDialog):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon(f'{ROOTDIR}/test/unimr_lead_image.png'))
     dlg = ChooseGUI()
     dlg.show()
     sys.exit(app.exec_())

@@ -13,7 +13,6 @@ class CheckPID(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowContextHelpButtonHint)
-        self.setWindowIcon(QtGui.QIcon(f'{ROOTDIR}/test/unimr_lead_image.png'))
         self.EnterNewPID = CheckForGeneralData()
 
         self.setWindowTitle('Please enter the PID to search for')
