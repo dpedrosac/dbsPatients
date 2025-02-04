@@ -11,8 +11,8 @@ from PyQt5.QtWidgets import (QApplication, QDialog, QPushButton, QVBoxLayout, QG
 
 from GUImedication import MedicationDialog
 from GUI.GUIsettingsDBS import DBSsettingsDialog
-from utils.helper_functions import General, Content, Clean
-from dependencies import FILEDIR
+from utils.helper_functions import General, Content, Clean, Output
+from dependencies import FILEDIR, dtype_dict_intraoperative
 
 pds.options.mode.chained_assignment = None  # default='warn' cf.
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
@@ -39,8 +39,8 @@ class IntraoperativeDialog(QDialog):
         #self.create_medication_dialog()
         #self.create_DBSsettings_dialog()
 
-        self.setWindowTitle(f'Please insert the intraoperative patient data (PID: {int(subj_details.pid.iloc[0])})')
-        self.setGeometry(200, 100, 280, 170)
+        self.setWindowTitle(f'Please insert the intraoperative patient data (PID: {str(subj_details.pid.iloc[0]).strip("PID_")})')
+        self.setGeometry(200, 100, 1700, 200)
         self.move(400, 200)
 
         layout_general = QGridLayout(self)
@@ -64,6 +64,9 @@ class IntraoperativeDialog(QDialog):
 
         # Obtain data that has been stored already in intraoperative.csv
         self.updateIntraoperativeData()
+
+        self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, True)
+        self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
 
     def initialize_content(self):
         """Initializes the content that may be needed later for reading or saving data from/to csv-files"""
@@ -89,11 +92,10 @@ class IntraoperativeDialog(QDialog):
     def optionbox_dates_intraoperative(self, layout_general):
         """creates upper left optionbox in which important dates are added"""
 
-        def create_line_edit_for_dates(label_text, line_edit_width=200, label_width=250):
+        def create_line_edit_for_dates(label_text, line_edit_width=180, label_width=250):
             label = QLabel(f'{label_text}:')
             label.setFixedWidth(label_width)
             line_edit = QLineEdit()
-            line_edit.setPlaceholderText('DD/MM/YYYY')
             line_edit.setEnabled(False)
             line_edit.setFixedWidth(line_edit_width)
             line_edit.editingFinished.connect(self.validate_date_input)
@@ -164,18 +166,24 @@ class IntraoperativeDialog(QDialog):
 
         for line_edit in line_edits:
             line_edit.setEnabled(not line_edit.isEnabled())
+            if line_edit.isEnabled():
+                line_edit.setPlaceholderText("DD/MM/YYYY")
+            else:
+                line_edit.setPlaceholderText("")
 
     def optionbox_general_intraoperative(self, layout_general):
         """creates upper right optionbox: General data for the intraoperative recordings"""
 
         self.optionbox_general = QGroupBox('General data')
+        self.optionbox_general.setFixedWidth(300)  # Set the desired fixed width
         self.optionbox_generalContent = QVBoxLayout(self.optionbox_general)
         layout_general.addWidget(self.optionbox_general, 0, 1)
 
         # Target List
         targetLabel = QLabel('Target:\t\t')
-        targetLabel.setAlignment(QtCore.Qt.AlignTop)
+        #targetLabel.setAlignment(QtCore.Qt.AlignTop)
         self.targetList = QListWidget()
+        self.targetList.setMaximumSize(100, 150)
         self.targetList.show()
         ls = ['STN', 'GPi', 'VLp', 'Other'] #GP: should the user to be able to input custom 'other'?
         for k in ls:
@@ -202,25 +210,21 @@ class IntraoperativeDialog(QDialog):
             return checkbox, label
 
         # Checkboxes Reports
-        self.ReportNeurCheck, self.ReportNeurLabel = create_checkbox_label_pair('Report Neurology')
-        self.AwakePatientCheck, self.AwakePatientLabel = create_checkbox_label_pair('Awake Patient')
-        self.ReportNChCheck, self.ReportNChLabel = create_checkbox_label_pair('Report Neurosurgery')
-        self.ProtocolNeurCheck, self.ProtocolNeurLabel = create_checkbox_label_pair('Protocol Neurology')
+        self.ReportNeurCheck, self.ReportNeurLabel = create_checkbox_label_pair('Report Neurology:')
+        self.AwakePatientCheck, self.AwakePatientLabel = create_checkbox_label_pair('Awake Patient:')
+        self.ReportNChCheck, self.ReportNChLabel = create_checkbox_label_pair('Report Neurosurgery:')
+        self.ProtocolNeurCheck, self.ProtocolNeurLabel = create_checkbox_label_pair('Protocol Neurology:')
 
         # Create a single horizontal layout for all checkbox/label pairs
         box3line1 = QHBoxLayout()
-        box3line1.addWidget(self.ReportNeurCheck)
         box3line1.addWidget(self.ReportNeurLabel)
-        box3line1.addWidget(QLabel("      "))
-        box3line1.addWidget(self.AwakePatientCheck)
+        box3line1.addWidget(self.ReportNeurCheck)
         box3line1.addWidget(self.AwakePatientLabel)
-        box3line1.addWidget(QLabel("      "))
-        box3line1.addWidget(self.ReportNChCheck)
+        box3line1.addWidget(self.AwakePatientCheck)
         box3line1.addWidget(self.ReportNChLabel)
-        box3line1.addWidget(QLabel("      "))
-        box3line1.addWidget(self.ProtocolNeurCheck)
+        box3line1.addWidget(self.ReportNChCheck)
         box3line1.addWidget(self.ProtocolNeurLabel)
-        box3line1.addStretch()
+        box3line1.addWidget(self.ProtocolNeurCheck)
 
         # Duration and Trajectories enter field
         self.DurationSurgery = QLabel('Duration surgery:')
@@ -231,6 +235,7 @@ class IntraoperativeDialog(QDialog):
         self.Trajectories = QLabel('Trajectories:')
         self.Trajectories.setFixedWidth(250)
         self.lineEditTrajectories = QLineEdit()
+        self.lineEditTrajectories.setFixedWidth(200)
 
         box3line2 = QHBoxLayout()
         box3line2.addWidget(self.DurationSurgery)
@@ -245,6 +250,7 @@ class IntraoperativeDialog(QDialog):
         self.testingNeurLabel = QLabel('Testing Neurologist(s):')
         self.testingNeurLabel.setFixedWidth(250)
         self.testingNeurList = QListWidget()
+        self.testingNeurList.setMaximumSize(200, 150)
         self.testingNeurList.show()
         ls = ['Oehrn/Weber', 'Pedrosa', 'Waldthaler', 'Other']
         [self.testingNeurList.addItem(k) for k in ls]
@@ -266,10 +272,10 @@ class IntraoperativeDialog(QDialog):
     def create_bottom_buttons_intraoperative(self, layout_general):
         """Creates buttons a) to enter medication, b) to enter DBSsettings c) to save or d) to save and close GUI """
 
-        self.ButtonEnterMedication = QPushButton('Open GUI \nMedication')
-        self.ButtonEnterDBSsettings = QPushButton('Open GUI \nDBS settings')
+        self.ButtonEnterMedication = QPushButton('Intraoperative\nMedication')
+        self.ButtonEnterDBSsettings = QPushButton('Intraoperative\nDBS settings')
         self.button_save = QPushButton('Save')
-        self.button_save_return = QPushButton('Save and \nReturn')
+        self.button_save_return = QPushButton('Save and\nReturn')
 
         # Set fixed size for all buttons
         button_width = 200
@@ -302,13 +308,20 @@ class IntraoperativeDialog(QDialog):
     def onClickedMedication(self):
         """Shows medication dialog ; former implementation with creating GUI was replaced with show/hide GUI which is
         initiated at beginning at the disadvantage of not being saved until GUIintraoperative is closed"""
-        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)
-        self.dialog_medication.show()
+        subject_id = General.read_current_subj().id[0]
+        df = General.import_dataframe(f'{self.date}.csv', separator_csv=',')
+
+        if subject_id in df['ID'].values:
+            self.dialog_medication = MedicationDialog(parent=self, visit=self.date)
+            self.dialog_medication.exec_()
+        else:
+            Output.msg_box('Please save data before entering medication!', f'No entry for ID: {subject_id}')
+            return
 
     def onClickedDBSsettings(self):
         """shows the DBSsettings dialog when button is pressed"""
         self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date)  # creates medication dialog
-        self.dialog_DBSsettings.show()
+        self.dialog_DBSsettings.exec_()
 
     @QtCore.pyqtSlot()
     def onClickedSave(self):
@@ -393,8 +406,7 @@ class IntraoperativeDialog(QDialog):
         # Compare with general_data.csv
         try:
             df_subj['ID'] = General.read_current_subj().id[0]
-            df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][
-                0]  # is this necessary? -> Error if subj has no data in general_data
+            df_subj['PID_ORBIS'] = df_general['PID_ORBIS'][0]
             df_subj['Gender'] = df_general['gender'][0]
             df_subj['Diagnosis_preop'] = df_general['diagnosis'][0]
         except KeyError:
@@ -402,18 +414,10 @@ class IntraoperativeDialog(QDialog):
 
         # Now extract changed data from the GUI
         for column, widget in self.content_widgets.items():
-            if 'lineEdit' in widget:
-                widget_object = getattr(self, widget)
-                print(widget_object.text())
-                if widget == 'lineEditTrajectories' or widget == 'lineEditDurationSurgery':
-                    widget_object = getattr(self, widget)
-                    df_subj[column] = widget_object.text()
-                    pass
-                else:
-                    df_subj[column] = widget_object.text()
-            else:
-                widget_object = getattr(self, widget)
-                df_subj[column] = widget_object.text()
+            widget_object = getattr(self, widget)
+            df_subj[column] = widget_object.text().strip()
+            if df_subj[column] == "":
+                df_subj[column] = ""
 
         checkboxes = {"report_file_NR_intraop": 'ReportNeurCheck',
                       "awake_intraop": 'AwakePatientCheck',
@@ -425,19 +429,63 @@ class IntraoperativeDialog(QDialog):
             df_subj[df_name] = 1 if getattr(self, checkbox_name).isChecked() else 0
 
         # Extract selected items from QListWidgets
-        selected_neurologist_items = [self.testingNeurList.item(i).text() for i in
-                                      range(self.testingNeurList.count()) if
-                                      self.testingNeurList.item(i).isSelected()]
+        selected_neurologist_items = [self.testingNeurList.item(i).text() for i in range(self.testingNeurList.count())
+                                      if self.testingNeurList.item(i).isSelected()]
         df_subj["neur_test_intraop"] = ', '.join(selected_neurologist_items)
 
         selected_target_items = [self.targetList.item(i).text() for i in range(self.targetList.count()) if
                                  self.targetList.item(i).isSelected()]
         df_subj["target_intraop"] = ', '.join(selected_target_items)
 
+        # Ensure the correct data types using dtype_dict_intraoperative
+        error_keys = []
+        for key, dtype in dtype_dict_intraoperative.items():
+            if key in df_subj:
+                try:
+                    if dtype == "float64":
+                        df_subj[key] = float(df_subj[key]) if df_subj[key] != "" else np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = int(df_subj[key]) if df_subj[key] != "" else pds.NA
+                    elif dtype == "object":
+                        df_subj[key] = str(df_subj[key]) if df_subj[key] != "" else ""
+                    df_subj[key] = pds.array([df_subj[key]], dtype=dtype)[0]
+                except (ValueError, TypeError):
+                    print("Error", dtype, df_subj[key])
+                    error_keys.append(key)
+                    if dtype == "float64":
+                        df_subj[key] = np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = pds.NA
+                    elif dtype == "object":
+                        df_subj[key] = ""
+
+        for error_key in error_keys:
+            print(error_key, df_subj[error_key], df[error_key])
+
+        # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
+        try:
+            idx2replace = df.index[df['ID'] == subject_id][0]
+            for key, value in df_subj.items():
+                if pds.isna(value) or value in ["", "nan"]:
+                    if key in dtype_dict_intraoperative.keys():
+                        df[key] = df[key].astype(dtype_dict_intraoperative[key])
+                        df.at[idx2replace, key] = value
+                else:
+                    if key in dtype_dict_intraoperative.keys():
+                        df[key] = df[key].astype(dtype_dict_intraoperative[key])
+                        df.at[idx2replace, key] = value
+        except IndexError:
+            df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
+            df_subj = df_subj.dropna(how='all')  # Exclude all-NA entries
+            df = pds.concat([df, df_subj], ignore_index=True)
+
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+
+        """
         # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
         # try:
         #     idx2replace = df.index[df['ID'] == subject_id][0]
-        #     # df.loc[idx2replace, :] = df_subj
+        #     df.loc[idx2replace, :] = df_subj
         #     df_subj = pds.to_numeric(df_subj, errors='coerce')  # Convert to numeric, set invalid values to NaN
         #     df.loc[idx2replace, :] = df_subj.fillna(0).astype(int)  # Replace NaN with 0 and cast to int
         #     df = df.replace(['nan', ''], [np.nan, np.nan])
@@ -456,9 +504,7 @@ class IntraoperativeDialog(QDialog):
             new_index = df.index.max() + 1 if not df.empty else 0  # Set new index safely
             df_subj = pds.DataFrame([df_subj], index=[new_index])  # Wrap as DataFrame with new index
             df = pds.concat([df, df_subj], ignore_index=False)  # Append to the existing DataFrame
-
-
-        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+        """
 
 
 if __name__ == '__main__':

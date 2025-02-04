@@ -4,8 +4,10 @@ import numpy as np
 import pandas as pds
 from PyQt5 import QtCore
 from pathlib import Path
+from datetime import datetime
 from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout, QGroupBox, \
-    QHBoxLayout, QFileDialog, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox, QMessageBox, QSpacerItem, QSizePolicy
+    QHBoxLayout, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QCheckBox, QMessageBox, QSpacerItem, \
+    QSizePolicy, QInputDialog
 from GUImedication import MedicationDialog
 from GUI.GUIsettingsDBS import DBSsettingsDialog
 from utils.helper_functions import General, Content, Clean, Output
@@ -31,12 +33,9 @@ class PostoperativeDialog(QDialog):
         General.synchronize_data_with_general(self.date, subj_details.id[0],
                                               messagebox=False)  # for identical general columns in 'postoperative.csv'
 
-        #self.create_medication_dialog()
-        #self.create_DBSsettings_dialog()
-
-        self.setWindowTitle(f'Please insert the postoperative information (PID: {int(subj_details.pid.iloc[0])})')
+        self.setWindowTitle(f'Please insert the postoperative information (PID: {str(subj_details.pid.iloc[0]).strip("PID_")})')
         self.setGeometry(200, 100, 280, 170)
-        self.setMaximumWidth(2500)
+        self.setMinimumWidth(1800)
         self.move(400, 200)
 
         layout_general = QGridLayout(self)
@@ -61,22 +60,17 @@ class PostoperativeDialog(QDialog):
         # Connect button actions that are needed so that everything works
         self.connect_button_actions()
 
-    # def create_medication_dialog(self):
-    #    self.dialog_medication = MedicationDialog(parent=self, visit=self.date)  # creates medication dialog
-    #    self.dialog_medication.hide()
-
-    #def create_DBSsettings_dialog(self):
-    #    self.dialog_DBSsettings = DBSsettingsDialog(parent=self, visit=self.date)  # creates DBSsettings dialog
-    #    self.dialog_DBSsettings.hide()
+        self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, True)
+        self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
 
     def optionbox_dates_postoperative(self, layout_general):
         """creates upper left optionbox in which important dates are added"""
 
-        def create_line_edit_for_dates(label_text, line_edit_width=200, label_width=250):
+        def create_line_edit_for_dates(label_text, line_edit_width=180, label_width=250):
             label = QLabel(f'{label_text}:\t\t')
             label.setFixedWidth(label_width)
             line_edit = QLineEdit()
-            line_edit.setPlaceholderText('(DD/MM/YYYY)')
+            line_edit.setPlaceholderText('DD/MM/YYYY')
             line_edit.setEnabled(False)
             line_edit.setFixedWidth(line_edit_width)
             line_edit.editingFinished.connect(self.validate_date_input)
@@ -90,7 +84,7 @@ class PostoperativeDialog(QDialog):
             return layout
 
         self.optionbox_dates_postoperative = QGroupBox('Important dates')
-        self.optionbox_dates_postoperative.setMaximumWidth(600)
+        self.optionbox_dates_postoperative.setMaximumWidth(500)
         self.optionbox_datesContent = QVBoxLayout(self.optionbox_dates_postoperative)
         layout_general.addWidget(self.optionbox_dates_postoperative, 0, 0)
 
@@ -123,7 +117,6 @@ class PostoperativeDialog(QDialog):
         self.optionbox_dates_postoperative.setLayout(self.optionbox_datesContent)
 
     def validate_date_input(self):
-        #GP: nutzt die staticmethod um das Format zu überprüfen (DD/MM/YYYY)
         """Validates the date input in the QLineEdit for optionbox_dates_postoperative"""
         sender = self.sender()
         date_text = sender.text()
@@ -139,20 +132,24 @@ class PostoperativeDialog(QDialog):
 
     def optionbox_reason_for_visit_postoperative(self, layout_general):
         """creates upper right optionbox in which reasons for visit is added"""
-
         self.optionbox_visit_information = QGroupBox('Information on visit')
-        self.optionbox_visit_information.setMaximumWidth(1200)
+        #self.optionbox_visit_information.setMaximumWidth(1200)
         layout_general.addWidget(self.optionbox_visit_information, 0, 1)
         self.optionbox_visit_informationContent = QVBoxLayout(self.optionbox_visit_information)
 
-        self.subj_reason = QLabel('Reason:\t\t')
+        self.subj_reason = QLabel('Follow-Up-Date:\t')
         self.lineEditreason = QComboBox()
         self.lineEditreason.setFixedWidth(400)
         self.fill_combobox()
 
+        self.button_change_delete_date = QPushButton('Change/Delete Date')  # New button
+        self.button_change_delete_date.setFixedWidth(220)  # Set the width for the new button
+
         reason_layout = QHBoxLayout()
         reason_layout.addWidget(self.subj_reason)
         reason_layout.addWidget(self.lineEditreason)
+        reason_layout.addWidget(self.button_change_delete_date)  # Add new button to layout
+        self.button_change_delete_date.setEnabled(False)
         reason_layout.addStretch()
 
         self.subj_Adverse_Event = QLabel('Adverse Events:\t')
@@ -178,7 +175,7 @@ class PostoperativeDialog(QDialog):
 
         # Create third optionbox on the second row left
         self.optionbox3 = QGroupBox('Reports')
-        self.optionbox3.setMaximumWidth(600)
+        self.optionbox3.setMaximumWidth(500)
         self.optionbox3Content = QVBoxLayout(self.optionbox3)
         layout_general.addWidget(self.optionbox3, 1, 0)
 
@@ -223,120 +220,81 @@ class PostoperativeDialog(QDialog):
         self.optionbox3.setLayout(self.optionbox3Content)
 
     def optionbox_questionnaires_postoperative(self, layout_general):
-        """optionbox containing the postopreative tests that are being applied"""
+        """Optionbox containing the postoperative tests that are being applied"""
 
-        def create_label_and_line_edit_pair(label_text, line_edit_width=50):
-            label = QLabel(label_text)
-            label.setAlignment(QtCore.Qt.AlignCenter)
-            label.setFixedWidth(130)
+        def create_label_and_line_edit_pair(col, label_text, line_edit_width=60):
+            if col == 0:
+                label = QLabel(f"{label_text}:")
+            else:
+                label = QLabel(f"\t{label_text}:")
+            label.setAlignment(QtCore.Qt.AlignRight)
             line_edit = QLineEdit()
             line_edit.setEnabled(False)
             line_edit.setFixedWidth(line_edit_width)
             return label, line_edit
 
-        def create_horizontal_layout(*widgets):
-            layout = QHBoxLayout()
-            for widget in widgets:
-                layout.addWidget(widget)
-                if widgets.index(widget) % 2 != 0 and widgets.index(widget) != 0:
-                    layout.addItem(QSpacerItem(30, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))
-            layout.addStretch()
-            return layout
+        def add_widgets_to_grid_layout(layout, row, col, *widgets):
+            for i, widget in enumerate(widgets):
+                layout.addWidget(widget, row, col + i)
 
         self.optionbox_tests = QGroupBox('Tests')
-        self.optionbox_tests.setMaximumWidth(1200)
         self.optionbox_tests_content = QVBoxLayout(self.optionbox_tests)
         layout_general.addWidget(self.optionbox_tests)
 
-        # First line of the optionbox
-        updrs_i, self.lineEditUPDRSI = create_label_and_line_edit_pair('UPDRS I')
-        updrs_iv, self.lineEditUPDRSIV = create_label_and_line_edit_pair('UPDRS IV')
-        tss, self.lineEditTSS = create_label_and_line_edit_pair('TSS')
-        cgic_pat, self.lineEditCGICPat = create_label_and_line_edit_pair('CGIC patient')
-        cgic_clinician, self.lineEditCGICClinician = create_label_and_line_edit_pair('CGIC clinician')
 
-        testbox_line1 = create_horizontal_layout(updrs_i, self.lineEditUPDRSI, updrs_iv, self.lineEditUPDRSIV,
-                                                 tss, self.lineEditTSS, cgic_pat, self.lineEditCGICPat,
-                                                 cgic_clinician, self.lineEditCGICClinician)
+        grid_layout = QGridLayout()
 
-        # Second line of the optionbox
-        updrs_on, self.lineEditUPDRSON = create_label_and_line_edit_pair('UPDRS On')
-        updrs_ii, self.lineEditUPDRSII = create_label_and_line_edit_pair('UPDRS II')
-        hruq, self.lineEditHRUQ = create_label_and_line_edit_pair('HRUQ')
-        moca, self.lineEditMoCa = create_label_and_line_edit_pair('MoCa')
-        mmst, self.lineEditMMST = create_label_and_line_edit_pair('MMST')
+        # Create label and line edit pairs
+        questionnaires_content = {
+            'UPDRS I': 'lineEditUPDRSI',
+            'UPDRS IV': 'lineEditUPDRSIV',
+            'TSS': 'lineEditTSS',
+            'CGIC patient': 'lineEditCGICPat',
+            'CGIC clinician': 'lineEditCGICClinician',
+            'UPDRS On': 'lineEditUPDRSON',
+            'UPDRS II': 'lineEditUPDRSII',
+            'HRUQ': 'lineEditHRUQ',
+            'MoCa': 'lineEditMoCa',
+            'MMST': 'lineEditMMST',
+            'BDI-II': 'lineEditBDIII',
+            'NMSQ': 'lineEditNMSQ',
+            'UPDRS Off': 'lineEditUPDRSOFF',
+            'H&Y': 'lineEditHY',
+            'EQ5D': 'lineEditEQ5D',
+            'DemTect': 'lineEditDemTect',
+            'PDQ8': 'lineEditPDQ8',
+            'PDQ39': 'lineEditPDQ39',
+            'S&E': 'lineEditSE',
+            'UDDRS On': 'lineEditUDDRSOn',
+            'TRS On': 'lineEditTRSOn',
+            'UDDRS Off': 'lineEditUDDRSOff',
+            'TRS Off': 'lineEditTRSOff'
+        }
 
-
-        # Create second line layout
-        testbox_line2 = create_horizontal_layout(
-            updrs_on, self.lineEditUPDRSON,
-            updrs_ii, self.lineEditUPDRSII,
-            hruq, self.lineEditHRUQ,
-            moca, self.lineEditMoCa,
-            mmst, self.lineEditMMST
-        )
-
-        # Third line of the optionbox
-        bdi_ii, self.lineEditBDIII = create_label_and_line_edit_pair('BDI-II')
-        nmsq, self.lineEditNMSQ = create_label_and_line_edit_pair('NMSQ')
-        updrs_off, self.lineEditUPDRSOFF = create_label_and_line_edit_pair('UPDRS Off')
-        hy, self.lineEditHY = create_label_and_line_edit_pair('H&Y')
-        eq5d, self.lineEditEQ5D = create_label_and_line_edit_pair('EQ5D')
-
-
-        # Create third line layout
-        testbox_line3 = create_horizontal_layout(
-            bdi_ii, self.lineEditBDIII,
-            nmsq, self.lineEditNMSQ,
-            updrs_off, self.lineEditUPDRSOFF,
-            hy, self.lineEditHY,
-            eq5d, self.lineEditEQ5D
-        )
-
-        # fourth line of the optionbox
-        demtect, self.lineEditDemTect = create_label_and_line_edit_pair('DemTect')
-        pdq8, self.lineEditPDQ8 = create_label_and_line_edit_pair('PDQ8')
-        pdq39, self.lineEditPDQ39 = create_label_and_line_edit_pair('PDQ39')
-        se, self.lineEditSE = create_label_and_line_edit_pair('S&E')
-        uddrs_on, self.lineEditUDDRSOn = create_label_and_line_edit_pair('UDDRS On')
+        # Add widgets to grid layout
+        row = 0
+        col = 0
+        for label_text, line_edit_name in questionnaires_content.items():
+            label, line_edit = create_label_and_line_edit_pair(col, label_text)
+            setattr(self, line_edit_name, line_edit)
+            add_widgets_to_grid_layout(grid_layout, row, col, label, line_edit)
+            col += 2
+            if col >= 8:  # 4 pairs per row
+                col = 0
+                row += 1
 
 
-        # Create fourth line layout
-        testbox_line4 = create_horizontal_layout(
-            demtect, self.lineEditDemTect,
-            pdq8, self.lineEditPDQ8,
-            pdq39, self.lineEditPDQ39,
-            se, self.lineEditSE,
-            uddrs_on, self.lineEditUDDRSOn
-        )
-
-        #fifth line of optionbox
-        trs_on, self.lineEditTRSOn = create_label_and_line_edit_pair('TRS On')
-        uddrs_off, self.lineEditUDDRSOff = create_label_and_line_edit_pair('UDDRS Off')
-        trs_off, self.lineEditTRSOff = create_label_and_line_edit_pair('TRS Off')
-
-        # Create fifth line layout
-        testbox_line5 = create_horizontal_layout(
-            trs_on, self.lineEditTRSOn,
-            uddrs_off, self.lineEditUDDRSOff,
-            trs_off, self.lineEditTRSOff
-        )
-
-        # Add layouts to option box content
-        self.optionbox_tests_content.addLayout(testbox_line1)
-        self.optionbox_tests_content.addLayout(testbox_line2)
-        self.optionbox_tests_content.addLayout(testbox_line3)
-        self.optionbox_tests_content.addLayout(testbox_line4)
-        self.optionbox_tests_content.addLayout(testbox_line5)
-
+        # Add grid layout to option box content
+        self.optionbox_tests_content.addLayout(grid_layout)
         self.optionbox_tests.setLayout(self.optionbox_tests_content)
+
 
     def create_bottom_buttons_postoperative(self, layout_general):
         """Creates two buttons a) to read medication and b) to save settings and exit GUI """
-        self.ButtonEnterMedication = QPushButton('Open GUI \nMedication')
-        self.ButtonEnterDBSsettings = QPushButton('Open GUI \nDBS settings')
+        self.ButtonEnterMedication = QPushButton('Postoperative\nMedication')
+        self.ButtonEnterDBSsettings = QPushButton('Postoperative\nDBS settings')
         self.button_save = QPushButton('Save')
-        self.button_save_return = QPushButton('Save and \nReturn')
+        self.button_save_return = QPushButton('Save and\nReturn')
 
         # Set fixed size for all buttons
         button_width = 200
@@ -356,6 +314,11 @@ class PostoperativeDialog(QDialog):
         hlay_bottom.addStretch(1)
         layout_general.addLayout(hlay_bottom, 4, 0, 1, 3)
 
+        self.ButtonEnterMedication.setEnabled(False)
+        self.ButtonEnterDBSsettings.setEnabled(False)
+        self.button_save.setEnabled(False)
+        self.button_save_return.setEnabled(False)
+
         self.read_content_csv()
 
     def connect_button_actions(self):
@@ -365,6 +328,7 @@ class PostoperativeDialog(QDialog):
         self.ButtonEnterDBSsettings.clicked.connect(self.onClickedDBSsettings)
         self.button_save.clicked.connect(self.onClickedSave)
         self.button_save_return.clicked.connect(self.onClickedSaveReturn)
+        self.button_change_delete_date.clicked.connect(self.onClickedChangeDeleteDate)  # Connect new button
 
     # From here on, you can find the function of the buttons, etc.
     def fill_combobox(self, new_date = None): #GP: new_date als neue Variable (s.u.)
@@ -373,22 +337,22 @@ class PostoperativeDialog(QDialog):
         default_options = ['Please select date or enter new data', 'Enter new data']
         items_available = default_options if not items_available else items_available + default_options
         unique_dates = list(set(items_available))
+        print(unique_dates)
 
         def custom_sort(item):
             if item in default_options:
                 return (default_options.index(item), item)
             else:
-                return (len(default_options), item)
+                try:
+                    return (len(default_options), datetime.strptime(item, '%d/%m/%Y'))
+                except ValueError:
+                    return (len(default_options), item)
 
 
         # Add items to ComboBox
         self.lineEditreason.clear()
         self.lineEditreason.addItems(sorted(unique_dates, key=custom_sort))
-        # self.update_context() # Not sure if that is needed but so far it drops no error, so keep it!
-        print(unique_dates)
-        #GP: Set the current index to the newly added date if it exists
-        #GP: stellt direkt nach Eingabe des Datums die optionbox auf das Datum ein
-        #GP: direkte Eingabe möglich, ohne nochmal manuell das Datum zu ändern
+
         if new_date:
             self.lineEditreason.setCurrentText(new_date)
 
@@ -406,8 +370,6 @@ class PostoperativeDialog(QDialog):
         """After selecting the reason for visit, data is read from the csv-file [preoperative] if available"""
         df_subj = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
 
-        # GP: postoperative.csv is always empty the first time you enter data
-
         if not os.path.isfile(f'{FILEDIR}/{self.date}.csv'):
             Output.msg_box(text='Something went wrong when looking for the data',
                            title=f'{self.date}.csv not found in the folder: {FILEDIR}',
@@ -423,7 +385,7 @@ class PostoperativeDialog(QDialog):
         try:
             row = df_subj_filtered.iloc[0]
         except IndexError:
-            row = pds.Series(['nan' for _ in range(len(df_subj_filtered.columns))], index=df_subj_filtered.columns)
+            row = pds.Series([np.nan for _ in range(len(df_subj_filtered.columns))], index=df_subj_filtered.columns)
 
         line_edits_upper_right = [
             (self.lineEditAdmission_Nch, "Admission_NCh_postop"),
@@ -436,6 +398,13 @@ class PostoperativeDialog(QDialog):
         ]
 
         self.update_line_edits(line_edits_upper_right, row)
+
+        # Check if any line edits are still empty
+        if any(line_edit.text() == '' for line_edit, column_name in line_edits_upper_right):
+            intraoperative_dates = self.check_intraoperative_dates()
+            for line_edit, column_name in line_edits_upper_right:
+                if line_edit.text() == '' and column_name in intraoperative_dates:
+                    self.set_widget_text(line_edit, intraoperative_dates[column_name])
 
         # Upper right
         self.set_widget_text(self.lineEditAdverse_Event, row["AE_postop"])
@@ -505,67 +474,185 @@ class PostoperativeDialog(QDialog):
              self.ReportNeurosurgeryCheck,
              self.PatProgrammerCheck])
 
-        if selected_item1 != 'Enter new data' and selected_item1 != 'Please select date or enter new data': # and selected_item2 != ''):
+        if selected_item1 != 'Enter new data' and selected_item1 != 'Please select date or enter new data':
             self.set_lineedit_state(True, *optionboxes)
             self.set_checkbox_state(True, *checkboxes)
+            self.ButtonEnterMedication.setEnabled(True)
+            self.ButtonEnterDBSsettings.setEnabled(True)
+            self.button_save.setEnabled(True)
+            self.button_save_return.setEnabled(True)
+            self.button_change_delete_date.setEnabled(True)
+            self.current_date = self.lineEditreason.currentText()
+            #Needed to edit current_date:
+            data_frame = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
+            subj_details = General.read_current_subj()
+            filtered_df = data_frame[data_frame['PID_ORBIS'] == subj_details.pid[0]]
+            self.list_of_dates = filtered_df['Reason_postop'].tolist()
+
         else:
             self.set_lineedit_state(False, *optionboxes)
             self.set_checkbox_state(False, *checkboxes)
+            self.ButtonEnterMedication.setEnabled(False)
+            self.ButtonEnterDBSsettings.setEnabled(False)
+            self.button_save.setEnabled(False)
+            self.button_save_return.setEnabled(False)
+            self.button_change_delete_date.setEnabled(False)
 
         if self.lineEditreason.currentText() == 'Please select date or enter new data':
             pass
+
         elif self.lineEditreason.currentText() == 'Enter new data':
             self.reason_visit = Output.open_input_dialog_postoperative(self)
-            if self.reason_visit != None: #GP wenn open_input_dialog None ausgibt, wird None als date gespeichert
+            if self.reason_visit is not None: #GP wenn open_input_dialog None ausgibt, wird None als date gespeichert
                 data_frame = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
                 subj_details = General.read_current_subj()
+                general_data = pds.read_csv(os.path.join(FILEDIR, 'general_data.csv'))
+                subj_general_data = general_data[general_data['ID'] == subj_details.id[0]].iloc[0]
 
-                # GP: checking BEFORE new data is added to postoperative.csv
                 match = re.search(r'^(pre|intra|post)op', self.date)
                 filtered_df = data_frame[data_frame['PID_ORBIS'] == subj_details.pid[0]]
 
                 if not filtered_df.empty:
                     list_of_dates = filtered_df['Reason_postop'].tolist()
                     if self.reason_visit in list_of_dates:
-                        Output.msg_box('There is already an identical entry for this subject. Please enter a different reason',
-                                       title=f'Warning, double entry for subj {subj_details.id[0]}')
+                        Output.msg_box(
+                            'There is already an identical entry for this subject. Please enter a different reason',
+                            title=f'Warning, double entry for subj {subj_details.id[0]}')
                         self.fill_combobox()
                         return
 
-                #if any(filtered_df['Reason_{}'.format(self.date)].isin([self.reason_visit])):
-                #    Output.msg_box(
-                #        'There is already an identical entry for this subject. Please enter a different reason',
-                #        title=f'Warning, double entry for subj {subj_details.id[0]}')
-                #    self.fill_combobox()
-                #    return
+                new_row = {
+                    'ID': subj_details.id[0],
+                    'PID_ORBIS': subj_details.pid[0],
+                    f'Reason_{match.group()}': self.reason_visit,
+                    'Gender': subj_general_data['gender'],
+                    'Diagnosis_postop': subj_general_data['diagnosis']
+                }
 
-                data_frame.loc[len(data_frame), ['ID', 'PID_ORBIS', 'Reason_{}'.format(match.group())]] = [subj_details.id[0],
-                                                                                                           subj_details.pid[0],
-                                                                                                           self.reason_visit]
+                #Checking for existing data
+                existing_data_postop = filtered_df.iloc[0] if not filtered_df.empty else {}
+                new_row['Implanted_IPG'] = existing_data_postop.get('Implanted_IPG', np.nan)
+                new_row['Lead_manufacturer'] = existing_data_postop.get('Lead_manufacturer', np.nan)
+                new_row['implanted_leads'] = existing_data_postop.get('implanted_leads', np.nan)
 
-                data_frame = data_frame.replace(['nan', ''], [np.nan, np.nan])
-                data_frame = data_frame.applymap(lambda x: str(x).replace(';', ' -'))
+                #Checking intraoperative.csv for preexisting data
+                if all(pds.isna(new_row[item]) or new_row[item] in ["nan", ""] for item in ['Implanted_IPG', 'Lead_manufacturer', 'implanted_leads']):
+                    try:
+                        intraoperative_df = General.import_dataframe("intraoperative.csv", separator_csv=',')
+                        existing_data_intraop = intraoperative_df[intraoperative_df['PID_ORBIS'] == subj_details.pid[0]]
+                        new_row['Implanted_IPG'] = existing_data_intraop['Implanted_IPG'].iloc[0]
+                        new_row['Lead_manufacturer'] = existing_data_intraop['Lead_manufacturer'].iloc[0]
+                        new_row['implanted_leads'] = existing_data_intraop['implanted_leads'].iloc[0]
+                        print(existing_data_intraop['implanted_leads'])
+                    except IndexError:
+                        pass
+
+                checkboxes_postop = ["Report_File_NR_postop",
+                                     "Report_File_NCh_postop",
+                                     "Using_Programmer_postop",
+                                     "CTscan_postop",
+                                     "Planned_Visit_postop"]
+                for checkbox in checkboxes_postop:
+                    new_row[checkbox] = 0
+
+                for key, dtype in dtype_dict_postoperative.items():
+                    if key not in new_row:
+                        if dtype == "float64":
+                            new_row[key] = np.nan
+                        elif dtype == "int64":
+                            new_row[key] = pds.NA
+                        elif dtype == "object":
+                            new_row[key] = np.nan
+
+                new_row_df = pds.DataFrame([new_row]).dropna(axis=1, how='all')
+                data_frame = pds.concat([data_frame, new_row_df], ignore_index=True)
                 data_frame.to_csv(os.path.join(FILEDIR, f"{self.date}.csv"), index=False)
 
-                self.save_data2csv()
                 new_date = self.reason_visit
 
                 self.fill_combobox(new_date)
                 self.read_content_csv()
-            else:
-                self.lineEditreason.setCurrentText('Please select date or enter new data')
-                pass
+
         else:
             self.reason_visit = self.lineEditreason.currentText()
             self.read_content_csv()
-            #self.save_data2csv() #needed?
 
     # ====================   Defines actions when buttons are pressed      ====================
+    @QtCore.pyqtSlot()
+    def onClickedChangeDeleteDate(self):
+        """Handles the action for changing or deleting the date."""
+        current_date = self.current_date
+
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Question)
+        msg_box.setWindowTitle('Change or Delete Date')
+        msg_box.setText(f'Do you want to change or delete the date: {current_date}?')
+        change_button = msg_box.addButton('Change Date', QMessageBox.ActionRole)
+        delete_button = msg_box.addButton('Delete Date', QMessageBox.ActionRole)
+        cancel_button = msg_box.addButton(QMessageBox.Cancel)
+
+        msg_box.exec_()
+
+        if msg_box.clickedButton() == change_button:
+            new_date, ok = QInputDialog.getText(self, 'Change Date', 'Enter new date (DD/MM/YYYY):')
+            if ok and new_date:
+                formatted_date = General.validate_and_format_dates(new_date)
+                if formatted_date == 'Invalid date format':
+                    QMessageBox.warning(self, 'Invalid Date',
+                                        'The entered date is invalid. Please enter a date in the format DD/MM/YYYY.')
+                else:
+                    self.update_date_in_csv(current_date, formatted_date)
+                    self.fill_combobox(formatted_date)
+                    self.read_content_csv()
+        elif msg_box.clickedButton() == delete_button:
+            self.delete_date_from_csv(current_date)
+            self.fill_combobox()
+            self.read_content_csv()
+
+    def update_date_in_csv(self, old_date, new_date):
+        """Updates the date in the CSV file."""
+        df = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
+        # Check if the new date already exists
+        if new_date in self.list_of_dates and new_date != old_date:
+            QMessageBox.warning(self, 'Duplicate Date',
+                                'The entered date already exists. Please enter a different date.')
+            return
+        df.loc[df['Reason_postop'] == old_date, 'Reason_postop'] = new_date
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+
+    def delete_date_from_csv(self, date_to_delete):
+        """Deletes the row with the specified date from the CSV file."""
+        df = General.import_dataframe(f"{self.date}.csv", separator_csv=',')
+        df = df[df['Reason_postop'] != date_to_delete]
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+
+    def check_intraoperative_dates(self):
+        """Checks for available dates in intraoperative.csv for the current subject."""
+        date_list = {
+            "Admission_NCh_postop": "admission_Nch_intraop",
+            "Admission_NR_postop": "Admission_intraop",
+            "Dismissal_NCh_postop": "dismissal_NCh_intraop",
+            "Dismissal_NR_postop": "Dismissal_intraop",
+            "Surgery_Date_postop": "surgery_date_intraop"
+        }
+
+        subj_details = General.read_current_subj()
+        intraoperative_df = General.import_dataframe("intraoperative.csv", separator_csv=',')
+        filtered_df = intraoperative_df[intraoperative_df['PID_ORBIS'] == subj_details.pid[0]]
+
+        available_dates = {}
+        for postop_col, intraop_col in date_list.items():
+            if intraop_col in filtered_df.columns:
+                available_dates[postop_col] = filtered_df[intraop_col].values[0] if not filtered_df[
+                    intraop_col].isna().all() else ''
+        print(available_dates)
+        return available_dates
+
     @QtCore.pyqtSlot()
     def onClickedMedication(self):
         """shows the medication dialog when button is pressed; former implementation with creating GUI was replaced with
         show/hide GUI which is initiated at beginning"""
-        self.dialog_medication = MedicationDialog(parent=self, visit=self.date)
+        self.dialog_medication = MedicationDialog(parent=self, visit=self.date, postop_date=self.reason_visit)
         self.dialog_medication.show()
 
     @QtCore.pyqtSlot()
@@ -630,7 +717,6 @@ class PostoperativeDialog(QDialog):
             df_subj[column_key] = line_edit.text()
 
         df_subj['AE_{}'.format(match.group())] = self.lineEditAdverse_Event.text()
-
         df_subj['UPDRS1_{}'.format(match.group())] = self.lineEditUPDRSI.text()
         df_subj['UPDRS4_{}'.format(match.group())] = self.lineEditUPDRSIV.text()
         df_subj['TSS_postop'] = self.lineEditTSS.text()
@@ -662,20 +748,45 @@ class PostoperativeDialog(QDialog):
                          ("PlannedVisitCheck", "Planned_Visit_postop")]
 
         for checkbox, col_name in checkbox_cols:
-            if getattr(self, checkbox).isChecked():
-                df_subj[col_name] = 1
-            else:
-                df_subj[col_name] = 0
-            # Incorporate the [df_subj] dataframe into the entire dataset and save as csv
+            df_subj[col_name] = 1 if getattr(self, checkbox).isChecked() else 0
 
-        indices_to_update = df.index[df['Reason_postop'] == self.reason_visit]
+        for key, dtype in dtype_dict_postoperative.items():
+            if key in df_subj:
+                try:
+                    if dtype == "float64":
+                        df_subj[key] = str(df_subj[key]) if not (
+                                pds.isna(df_subj[key]) or str(df_subj[key]) in ["", "nan"]) else np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = str(df_subj[key]) if not (
+                                pds.isna(df_subj[key]) or str(df_subj[key]) in ["", "nan"]) else pds.NA
+                    elif dtype == "object":
+                        df_subj[key] = str(df_subj[key]) if not (
+                                    pds.isna(df_subj[key]) or str(df_subj[key]) in ["", "nan"]) else ""
+                    df_subj[key] = pds.array([df_subj[key]], dtype=dtype)[0]
+                except (ValueError, TypeError):
+                    print("Error", dtype, df_subj[key])
+                    if dtype == "float64":
+                        df_subj[key] = np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = pds.NA
+                    elif dtype == "object":
+                        df_subj[key] = ""
 
-        if not indices_to_update.empty:
-            index_to_update = indices_to_update[0]
-            df.loc[index_to_update] = df_subj
-        else:
-            # Handle the case when the index is not found
-            print(f"Index for Reason_postop '{self.reason_visit}' not found.")
+        try:
+            idx2replace = df.index[df['Reason_postop'] == self.reason_visit][0]
+            for key, value in df_subj.items():
+                if pds.isna(value) or value in ["", "nan"]:
+                    if key in dtype_dict_postoperative.keys():
+                        df[key] = df[key].astype(dtype_dict_postoperative[key])
+                        df.at[idx2replace, key] = value
+                else:
+                    if key in dtype_dict_postoperative.keys():
+                        df[key] = df[key].astype(dtype_dict_postoperative[key])
+                        df.at[idx2replace, key] = value
+                    df.at[idx2replace, key] = value
+        except IndexError:
+            df_subj = pds.DataFrame(df_subj, index=[df.index.shape[0]])
+            df = pds.concat([df, df_subj], ignore_index=True)
 
         df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
 

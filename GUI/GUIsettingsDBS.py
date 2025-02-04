@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5 import QtCore
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QPushButton, QLineEdit, QVBoxLayout, QGroupBox, \
-    QHBoxLayout, QLabel, QGridLayout, QComboBox, QLayout, QDialog, QMessageBox
+    QHBoxLayout, QLabel, QGridLayout, QComboBox, QLayout, QDialog, QMessageBox, QSizePolicy, QSpacerItem
 
 import dependencies
 from utils.helper_functions import General, Content, Clean
@@ -17,7 +17,7 @@ pd.options.mode.chained_assignment = None
 class DBSsettingsDialog(QDialog):
     """Dialog to introduce the DBS-Settings at a specific date."""
 
-    def __init__(self, visit='postoperative', reason = "DD/MM/YYY",  parent=None):
+    def __init__(self, visit='postoperative', reason = "DD/MM/YYYY",  parent=None):
         super(DBSsettingsDialog, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.date = visit  # ensures the right date is entered
@@ -40,7 +40,9 @@ class DBSsettingsDialog(QDialog):
         """Defines the general layout for the GUI"""
 
         subj_details = General.read_current_subj() # reads information for the subject last being processed
-        self.setWindowTitle(f'Postoperative DBS settings (PID: {int(subj_details.pid.iloc[0])}) on date: {self.reason}')
+        if self.reason != "DD/MM/YYYY":
+            self.setWindowTitle(f'Postoperative DBS settings (PID: {str(subj_details.pid.iloc[0]).strip("PID_")}) on date: {self.reason}')
+        else: self.setWindowTitle(f'Intraoperative DBS settings (PID: {str(subj_details.pid.iloc[0]).strip("PID_")})')
 
         layout_general = QGridLayout(self)
         self.setLayout(layout_general)
@@ -60,7 +62,10 @@ class DBSsettingsDialog(QDialog):
         # Create option box with further possibilities
         self.action_buttons_bottom(layout_general)
 
-        self.show()
+        self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, True)
+        self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
+
+        #self.exec_()
 
     @staticmethod
     def settings_DBSleads_general(layout_general, side):
@@ -92,8 +97,12 @@ class DBSsettingsDialog(QDialog):
 
         for group_number in range(1, 3): #GP: erstellt 2 Gruppen
             layout, dbs_percentage_layout = QVBoxLayout(), QHBoxLayout()
-            group_label = QLabel(f"Group {group_number}")
-            #group_label.setFixedSize(100, 100)  # Set the desired width and height
+
+            # Add spacer above the group label
+            spacer_above = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
+            layout.addSpacerItem(spacer_above)
+
+            group_label = QLabel(f"Group {group_number}:")
             layout.addWidget(group_label)
             #GP: imported former staticmethod to GUI -> access to lineedit objectnames
             anode_grid, anode_content = self.create_grid_columntitle(name_title="Anode", num_rows=num_contacts, group_num = f'G{group_number}', side = idx, contact_names = contact_name)
@@ -113,17 +122,28 @@ class DBSsettingsDialog(QDialog):
             #GP: mittige Buttons
             if group_number == 2:
                 toggle_layout = QVBoxLayout()
+                spacer_top = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
                 toggleButton1 = QPushButton('+', self)
-                toggleButton1.setFixedSize(30, 30)  # Set a fixed size
+                toggleButton1.setFixedSize(30, 30)
                 toggleButton2 = QPushButton('-', self)
-                toggleButton2.setFixedSize(30, 30)  # Set a fixed size
+                toggleButton2.setFixedSize(30, 30)
+                spacer_bottom = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+                toggle_layout.addSpacerItem(spacer_top)
                 toggle_layout.addWidget(toggleButton1)
                 toggle_layout.addWidget(toggleButton2)
+                toggle_layout.addSpacerItem(spacer_bottom)
                 obj_content.addLayout(toggle_layout)
+
+
             obj_content.addLayout(layout)
             self.group_layouts_contacts.append(dbs_percentage_layout)  # needed to toggle visibility of 2nd group later
             self.group_anode.append(anode_content)  # needed to extract values for saving
             self.group_cathode.append(cathode_content)  # needed to extract values for saving
+
+            # Add spacer above the group label
+            spacer_below = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
+            layout.addSpacerItem(spacer_below)
 
         # Define what to do when button is pressed
         toggleButton1.clicked.connect(self.enable_SecondGroup)
@@ -229,7 +249,7 @@ class DBSsettingsDialog(QDialog):
             dbs_settings_layout = QHBoxLayout()
             if group_number == 1:
                 FirstColumnNames = Content.create_first_column(num_rows=num_rows,
-                                                               string2use=['Amplitude', 'Frequency', 'Pulse width'])
+                                                               string2use=['Amplitude (V)', 'Frequency (Hz)', 'Pulse width (µs)'])
                 dbs_settings_layout.addLayout(FirstColumnNames)
 
             dbs_settings_layout.addLayout(settings_grid)
@@ -358,6 +378,7 @@ class DBSsettingsDialog(QDialog):
 
                 self.line_edit.setEnabled(False)
                 self.line_edit.setFixedHeight(35)  # GP: ansonsten gibt es ein alignment-problem
+                self.line_edit.setFixedWidth(150)
 
                 content.append(self.line_edit)
                 dbs_percentage_layout.addWidget(self.line_edit, j + 1, i)
@@ -450,6 +471,24 @@ class DBSsettingsDialog(QDialog):
         #self.close()
 
     def onClickedChangeSystemInformation(self):
+        data = {}
+        # Collect data from group_anode and group_cathode
+        for group in self.group_anode + self.group_cathode:
+            for line_edit in group:
+                object_name = line_edit.objectName()
+                text = line_edit.text()
+                data[object_name] = text
+
+        # Check if there is any preexisting data
+        if any(data.values()):
+            # Ask the user for confirmation
+            reply = QMessageBox.question(self, 'Confirm Change',
+                                         'Changing the system information will result in the loss of the current inputs. Do you want to proceed?',
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.No:
+                return
+
+        # Enable the input fields
         self.lineEditLeadManufacturer.setEnabled(True)
         self.lineEditIPG.setEnabled(True)
         self.lineEditLeads.setEnabled(True)
@@ -498,7 +537,7 @@ class DBSsettingsDialog(QDialog):
                         widget = self.findChild((QLineEdit, QComboBox), key)
                         if widget:
                             if isinstance(widget, QLineEdit):
-                                if str(value) == "" or str(value) == "nan":
+                                if str(value) == "" or str(value) == "nan" or pd.isna(value):
                                     widget.setText("")
                                 else:
                                     widget.setText(value if value == str else str(value))
@@ -538,7 +577,10 @@ class DBSsettingsDialog(QDialog):
                         widget = self.findChild((QLineEdit, QComboBox), key)
                         if widget:
                             if isinstance(widget, QLineEdit):
-                                widget.setText(value if value == str else str(value))
+                                if pd.isna(value) or value == "" or value == "nan":
+                                    widget.setText("")
+                                else:
+                                    widget.setText(value if value == str else str(value))
                             elif isinstance(widget, QComboBox):
                                 pass
             except IndexError:
@@ -549,31 +591,34 @@ class DBSsettingsDialog(QDialog):
         current_subj = General.read_current_subj()
         subject_id = current_subj['id'][0]
         df_general = Clean.extract_subject_data(subject_id)
-        match = re.search(r'^(pre|intra|post)op', self.date)
 
-        df_subj = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+        df = General.import_dataframe('{}.csv'.format(self.date), separator_csv=',')
+
         if self.date == 'postoperative':
             try:
-                df_current = df_subj[df_subj['Reason_postop'] == self.reason].iloc[0].to_dict()
+                df_subj = df[df['Reason_postop'] == self.reason].iloc[0].to_dict()
             except IndexError:
-                df_current = pd.Series(['nan' for _ in range(len(df_subj.columns))], index=df_subj.columns)
+                df_subj = {k: '' for k in df.columns}
+            dtype_dict = dependencies.dtype_dict_postoperative
         elif self.date == 'intraoperative':
             try:
-                df_current = df_subj.iloc[df_subj.index[df_subj['ID'] == subject_id][0], :].to_dict()
+                df_subj = df.iloc[df.index[df['ID'] == subject_id][0], :].to_dict()
             except IndexError:
-                df_current = pd.Series(['nan' for _ in range(len(df_subj.columns))], index=df_subj.columns)
+                df_subj = {k: '' for k in df.columns}
+            dtype_dict = dependencies.dtype_dict_intraoperative
         else:
-            df_current = pd.Series(['nan' for _ in range(len(df_subj.columns))], index=df_subj.columns)
+            df_subj = {k: '' for k in df.columns}
+            dtype_dict = {}
 
         df_general.reset_index(inplace=True, drop=True)
-        df_current['ID'] = General.read_current_subj().id[0]
-        df_current['PID_ORBIS'] = df_general.iloc[0, :]['PID_ORBIS']
-        df_current['Gender'] = df_general['gender'][0]
+        df_subj['ID'] = General.read_current_subj().id[0]
+        df_subj['PID_ORBIS'] = df_general.iloc[0, :]['PID_ORBIS']
+        df_subj['Gender'] = df_general['gender'][0]
 
         # Save lead Implanted_IPG, Lead_manufacturer and implanted_leads
-        df_current['Implanted_IPG'] = self.lineEditIPG.currentText()
-        df_current['Lead_manufacturer'] = self.lineEditLeadManufacturer.currentText()
-        df_current['implanted_leads'] = self.lineEditLeads.currentText()
+        df_subj['Implanted_IPG'] = self.lineEditIPG.currentText()
+        df_subj['Lead_manufacturer'] = self.lineEditLeadManufacturer.currentText()
+        df_subj['implanted_leads'] = self.lineEditLeads.currentText()
 
         # DBS-Leads Data
         data = {}
@@ -593,27 +638,84 @@ class DBSsettingsDialog(QDialog):
 
         # Update the DataFrame with the collected data
         for key, value in data.items():
-            df_current[key] = value
-
+            df_subj[key] = value
+        """
         if self.date == 'postoperative':
-            indices_to_update = df_subj.index[df_subj['Reason_postop'] == self.reason]
+            indices_to_update = df.index[df['Reason_postop'] == self.reason]
         elif self.date == 'intraoperative':
-            indices_to_update = df_subj.index[df_subj['ID'] == subject_id]
+            indices_to_update = df.index[df['ID'] == subject_id]
         else:
             indices_to_update = pd.Index([])
 
+        real_df = pd.DataFrame([df_subj])
         if not indices_to_update.empty:
             index_to_update = indices_to_update[0]
-            df_subj.loc[index_to_update] = df_current
-        else:
-            # Handle the case when the index is not found
-            print(f"Index for Reason_postop '{self.reason}' not found.")
+            for key, dtype in dtype_dict.items():
+                if key in df_subj:
+                    try:
+                        real_df[key] = real_df[key].astype(dtype)
+                    except ValueError:
+                        real_df[key] = np.nan
+            for key, value in current_subj.items():
+                if key in dtype_dict.keys():
+                    df[key] = df[key].astype(dtype_dict[key])
 
-        df_subj.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+            df.loc[index_to_update] = real_df.iloc[0]
+        else:
+            df = df.append(df_subj, ignore_index=True)
+
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)"""
+
+        for key, dtype in dtype_dict.items():
+            if key in df_subj:
+                try:
+                    if dtype == "float64":
+                        df_subj[key] = str(df_subj[key]) if not (
+                                pd.isna(df_subj[key]) or str(df_subj[key]) in ["", "nan"]) else np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = str(df_subj[key]) if not (
+                                pd.isna(df_subj[key]) or str(df_subj[key]) in ["", "nan"]) else pd.NA
+                    elif dtype == "object":
+                        df_subj[key] = str(df_subj[key]) if not (
+                                    pd.isna(df_subj[key]) or str(df_subj[key]) in ["", "nan"]) else ""
+                    df_subj[key] = pd.array([df_subj[key]], dtype=dtype)[0]
+                except (ValueError, TypeError):
+                    print("Error", dtype, df_subj[key])
+                    if dtype == "float64":
+                        df_subj[key] = np.nan
+                    elif dtype == "int64":
+                        df_subj[key] = pd.NA
+                    elif dtype == "object":
+                        df_subj[key] = ""
+
+        try:
+            if self.date == 'postoperative':
+                idx2replace = df.index[df['Reason_postop'] == self.reason][0]
+            elif self.date == 'intraoperative':
+                idx2replace = df.index[df['ID'] == subject_id][0]
+            else:
+                idx2replace = pd.Index([])
+            for key, value in df_subj.items():
+                if pd.isna(value) or value in ["", "nan"]:
+                    if key in dtype_dict.keys():
+                        df[key] = df[key].astype(dtype_dict[key])
+                        df.at[idx2replace, key] = value
+                else:
+                    if key in dtype_dict.keys():
+                        df[key] = df[key].astype(dtype_dict[key])
+                        df.at[idx2replace, key] = value
+                    df.at[idx2replace, key] = value
+        except IndexError:
+            df_subj = pd.DataFrame(df_subj, index=[df.index.shape[0]])
+            df_subj = df_subj.dropna(how='all')  # Exclude all-NA entries
+            df = pd.concat([df, df_subj], ignore_index=True)  # GP: FutureWarning, as long as one column does not have any data
+
+        df.to_csv(Path(f"{FILEDIR}/{self.date}.csv"), index=False)
+
         self.close()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     dlg = DBSsettingsDialog()
-    dlg.show()
+    dlg.exec_()
     sys.exit(app.exec_())
